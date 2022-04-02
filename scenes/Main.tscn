@@ -1,0 +1,46 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://scripts/GrabCheckButton.gd" type="Script" id=1]
+[ext_resource path="res://themes/MainTheme.tres" type="Theme" id=2]
+[ext_resource path="res://scripts/DeviceOptions.gd" type="Script" id=3]
+
+[node name="Main" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="TestRect" type="ColorRect" parent="."]
+visible = false
+margin_right = 10.0
+margin_bottom = 10.0
+
+[node name="Button" type="Button" parent="."]
+margin_right = 424.0
+margin_bottom = 254.0
+theme = ExtResource( 2 )
+text = "Testing"
+
+[node name="DeviceOptions" type="OptionButton" parent="."]
+margin_left = 595.0
+margin_top = 57.0
+margin_right = 624.0
+margin_bottom = 77.0
+text = "Devices"
+script = ExtResource( 3 )
+
+[node name="Control" type="Control" parent="."]
+margin_left = 35.0
+margin_top = 49.0
+margin_right = 75.0
+margin_bottom = 89.0
+
+[node name="GrabCheckButton" type="CheckButton" parent="Control"]
+margin_left = 344.0
+margin_top = 281.0
+margin_right = 420.0
+margin_bottom = 321.0
+pressed = true
+text = "Grab"
+script = ExtResource( 1 )
+
+[connection signal="item_selected" from="DeviceOptions" to="DeviceOptions" method="_on_DeviceOptions_item_selected"]
+[connection signal="toggled" from="Control/GrabCheckButton" to="Control/GrabCheckButton" method="_on_GrabCheckButton_toggled"]
