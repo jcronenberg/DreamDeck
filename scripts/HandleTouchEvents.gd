@@ -17,11 +17,16 @@ func _ready():
 	#grab_touch_devices_script.call("grab_device")
 	#print(device_list)
 
+# These functions are unfortunately necessary as we need to call
+# call_deferred() otherwise we run into burrow issues
 func grab_device():
 	grab_touch_devices_script.call("grab_device")
 
 func ungrab_device():
 	grab_touch_devices_script.call("ungrab_device")
+
+func set_device(device_name):
+	grab_touch_devices_script.call("set_device", device_name)
 
 func x_coord_event(new_x):
 	event_lmb.position.x = new_x

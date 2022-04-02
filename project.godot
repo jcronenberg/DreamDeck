@@ -16,8 +16,8 @@ config/icon="res://icon.png"
 
 [autoload]
 
-GrabTouchDevice="*res://scripts/GrabTouchDevice.gdns"
 HandleTouchEvents="*res://scripts/HandleTouchEvents.gd"
+GrabTouchDevice="*res://scripts/GrabTouchDevice.gdns"
 
 [physics]
 
