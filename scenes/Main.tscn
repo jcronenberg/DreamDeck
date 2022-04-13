@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=2]
+[gd_scene load_steps=6 format=2]
 
 [ext_resource path="res://scripts/GrabCheckButton.gd" type="Script" id=1]
 [ext_resource path="res://themes/MainTheme.tres" type="Theme" id=2]
 [ext_resource path="res://scripts/DeviceOptions.gd" type="Script" id=3]
 [ext_resource path="res://scenes/AppButton.tscn" type="PackedScene" id=4]
+[ext_resource path="res://scenes/Macroboard.tscn" type="PackedScene" id=5]
 
 [node name="Main" type="Control"]
 anchor_right = 1.0
@@ -34,7 +35,10 @@ text = "Grabbed"
 align = 2
 script = ExtResource( 1 )
 
+[node name="Macroboard" parent="." instance=ExtResource( 5 )]
+
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
+visible = false
 anchor_left = 0.3
 anchor_top = 0.5
 anchor_right = 0.3
@@ -43,10 +47,12 @@ margin_left = -306.0
 margin_top = -229.0
 margin_right = 306.0
 margin_bottom = 229.0
+custom_constants/separation = 10
 
 [node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
-margin_right = 612.0
+margin_right = 1110.0
 margin_bottom = 150.0
+custom_constants/separation = 10
 
 [node name="Spotify" parent="VBoxContainer/HBoxContainer" instance=ExtResource( 4 )]
 margin_right = 150.0
@@ -56,8 +62,8 @@ app_name = "Spotify"
 icon_path = "spotify.png"
 
 [node name="Emacs" parent="VBoxContainer/HBoxContainer" instance=ExtResource( 4 )]
-margin_left = 154.0
-margin_right = 304.0
+margin_left = 160.0
+margin_right = 310.0
 margin_bottom = 150.0
 app = "emacsclient"
 arguments = PoolStringArray( "-c", "-n", "-a", "\\\'\\\'" )
@@ -66,25 +72,50 @@ icon_path = "emacs.png"
 straight_shell = true
 
 [node name="Firefox" parent="VBoxContainer/HBoxContainer" instance=ExtResource( 4 )]
-margin_left = 308.0
-margin_right = 458.0
+margin_left = 320.0
+margin_right = 470.0
 margin_bottom = 150.0
 app = "firefox"
 app_name = "Firefox"
 icon_path = "firefox.png"
 
 [node name="Chromium" parent="VBoxContainer/HBoxContainer" instance=ExtResource( 4 )]
-margin_left = 462.0
-margin_right = 612.0
+margin_left = 480.0
+margin_right = 630.0
 margin_bottom = 150.0
 app = "chromium"
 app_name = "Chromium"
 icon_path = "chromium.png"
 
+[node name="Signal" parent="VBoxContainer/HBoxContainer" instance=ExtResource( 4 )]
+margin_left = 640.0
+margin_right = 790.0
+margin_bottom = 150.0
+app = "signal-desktop"
+app_name = "Signal"
+icon_path = "signal.png"
+
+[node name="Thunderbird" parent="VBoxContainer/HBoxContainer" instance=ExtResource( 4 )]
+margin_left = 800.0
+margin_right = 950.0
+margin_bottom = 150.0
+app = "thunderbird"
+app_name = "Thunderbird"
+icon_path = "thunderbird.png"
+
+[node name="Godot" parent="VBoxContainer/HBoxContainer" instance=ExtResource( 4 )]
+margin_left = 960.0
+margin_right = 1110.0
+margin_bottom = 150.0
+app = "godot"
+app_name = "Godot"
+icon_path = "godot.png"
+
 [node name="HBoxContainer2" type="HBoxContainer" parent="VBoxContainer"]
-margin_top = 154.0
-margin_right = 612.0
-margin_bottom = 304.0
+margin_top = 160.0
+margin_right = 1110.0
+margin_bottom = 310.0
+custom_constants/separation = 10
 
 [node name="SpotifyPrevious" parent="VBoxContainer/HBoxContainer2" instance=ExtResource( 4 )]
 margin_right = 150.0
@@ -96,8 +127,8 @@ icon_path = "previous.png"
 straight_shell = true
 
 [node name="SpotifyPlayPause" parent="VBoxContainer/HBoxContainer2" instance=ExtResource( 4 )]
-margin_left = 154.0
-margin_right = 304.0
+margin_left = 160.0
+margin_right = 310.0
 margin_bottom = 150.0
 app = "/home/jorik/bin/sp"
 arguments = PoolStringArray( "play" )
@@ -106,8 +137,8 @@ icon_path = "play_pause.png"
 straight_shell = true
 
 [node name="SpotifyNext" parent="VBoxContainer/HBoxContainer2" instance=ExtResource( 4 )]
-margin_left = 308.0
-margin_right = 458.0
+margin_left = 320.0
+margin_right = 470.0
 margin_bottom = 150.0
 app = "/home/jorik/bin/sp"
 arguments = PoolStringArray( "next" )
@@ -116,22 +147,13 @@ icon_path = "next.png"
 straight_shell = true
 
 [node name="HBoxContainer3" type="HBoxContainer" parent="VBoxContainer"]
-margin_top = 308.0
-margin_right = 612.0
-margin_bottom = 458.0
-
-[node name="SpotifyVolPlus" parent="VBoxContainer/HBoxContainer3" instance=ExtResource( 4 )]
-margin_right = 150.0
-margin_bottom = 150.0
-app = "/home/jorik/bin/spotify_volume_ctrl.py"
-arguments = PoolStringArray( "+5%" )
-app_name = "Vol +"
-icon_path = "vol_up.png"
-straight_shell = true
+margin_top = 320.0
+margin_right = 1110.0
+margin_bottom = 470.0
+custom_constants/separation = 10
 
 [node name="SpotifyVolMinus" parent="VBoxContainer/HBoxContainer3" instance=ExtResource( 4 )]
-margin_left = 154.0
-margin_right = 304.0
+margin_right = 150.0
 margin_bottom = 150.0
 app = "/home/jorik/bin/spotify_volume_ctrl.py"
 arguments = PoolStringArray( "-5%" )
@@ -139,5 +161,16 @@ app_name = "Vol -"
 icon_path = "vol_down.png"
 straight_shell = true
 
+[node name="SpotifyVolPlus" parent="VBoxContainer/HBoxContainer3" instance=ExtResource( 4 )]
+margin_left = 160.0
+margin_right = 310.0
+margin_bottom = 150.0
+app = "/home/jorik/bin/spotify_volume_ctrl.py"
+arguments = PoolStringArray( "+5%" )
+app_name = "Vol +"
+icon_path = "vol_up.png"
+straight_shell = true
+
 [connection signal="item_selected" from="DeviceOptions" to="DeviceOptions" method="_on_DeviceOptions_item_selected"]
+[connection signal="pressed" from="DeviceOptions" to="DeviceOptions" method="_on_DeviceOptions_pressed"]
 [connection signal="toggled" from="GrabCheckButton" to="GrabCheckButton" method="_on_GrabCheckButton_toggled"]

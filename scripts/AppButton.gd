@@ -7,12 +7,15 @@ export var icon_path: String
 export var straight_shell: bool = false
 export var show_app_name: bool = false
 
+var final_arguments: PoolStringArray
+
 func _ready():
 	apply_change()
 
 func apply_change():
+	final_arguments = arguments
 	if !straight_shell:
-		arguments.insert(0, app)
+		final_arguments.insert(0, app)
 	if icon_path:
 		set_logo()
 	elif app_name:
@@ -27,9 +30,9 @@ func apply_change():
 
 func set_logo():
 	if icon_path:
-		icon_path = "user://icons/" + icon_path
+		var complete_icon_path = "user://icons/" + icon_path
 		var image = Image.new()
-		image.load(icon_path)
+		image.load(complete_icon_path)
 		var texture = ImageTexture.new()
 		texture.create_from_image(image)
 		$Icon.texture = texture
@@ -49,6 +52,17 @@ func show_name_with_icon():
 
 func _on_AppButton_pressed():
 	if straight_shell:
-		OS.execute(app, arguments, false)
+		OS.execute(app, final_arguments, false)
 	else:
-		OS.execute("nohup", arguments, false)
+		OS.execute("nohup", final_arguments, false)
+
+func save():
+	var save_dict = {
+		"app" : app,
+		"arguments" : arguments,
+		"app_name" : app_name,
+		"icon_path" : icon_path,
+		"straight_shell" : straight_shell,
+		"show_app_name" : show_app_name
+	}
+	return save_dict

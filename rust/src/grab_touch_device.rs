@@ -178,7 +178,7 @@ impl GrabTouchDevice {
                     }
                 }
             }
-            None => godot_print!("No device"),
+            None => return,//godot_print!("No device"),
         }
     }
 }

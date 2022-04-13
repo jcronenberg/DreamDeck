@@ -1,0 +1,5 @@
+[gd_scene format=2]
+
+[node name="MacroRow" type="HBoxContainer"]
+margin_right = 40.0
+custom_constants/separation = 10
