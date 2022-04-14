@@ -1,0 +1,46 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://themes/MainTheme.tres" type="Theme" id=1]
+[ext_resource path="res://scripts/SpotifyPanel.gd" type="Script" id=2]
+
+[node name="SpotifyPanel" type="Control"]
+script = ExtResource( 2 )
+
+[node name="Background" type="Panel" parent="."]
+margin_right = 500.0
+margin_bottom = 1000.0
+theme = ExtResource( 1 )
+
+[node name="AlbumArt" type="TextureRect" parent="Background"]
+anchor_left = 0.2
+anchor_top = 0.1
+anchor_right = 0.8
+anchor_bottom = 0.4
+expand = true
+
+[node name="AlbumName" type="Label" parent="Background"]
+anchor_top = 0.42
+anchor_right = 1.0
+anchor_bottom = 0.42
+theme = ExtResource( 1 )
+text = "Home"
+align = 1
+clip_text = true
+
+[node name="ArtistsName" type="Label" parent="Background"]
+anchor_top = 0.55
+anchor_right = 1.0
+anchor_bottom = 0.55
+theme = ExtResource( 1 )
+text = "Siamese"
+align = 1
+clip_text = true
+
+[node name="TrackName" type="Label" parent="Background"]
+anchor_top = 0.6
+anchor_right = 1.0
+anchor_bottom = 0.6
+theme = ExtResource( 1 )
+text = "Sloboda"
+align = 1
+clip_text = true

@@ -4,4 +4,5 @@
 font_path = "res://fonts/Roboto-Regular.ttf"
 
 [resource]
+size = 20
 font_data = SubResource( 7 )
