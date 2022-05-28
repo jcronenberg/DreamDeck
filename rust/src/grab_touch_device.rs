@@ -11,6 +11,9 @@ use evdev::{
     AbsoluteAxisType,
 };
 
+/// Time interval between retrying to connect device
+const RETRY_COOLDOWN: f32 = 1.0;
+
 /// GrabTouchDevice "class"
 /// Handles all evdev functions and then calls handler functions
 #[derive(NativeClass)]
@@ -24,6 +27,10 @@ pub struct GrabTouchDevice {
     handler: Option<Ref<Node>>,
     /// State of device
     grabbed: bool,
+    /// Timer for trying to reconnect
+    retry_device: f32,
+    /// Name of the currently selected device
+    device_name: String,
 }
 
 #[methods]
@@ -34,22 +41,30 @@ impl GrabTouchDevice {
             device_list: None,
             handler: None,
             grabbed: false,
+            retry_device: 0.0,
+            device_name: String::new(),
         }
     }
 
     /// Internal function to set self.device by specified id
     /// id needs to be a valid id for evdev::enumerate()
-    fn _set_device(&mut self, owner: &Node, id: usize) {
+    fn _set_device(&mut self, owner: &Node) {
         // Ensure that if a device is already grabbed we ungrab it first
         if self.grabbed {
             self.ungrab_device(owner);
         }
 
+        // Get id from device_list by matching name
+        let id: usize = *match self.device_list.as_ref().unwrap().get(self.device_name.as_str()) {
+            Some(id) => id,
+            None => return,
+        };
+
         // Get device by id
         let mut devices = evdev::enumerate()
             .collect::<Vec<_>>();
         devices.reverse();
-        let mut device = devices.into_iter().nth(id).unwrap();
+        let device = devices.into_iter().nth(id).unwrap();
 
         // Nonblocking stuff
         let raw_fd = device.as_raw_fd();
@@ -66,21 +81,21 @@ impl GrabTouchDevice {
             Some(&mut event),
         ).unwrap();
 
-        // grab device MAYBE debug?
-        device.grab().unwrap();
-        self.grabbed = true;
-
         // store device so we can fetch events in _process
         self.device = Some(device);
+
+        // Grab device
+        self.grab_device(owner);
     }
 
     /// Set self.device by specified name
     #[export]
     fn set_device(&mut self, owner: &Node, name: String) {
-        if self.device_list == None {
-            self._get_devices();
-        }
-        self._set_device(owner, *self.device_list.as_ref().unwrap().get(name.as_str()).unwrap());
+        self._get_devices();
+
+        self.device_name = name;
+
+        self._set_device(owner);
     }
 
     /// Internal function that populates self.device_list
@@ -101,9 +116,8 @@ impl GrabTouchDevice {
     /// Get all devices that support AbsoluteAxisTypes
     #[export]
     fn get_devices(&mut self, _owner: &Node) -> Variant {
-        if self.device_list == None {
-            self._get_devices();
-        }
+        self._get_devices();
+
         let mut device_list_string: Vec<String> = Vec::new();
         match self.device_list.as_mut() {
             Some(device_list) => {
@@ -149,7 +163,20 @@ impl GrabTouchDevice {
 
     /// Godot _process function
     #[export]
-    fn _process(&mut self, _owner: &Node, _delta: f32) {
+    fn _process(&mut self, owner: &Node, delta: f32) {
+        // If not connected, retry to connect
+        // TODO: This approach of just trying to set device isn't very performant
+        //       and hangs the main thread for a bit, rework it in the future
+        if !self.grabbed {
+            self.retry_device += delta;
+            if self.retry_device >= RETRY_COOLDOWN {
+                self.retry_device = 0.0;
+                self.set_device(owner, self.device_name.clone());
+            }
+            return;
+        }
+
+        // Main loop when device is grabbed
         match self.device.as_mut() {
             Some(device) => {
                 match device.fetch_events() {
@@ -174,11 +201,12 @@ impl GrabTouchDevice {
                         return;
                     }
                     Err(e) => {
+                        self.grabbed = false;
                         godot_print!("{}", e);
                     }
                 }
             }
-            None => return,//godot_print!("No device"),
+            None => return,
         }
     }
 }

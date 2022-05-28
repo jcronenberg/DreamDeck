@@ -23,9 +23,14 @@ func set_default_device():
 	elif not config_data["settings"].has("default_device"):
 		return
 	default_device = config_data["settings"]["default_device"]
+	# This is a hack to enable setting the default_device even if it is not connected
+	# TODO: Improve this in the future
 	if device_list.has(default_device):
-		handler.call_deferred("set_device", default_device)
 		self.select(device_list.find(default_device) + 2)
+	else:
+		self.add_item(default_device, len(device_list))
+		self.select(len(device_list) + 2)
+	handler.call_deferred("set_device", default_device)
 
 func _ready():
 	get_items()
