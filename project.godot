@@ -20,6 +20,7 @@ config/icon="res://icon.png"
 
 HandleTouchEvents="*res://scripts/HandleTouchEvents.gd"
 GrabTouchDevice="*res://scripts/GrabTouchDevice.gdns"
+ConfigLoader="*res://scripts/ConfigLoader.gd"
 
 [display]
 

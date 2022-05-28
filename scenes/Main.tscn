@@ -61,10 +61,6 @@ custom_constants/margin_left = 50
 custom_constants/margin_bottom = 50
 
 [node name="Macroboard" parent="VSeparator/ElementSeparator/MacroMargin" instance=ExtResource( 5 )]
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
 margin_left = 50.0
 margin_top = 50.0
 margin_right = 1366.0
@@ -87,5 +83,4 @@ margin_bottom = 888.0
 size_flags_vertical = 4
 
 [connection signal="item_selected" from="VSeparator/ControlsSeparator/DeviceOptions" to="VSeparator/ControlsSeparator/DeviceOptions" method="_on_DeviceOptions_item_selected"]
-[connection signal="pressed" from="VSeparator/ControlsSeparator/DeviceOptions" to="VSeparator/ControlsSeparator/DeviceOptions" method="_on_DeviceOptions_pressed"]
 [connection signal="toggled" from="VSeparator/ControlsSeparator/GrabCheckButton" to="VSeparator/ControlsSeparator/GrabCheckButton" method="_on_GrabCheckButton_toggled"]

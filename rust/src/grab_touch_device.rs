@@ -91,8 +91,8 @@ impl GrabTouchDevice {
         devices.reverse();
         let mut device_map: HashMap<String, usize> = HashMap::new();
         for (i, d) in devices.iter().enumerate() {
-           if d.supported_absolute_axes().map_or(false, |axes| axes.contains(AbsoluteAxisType::ABS_X)) {
-               device_map.insert(format!("{}: {}", i, d.name().unwrap_or("Unnamed device")), i);
+           if d.supported_absolute_axes().map_or(false, |axes| axes.contains(AbsoluteAxisType::ABS_MT_POSITION_X)) {
+               device_map.insert(format!("{}", d.name().unwrap_or("Unnamed device")), i);
            }
         }
         self.device_list = Some(device_map);

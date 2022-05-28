@@ -8,7 +8,6 @@ var in_focus: bool = true
 
 # Nodes
 onready var grab_touch_devices_script = get_node("/root/GrabTouchDevice")
-onready var device_options: OptionButton = get_node("/root/Main/DeviceOptions")
 
 func _ready():
 	event_lmb.button_index = 1

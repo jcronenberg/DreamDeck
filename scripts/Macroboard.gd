@@ -1,5 +1,7 @@
 extends Control
 
+onready var config_loader = get_node("/root/ConfigLoader")
+
 func _ready():
 	load_from_config()
 	#debug
@@ -14,18 +16,7 @@ func _ready():
 func load_from_config():
 	var macro_row = load("res://scenes/MacroRow.tscn")
 	var app_button = load("res://scenes/AppButton.tscn")
-	var data
-	var config_file = File.new()
-
-	config_file.open("user://config.json", File.READ)
-	var config_json = JSON.parse(config_file.get_as_text())
-
-	# Check if parsing the file was successful
-	if config_json.error == OK:
-		data = config_json.result
-	else:
-		print("Error parsing config file")
-		return
+	var data = config_loader.get_config_data()
 
 	# Load button settings
 	var button_min_size = Vector2(data["macroboard"]["button_settings"]["height"], data["macroboard"]["button_settings"]["width"])
