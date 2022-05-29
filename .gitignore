@@ -1,4 +1,4 @@
-bin/
+bin/*
 .import/
 export.cfg
 
