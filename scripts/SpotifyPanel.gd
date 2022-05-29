@@ -22,13 +22,11 @@ func _ready():
 		if config_data["spotify_panel"].has("script_path"):
 			script_path = config_data["spotify_panel"]["script_path"]
 		else:
-			push_error("Spotify_panel script_path not set in config, disabling the panel")
+			push_warning("Spotify_panel script_path not set in config, disabling the panel")
 			queue_free()
 
 	ensure_download_dir_exists()
 	clear_cache()
-	#download_cover("https://i.scdn.co/image/ab67616d0000b273e46a98f61e0510d50a51898f")
-	#get_metadata()
 
 func _physics_process(delta):
 	cum_delta += delta
@@ -44,7 +42,7 @@ func get_metadata():
 	var args = ["metadata"]
 	var output = []
 	if OS.execute("/home/jorik/bin/sp", args, true, output):
-		print("Couldn't get spotify metadata")
+		push_warning("Couldn't get spotify metadata")
 		return
 
 	if metadata != output[0]:
@@ -52,24 +50,26 @@ func get_metadata():
 
 func set_metadata(new_metadata):
 	metadata = new_metadata
+
 	var tmp
+
 	tmp = metadata.right(metadata.find("album|") + 6)
 	album = tmp.left(tmp.find("\n"))
 	$Background/AlbumName.text = album
-	#print("album: " + album)
+
 	tmp = metadata.right(metadata.find("albumArtist|") + 12)
 	artist = tmp.left(tmp.find("\n"))
 	$Background/ArtistsName.text = artist
-	#print("artist: " + artist)
+
 	tmp = metadata.right(metadata.find("title|") + 6)
 	track_name = tmp.left(tmp.find("\n"))
 	$Background/TrackName.text = track_name
-	#print("track_name: " + track_name)
+
 	tmp = metadata.right(metadata.find("artUrl|") + 7)
 	tmp = tmp.left(tmp.find("\n"))
+	# Only set art_url if it isn't the same
 	if art_url != tmp:
 		art_url = tmp
-		#print("art_url: " + art_url)
 		download_cover()
 
 func download_cover():
@@ -77,7 +77,7 @@ func download_cover():
 	var args: PoolStringArray = ["-O", download_dir_path + "/" + filename]
 	args.insert(0, art_url)
 	if OS.execute("wget", args):
-		print("Failed to download cover")
+		push_warning("Failed to download cover")
 		return
 	change_cover(filename)
 
@@ -93,7 +93,7 @@ func ensure_download_dir_exists():
 	var dir = Directory.new()
 	if dir.open(download_dir_path) != OK:
 		if dir.make_dir(download_dir_path) != OK:
-			print("Couldn't create cache dir")
+			push_warning("Couldn't create cache dir")
 
 func clear_cache():
 	var dir = Directory.new()
@@ -105,4 +105,4 @@ func clear_cache():
 				dir.remove(file_name)
 			file_name = dir.get_next()
 	else:
-		print("An error occurred when trying to access the path.")
+		push_warning("An error occurred when trying to access the path.")
