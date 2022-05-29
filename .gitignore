@@ -1,7 +1,6 @@
 bin/
 .import/
 export.cfg
-export_presets.cfg
 
 rust/target
 rust/Cargo.lock
