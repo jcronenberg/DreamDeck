@@ -10,9 +10,12 @@ use evdev::{
     InputEventKind::{AbsAxis, Key},
     AbsoluteAxisType,
 };
+use std::fs;
 
-/// Time interval between retrying to connect device
-const RETRY_COOLDOWN: f32 = 1.0;
+/// Time interval between retrying to reconnect device
+const RETRY_TIMER: f32 = 1.0;
+/// The input devices path
+const INPUT_DIR_PATH: &str = "/dev/input/";
 
 /// GrabTouchDevice "class"
 /// Handles all evdev functions and then calls handler functions
@@ -31,6 +34,21 @@ pub struct GrabTouchDevice {
     retry_device: f32,
     /// Name of the currently selected device
     device_name: String,
+    /// Current /dev/input dir, used to detect input device changes
+    input_dir: String,
+}
+
+/// Read content of INPUT_DIR_PATH
+/// Returns a String with all filenames inside
+/// The String is not formatted, since it is used mainly for comparison
+fn read_input_dir() -> String {
+    let paths = fs::read_dir(INPUT_DIR_PATH).unwrap();
+    let mut ret = String::new();
+
+    for path in paths {
+        ret.push_str(path.unwrap().path().to_str().unwrap());
+    }
+    ret
 }
 
 #[methods]
@@ -43,6 +61,7 @@ impl GrabTouchDevice {
             grabbed: false,
             retry_device: 0.0,
             device_name: String::new(),
+            input_dir: read_input_dir(),
         }
     }
 
@@ -165,13 +184,26 @@ impl GrabTouchDevice {
     #[export]
     fn _process(&mut self, owner: &Node, delta: f32) {
         // If not connected, retry to connect
-        // TODO: This approach of just trying to set device isn't very performant
-        //       and hangs the main thread for a bit, rework it in the future
         if !self.grabbed {
+            // Store delta
             self.retry_device += delta;
-            if self.retry_device >= RETRY_COOLDOWN {
+
+            // If cumulative delta is over timer
+            if self.retry_device >= RETRY_TIMER {
+                // Read input dir
+                let new_dir = read_input_dir();
+
+                // Check if input devices changed
+                if self.input_dir != new_dir {
+                    // Store the new input_dir
+                    self.input_dir = read_input_dir();
+
+                    // Try to connect to device
+                    self.set_device(owner, self.device_name.clone());
+                }
+
+                // Reset timer
                 self.retry_device = 0.0;
-                self.set_device(owner, self.device_name.clone());
             }
             return;
         }
@@ -181,19 +213,20 @@ impl GrabTouchDevice {
             Some(device) => {
                 match device.fetch_events() {
                     Ok(iterator) => {
+                        // Make sure we have a handler
                         let handler = match self.handler {
                             Some(handler) => unsafe { handler.assume_safe() },
                             None => { godot_print!("Handler missing"); return },
                         };
+
+                        // Match event
                         for ev in iterator {
-                            if self.grabbed {
-                                if ev.kind() == AbsAxis(AbsoluteAxisType::ABS_X) {
-                                    unsafe { handler.call("x_coord_event", &[Variant::new(ev.value())]) };
-                                } else if ev.kind() == AbsAxis(AbsoluteAxisType::ABS_Y) {
-                                    unsafe { handler.call("y_coord_event", &[Variant::new(ev.value())]) };
-                                } else if ev.kind() == Key(evdev::Key::BTN_TOUCH) {
-                                    unsafe { handler.call("key_event", &[Variant::new(ev.value())]) };
-                                }
+                            if ev.kind() == AbsAxis(AbsoluteAxisType::ABS_X) {
+                                unsafe { handler.call("x_coord_event", &[Variant::new(ev.value())]) };
+                            } else if ev.kind() == AbsAxis(AbsoluteAxisType::ABS_Y) {
+                                unsafe { handler.call("y_coord_event", &[Variant::new(ev.value())]) };
+                            } else if ev.kind() == Key(evdev::Key::BTN_TOUCH) {
+                                unsafe { handler.call("key_event", &[Variant::new(ev.value())]) };
                             }
                         }
                     }
@@ -201,6 +234,7 @@ impl GrabTouchDevice {
                         return;
                     }
                     Err(e) => {
+                        // When we lose the device set grabbed to start trying to reconnect
                         self.grabbed = false;
                         godot_print!("{}", e);
                     }
