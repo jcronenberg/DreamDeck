@@ -9,8 +9,22 @@ var album
 var artist
 var track_name
 var art_url
+var script_path
+
+onready var config_loader = get_node("/root/ConfigLoader")
 
 func _ready():
+	var config_data = config_loader.get_config_data()
+	if config_data.has("spotify_panel"):
+		if config_data["spotify_panel"].has("disabled"):
+			if config_data["spotify_panel"]["disabled"]:
+				queue_free()
+		if config_data["spotify_panel"].has("script_path"):
+			script_path = config_data["spotify_panel"]["script_path"]
+		else:
+			push_error("Spotify_panel script_path not set in config, disabling the panel")
+			queue_free()
+
 	ensure_download_dir_exists()
 	clear_cache()
 	#download_cover("https://i.scdn.co/image/ab67616d0000b273e46a98f61e0510d50a51898f")
