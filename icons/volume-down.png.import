@@ -1,0 +1,13 @@
+[remap]
+
+importer="image"
+type="Image"
+path="res://.import/volume-down.png-fc23174542c223d82a093d4a668a786e.image"
+
+[deps]
+
+source_file="res://icons/volume-down.png"
+dest_files=[ "res://.import/volume-down.png-fc23174542c223d82a093d4a668a786e.image" ]
+
+[params]
+

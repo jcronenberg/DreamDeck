@@ -1,0 +1,13 @@
+[remap]
+
+importer="image"
+type="Image"
+path="res://.import/shuffle_selected.png-538dde7f3b29b255018775ddeb071415.image"
+
+[deps]
+
+source_file="res://icons/shuffle_selected.png"
+dest_files=[ "res://.import/shuffle_selected.png-538dde7f3b29b255018775ddeb071415.image" ]
+
+[params]
+

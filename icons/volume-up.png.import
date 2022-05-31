@@ -1,0 +1,13 @@
+[remap]
+
+importer="image"
+type="Image"
+path="res://.import/volume-up.png-4321c5aa6486691020f696e50c6357d6.image"
+
+[deps]
+
+source_file="res://icons/volume-up.png"
+dest_files=[ "res://.import/volume-up.png-4321c5aa6486691020f696e50c6357d6.image" ]
+
+[params]
+
