@@ -43,4 +43,4 @@ See the following section how to create one.
 First create this directory if it doesn't already exist `~/.local/share/godot/app_userdata/TouchMacroboard` or just start the project once (it will crash without a config)  
 In this path create a `config.json`.
 My personal config can be found [here](https://github.com/jcronenberg/dotfiles/blob/master/various/executable_config.json) for reference.  
-For the Spotify Panel to work you will also need this script: [sp](https://github.com/jcronenberg/dotfiles/blob/master/bin/executable_sp)
+Note: icons need to be stored in `~/.local/share/godot/app_userdata/TouchMacroboard/icons`
