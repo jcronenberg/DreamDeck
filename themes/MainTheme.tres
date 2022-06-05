@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=22 format=2]
+[gd_resource type="Theme" load_steps=24 format=2]
 
 [ext_resource path="res://fonts/Roboto-Regular.tres" type="DynamicFont" id=1]
 
@@ -69,6 +69,15 @@ border_width_left = 2
 border_width_bottom = 2
 border_color = Color( 1, 1, 1, 0.109804 )
 
+[sub_resource type="StyleBoxFlat" id=24]
+bg_color = Color( 1, 1, 1, 0.164706 )
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+expand_margin_left = 6.0
+expand_margin_right = 6.0
+
 [sub_resource type="ImageTexture" id=17]
 
 [sub_resource type="StyleBoxFlat" id=18]
@@ -120,6 +129,13 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
+[sub_resource type="StyleBoxFlat" id=23]
+bg_color = Color( 0.219608, 0.215686, 0.215686, 1 )
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
 [resource]
 default_font = ExtResource( 1 )
 Button/colors/font_color = Color( 1, 1, 1, 1 )
@@ -141,6 +157,8 @@ CheckButton/styles/pressed = SubResource( 14 )
 HSlider/styles/grabber_area = SubResource( 7 )
 HSlider/styles/grabber_area_highlight = SubResource( 8 )
 HSlider/styles/slider = SubResource( 9 )
+LineEdit/styles/focus = SubResource( 24 )
+LineEdit/styles/normal = SubResource( 24 )
 OptionButton/icons/arrow = SubResource( 17 )
 OptionButton/styles/focus = SubResource( 18 )
 OptionButton/styles/hover = SubResource( 16 )
@@ -153,3 +171,5 @@ PopupMenu/icons/radio_checked = SubResource( 21 )
 PopupMenu/icons/radio_unchecked = SubResource( 21 )
 PopupMenu/styles/hover = SubResource( 19 )
 PopupMenu/styles/panel = SubResource( 20 )
+WindowDialog/colors/title_color = Color( 1, 1, 1, 1 )
+WindowDialog/styles/panel = SubResource( 23 )
