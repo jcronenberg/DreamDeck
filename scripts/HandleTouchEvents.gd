@@ -5,15 +5,18 @@ var x_changed: bool = false
 var y_changed: bool = false
 var event_lmb = InputEventMouseButton.new()
 var in_focus: bool = true
+var screen_divide_by: float = 1.0
 
 # Nodes
 onready var grab_touch_devices_script = get_node("/root/GrabTouchDevice")
+onready var config_loader = get_node("/root/ConfigLoader")
 
 func _ready():
 	event_lmb.button_index = 1
-	#grab_touch_devices_script.call("ungrab_device")
-	#grab_touch_devices_script.call("grab_device")
-	#print(device_list)
+	var config_data = config_loader.get_config_data()
+	if config_data.has("settings"):
+		if config_data["settings"].has("screen_divide_by"):
+			screen_divide_by = config_data["settings"]["screen_divide_by"]
 
 # These functions are unfortunately necessary as we need to call
 # call_deferred() otherwise we run into burrow issues
