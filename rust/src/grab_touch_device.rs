@@ -120,6 +120,14 @@ impl GrabTouchDevice {
         self._set_device(owner);
     }
 
+    /// Reconnect device the current device
+    /// This is for a manual call by the handler
+    #[export]
+    fn reconnect_device(&mut self, owner: &Node) {
+        godot_print!("reconnecting device");
+        self.set_device(owner, self.device_name.clone());
+    }
+
     /// Internal function that populates self.device_list
     /// Only devices that support AbsoluteAxisTypes are listed
     fn _get_devices(&mut self) {
