@@ -32,6 +32,8 @@ pub struct GrabTouchDevice {
     grabbed: bool,
     /// Timer for trying to reconnect
     retry_device: f32,
+    /// Flag to try and grab the device for set amount of time
+    try_grab: bool,
     /// Name of the currently selected device
     device_name: String,
     /// Current /dev/input dir, used to detect input device changes
@@ -60,6 +62,7 @@ impl GrabTouchDevice {
             handler: None,
             grabbed: false,
             retry_device: 0.0,
+            try_grab: false,
             device_name: String::new(),
             input_dir: read_input_dir(),
         }
@@ -188,6 +191,14 @@ impl GrabTouchDevice {
             // Store delta
             self.retry_device += delta;
 
+            // Try grabbing the device multiple times when a new device is connected
+            // as sometimes it won't immediately grab the device
+            if self.try_grab && self.retry_device <= RETRY_TIMER / 3.0 {
+                self.set_device(owner, self.device_name.clone());
+            } else if self.try_grab {
+                self.try_grab = false;
+            }
+
             // If cumulative delta is over timer
             if self.retry_device >= RETRY_TIMER {
                 // Read input dir
@@ -197,6 +208,7 @@ impl GrabTouchDevice {
                 if self.input_dir != new_dir {
                     // Store the new input_dir
                     self.input_dir = read_input_dir();
+                    self.try_grab = true;
 
                     // Try to connect to device
                     self.set_device(owner, self.device_name.clone());
