@@ -13,7 +13,7 @@ use evdev::{
 use std::fs;
 
 /// Time interval between retrying to reconnect device
-const RETRY_TIMER: f32 = 1.0;
+const RETRY_TIMER: f32 = 0.5;
 /// The input devices path
 const INPUT_DIR_PATH: &str = "/dev/input/";
 
@@ -201,7 +201,7 @@ impl GrabTouchDevice {
 
             // Try grabbing the device multiple times when a new device is connected
             // as sometimes it won't immediately grab the device
-            if self.try_grab && self.retry_device <= RETRY_TIMER / 3.0 {
+            if self.try_grab && self.retry_device <= RETRY_TIMER / 2.0 {
                 self.set_device(owner, self.device_name.clone());
             } else if self.try_grab {
                 self.try_grab = false;
@@ -256,6 +256,7 @@ impl GrabTouchDevice {
                     Err(e) => {
                         // When we lose the device set grabbed to start trying to reconnect
                         self.grabbed = false;
+                        self.try_grab = true;
                         godot_print!("{}", e);
                     }
                 }
