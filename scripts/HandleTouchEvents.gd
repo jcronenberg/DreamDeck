@@ -30,12 +30,12 @@ func set_device(device_name):
 	grab_touch_devices_script.call("set_device", device_name)
 
 func x_coord_event(new_x):
-	event_lmb.position.x = new_x
+	event_lmb.position.x = new_x / screen_divide_by
 	x_changed = true
 	handle_event()
 
 func y_coord_event(new_y):
-	event_lmb.position.y = new_y
+	event_lmb.position.y = new_y / screen_divide_by
 	y_changed = true
 	handle_event()
 
