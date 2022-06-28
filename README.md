@@ -1,5 +1,7 @@
 # TouchMacroboard
 A macroboard for a seperate touchscreen monitor using Godot and Rust.
+![image](https://user-images.githubusercontent.com/54934253/176308133-d2021cba-7299-4c8d-98f1-345ecb294dc1.png)
+
 
 ## Description
 This project's goal is to provide an application that let's you use a touchscreen monitor as a macroboard on Linux. It let's you launch programs, execute shell scripts etc.  
