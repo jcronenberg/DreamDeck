@@ -1,5 +1,5 @@
 # TouchMacroboard
-A macroboard for a seperate touchscreen monitor using Godot and Rust.
+A macroboard for a seperate touchscreen monitor on linux using Godot and Rust.
 ![image](https://user-images.githubusercontent.com/54934253/176308133-d2021cba-7299-4c8d-98f1-345ecb294dc1.png)
 
 
