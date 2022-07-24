@@ -96,7 +96,6 @@ margin_bottom = 888.0
 size_flags_vertical = 4
 
 [node name="UserInputPopup" parent="." instance=ExtResource( 7 )]
-visible = false
 
 [connection signal="item_selected" from="VSeparator/ControlsSeparator/DeviceOptions" to="VSeparator/ControlsSeparator/DeviceOptions" method="_on_DeviceOptions_item_selected"]
 [connection signal="pressed" from="VSeparator/ControlsSeparator/ReconnectButton" to="VSeparator/ControlsSeparator/ReconnectButton" method="_on_ReconnectButton_pressed"]

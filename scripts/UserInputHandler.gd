@@ -38,7 +38,7 @@ func create_dialog(description, placeholder) -> bool:
 func hide():
 	popup.hide()
 	hide_warning()
-	popup_opened = true
+	popup_opened = false
 
 func show_warning(warning):
 	popup.show_warning(warning)
