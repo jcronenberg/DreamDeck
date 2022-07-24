@@ -90,8 +90,6 @@ corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
 [sub_resource type="StyleBoxFlat" id=16]
-content_margin_left = 50.0
-content_margin_right = 50.0
 bg_color = Color( 1, 1, 1, 0.109804 )
 corner_radius_top_left = 4
 corner_radius_top_right = 4

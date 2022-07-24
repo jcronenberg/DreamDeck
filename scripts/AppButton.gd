@@ -37,6 +37,7 @@ func show_only_icon():
 	$Icon.margin_left = 20
 	$Icon.margin_right = -20
 	$AppName.visible = false
+	$AppName.autowrap = true
 
 func show_name_with_icon():
 	$Icon.margin_bottom = -50
