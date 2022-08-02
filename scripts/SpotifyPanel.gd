@@ -56,10 +56,10 @@ var cur_device_data # Current device data, used to check if changes happened
 var internal_config_data
 var config_completed: bool = false # Stop all calls while we setup the config
 var input_stage: int = 0 # At what stage the input is, since we have to ask for 3 user inputs
+var input_scene
 
 # Nodes
 onready var config_loader = get_node("/root/ConfigLoader")
-onready var user_input_handler = get_node("/root/UserInputHandler")
 onready var http_get = get_node("HTTPGet")
 onready var http_post = get_node("HTTPPost")
 
@@ -116,9 +116,11 @@ func load_configs():
 
 # Creates the first dialog and connects the functions
 func create_config():
-	user_input_handler.create_dialog("Client ID", "Client ID")
-	user_input_handler.connect("apply_text", self, "_on_text_config")
-	user_input_handler.connect("cancelled", self, "_on_config_cancel")
+	input_scene = load("res://scenes/UserInputPopup.tscn").instance()
+	get_node("/root/Main/InputCenterContainer").add_child(input_scene)
+	input_scene.create_dialog("Client ID", "Client ID")
+	input_scene.connect("apply_text", self, "_on_text_config")
+	input_scene.connect("cancelled", self, "_on_config_cancel")
 
 
 # If the user prematurely cancels we delete the object
@@ -139,8 +141,7 @@ func _on_text_config(text):
 	# 1st state: client_id
 	if input_stage == 0:
 		client_id = text
-		user_input_handler.hide()
-		user_input_handler.create_dialog("Client Secret", "Client Secret")
+		input_scene.create_dialog("Client Secret", "Client Secret")
 		input_stage = 1
 	elif input_stage == 1:
 		client_secret = text
@@ -151,16 +152,15 @@ func _on_text_config(text):
 			+ scope \
 			+ "&redirect_uri=" \
 			+ redirect_uri
-		user_input_handler.hide()
-		user_input_handler.create_dialog("Click this [url=" \
+		input_scene.create_dialog("Click this [url=" \
 			+ link \
 			+ "]link[/url] and authorize your account\nThen paste the url here:", \
 			  "Url e.g. like: http://localhost:8888/callback?code=...")
 		input_stage = 2
 	elif input_stage == 2:
-		user_input_handler.hide()
-		user_input_handler.disconnect("apply_text", self, "_on_text_config")
-		user_input_handler.disconnect("cancelled", self, "_on_config_cancel")
+		input_scene.hide()
+		input_scene.disconnect("apply_text", self, "_on_text_config")
+		input_scene.disconnect("cancelled", self, "_on_config_cancel")
 		finalize_config(text)
 
 

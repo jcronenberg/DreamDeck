@@ -12,6 +12,7 @@ func hide():
 
 func create_dialog(description, placeholder):
 	$MarginContainer/VBoxContainer/VBoxContainer/AboveText.bbcode_text = "[center]" + description + "[/center]"
+	$MarginContainer/VBoxContainer/LineEdit.text = ""
 	$MarginContainer/VBoxContainer/LineEdit.placeholder_text = placeholder
 	show()
 
@@ -35,5 +36,4 @@ func _on_LineEdit_text_entered(new_text):
 
 
 func _on_AboveText_meta_clicked(meta):
-	var args = [meta]
-	OS.execute("xdg-open", args)
+	OS.shell_open(meta)
