@@ -4,18 +4,13 @@ export var app: String
 export var arguments: PoolStringArray
 export var app_name: String
 export var icon_path: String
-export var straight_shell: bool = false
 export var show_app_name: bool = false
 
-var final_arguments: PoolStringArray
 
 func _ready():
 	apply_change()
 
 func apply_change():
-	final_arguments = arguments
-	if !straight_shell:
-		final_arguments.insert(0, app)
 	if icon_path:
 		set_logo()
 	elif app_name:
@@ -51,10 +46,7 @@ func show_name_with_icon():
 	$AppName.visible = true
 
 func _on_AppButton_pressed():
-	if straight_shell:
-		OS.execute(app, final_arguments, false)
-	else:
-		OS.execute("nohup", final_arguments, false)
+	OS.execute(app, arguments, false)
 
 func save():
 	var save_dict = {
@@ -62,7 +54,6 @@ func save():
 		"arguments" : arguments,
 		"app_name" : app_name,
 		"icon_path" : icon_path,
-		"straight_shell" : straight_shell,
 		"show_app_name" : show_app_name
 	}
 	return save_dict
