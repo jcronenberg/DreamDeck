@@ -1,31 +1,33 @@
 extends Control
 
-# Script stuff TODO remove
+# Script stuff
 var download_dir_path = OS.get_user_data_dir() + "/cache"
 
 # Metadata refresh timer
 var METADATA_REFRESH := 1.0 # state_refresh needs to be not evenly divisible by this
 var metadata_delta := 1.0
 # Device refresh timers
-var DEVICES_REFRESH := 5.1 # TODO this is pretty ugly. Implement a queue
-var devices_delta := 4.1
-# Skips one metadata update, useful e.g. play/pause button
-# as if we don't skip it can end up being updated by the metadata refresh
+var DEVICES_REFRESH := 5.2 # TODO this is pretty ugly. Implement a queue
+var devices_delta := 4.0
+# Skips one metadata update, useful for e.g. play/pause button
+# as if we don't skip, it can end up being updated by the metadata refresh to the wrong state
 var wait_to_update: bool = false
 
 # Repeat resources
+# States
 const repeat_modes = [
 	"off",
 	"context",
 	"track"
 	]
+# Texture resources
 var repeat_textures = [
 	load("res://resources/repeat.tres"),
 	load("res://resources/repeat_selected.tres"),
 	load("res://resources/repeat_1_selected.tres")
 ]
 
-# Spotify API
+# Spotify API variables
 var refresh_token: String # The token with which a new access_token can be generated
 var access_token: String # The token with which the requests get made, expires after 1 hour
 var client_id: String # The client_id provided by the spotify_app by the user
@@ -48,9 +50,9 @@ var artist: String
 var track_name: String
 var art_url: String
 # Devices
-var device_list := []
-var playback_active := true
 var cur_device_data # Current device data, used to check if changes happened
+var device_list := []
+var playback_active := true # This gets set to false when the api doesn't provide playback-state anymore
 
 # Config vars
 var internal_config_data
@@ -59,9 +61,10 @@ var input_stage: int = 0 # At what stage the input is, since we have to ask for 
 var input_scene
 
 # Nodes
-onready var config_loader = get_node("/root/ConfigLoader")
-onready var http_get = get_node("HTTPGet")
-onready var http_post = get_node("HTTPPost")
+onready var config_loader := get_node("/root/ConfigLoader")
+onready var http_get := get_node("HTTPGet")
+onready var http_post := get_node("HTTPPost")
+onready var http_get_devices := get_node("HTTPGetDevices")
 
 func _ready():
 	# Ensure prerequisites exist
@@ -74,7 +77,10 @@ func _ready():
 	clear_cache()
 
 	# Setup for requests
+# warning-ignore:return_value_discarded
 	http_get.connect("request_completed", self, "_on_get_request_completed")
+# warning-ignore:return_value_discarded
+	http_get_devices.connect("request_completed", self, "_on_get_request_completed")
 
 
 func _physics_process(delta):
@@ -85,9 +91,9 @@ func _physics_process(delta):
 		request_state()
 		metadata_delta = 0.0
 	devices_delta += delta
-	if devices_delta >= DEVICES_REFRESH:
+	if devices_delta >= DEVICES_REFRESH and access_token:
 		var headers = ["Authorization: Bearer " + access_token, "Content-Type: application/json"]
-		send_get_command(base_api_url + "/me/player/devices", headers)
+		http_get_devices.request(base_api_url + "/me/player/devices", headers, true, 0, "")
 		devices_delta = 0.0
 
 
@@ -97,6 +103,11 @@ func load_configs():
 	if config_data.has("spotify_panel"):
 		if config_data["spotify_panel"].has("disabled"):
 			if config_data["spotify_panel"]["disabled"]:
+				queue_free()
+		if config_data["spotify_panel"].has("legacy"):
+			if config_data["spotify_panel"]["legacy"]:
+				var legacy_instance = load("res://scenes/SpotifyPanelLegacy.tscn").instance()
+				get_parent().call_deferred("add_child", legacy_instance)
 				queue_free()
 		if config_data["spotify_panel"].has("refresh_interval"):
 			METADATA_REFRESH = config_data["spotify_panel"]["refresh_interval"]
@@ -252,8 +263,9 @@ func _on_get_request_completed(_result, response_code, _headers, body):
 		return
 	# Error handling/Unexpected response
 	elif response_code != 200:
-		print("Unexpected response code: " + str(response_code))
-		print("Body: " + body.get_string_from_utf8())
+		if OS.has_feature("editor"):
+			print("Unexpected response code: " + str(response_code))
+			print("Body: " + body.get_string_from_utf8())
 		return
 
 	# body handling
@@ -348,7 +360,8 @@ func set_song_state(data):
 # only that it checks if the http client is free
 func send_get_command(url, headers, method=0, body=""):
 	if http_get.get_http_client_status() != 0:
-		push_warning("You're sending signals faster than we can handle")
+		if OS.has_feature("editor"):
+			push_warning("You're sending signals faster than we can handle")
 		return
 	http_get.request(url, headers, true, method, body)
 
@@ -360,7 +373,8 @@ func send_get_command(url, headers, method=0, body=""):
 func send_command(endpoint, method, no_update=true, body=""):
 	# TODO maybe create a queue
 	if http_post.get_http_client_status() != 0:
-		push_warning("You're sending signals faster than we can handle")
+		if OS.has_feature("editor"):
+			push_warning("You're sending signals faster than we can handle")
 		return
 	wait_to_update = no_update
 	var headers
@@ -375,6 +389,7 @@ func send_command(endpoint, method, no_update=true, body=""):
 func download_cover():
 	var filename = art_url.right(art_url.find_last("/") + 1) + ".jpeg"
 	var args: PoolStringArray = ["-O", download_dir_path + "/" + filename]
+# warning-ignore:return_value_discarded
 	args.insert(0, art_url)
 	if OS.execute("wget", args):
 		push_warning("Failed to download cover")
