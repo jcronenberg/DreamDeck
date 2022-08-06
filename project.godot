@@ -14,6 +14,9 @@ config/name="TouchMacroboard"
 run/main_scene="res://scenes/Main.tscn"
 run/low_processor_mode=true
 run/low_processor_mode_sleep_usec=20700
+boot_splash/show_image=false
+boot_splash/fullsize=false
+boot_splash/use_filter=false
 config/icon="res://icon.png"
 
 [autoload]
@@ -31,7 +34,63 @@ settings/fps/force_fps=30
 window/size/width=1920
 window/size/height=1080
 window/size/fullscreen=true
+window/vsync/use_vsync=false
 window/energy_saving/keep_screen_on=false
+
+[input]
+
+ui_accept={
+"deadzone": 0.5,
+"events": [  ]
+}
+ui_select={
+"deadzone": 0.5,
+"events": [  ]
+}
+ui_cancel={
+"deadzone": 0.5,
+"events": [  ]
+}
+ui_focus_next={
+"deadzone": 0.5,
+"events": [  ]
+}
+ui_focus_prev={
+"deadzone": 0.5,
+"events": [  ]
+}
+ui_left={
+"deadzone": 0.5,
+"events": [  ]
+}
+ui_right={
+"deadzone": 0.5,
+"events": [  ]
+}
+ui_up={
+"deadzone": 0.5,
+"events": [  ]
+}
+ui_down={
+"deadzone": 0.5,
+"events": [  ]
+}
+ui_page_up={
+"deadzone": 0.5,
+"events": [  ]
+}
+ui_page_down={
+"deadzone": 0.5,
+"events": [  ]
+}
+ui_home={
+"deadzone": 0.5,
+"events": [  ]
+}
+ui_end={
+"deadzone": 0.5,
+"events": [  ]
+}
 
 [physics]
 
