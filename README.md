@@ -1,4 +1,4 @@
-# TouchMacroboard
+# DreamDeck
 A macroboard for a seperate touchscreen monitor on linux using Godot and Rust.
 ![image](https://user-images.githubusercontent.com/54934253/176308133-d2021cba-7299-4c8d-98f1-345ecb294dc1.png)
 
@@ -20,9 +20,9 @@ You will need rust/cargo and godot 3.
 ```bash
 # Download
 ## Clone the project
-git clone https://github.com/jcronenberg/TouchMacroboard
-## cd into project
-cd TouchMacroboard
+git clone https://github.com/jcronenberg/DreamDeck
+## cd into the project
+cd DreamDeck
 
 # Building the rust library
 ## cd to rust dir
@@ -42,7 +42,7 @@ The binary can now be found in `bin/`
 See the following section how to create one.
 
 ### Creating a config file
-First create this directory if it doesn't already exist `~/.local/share/godot/app_userdata/TouchMacroboard` or just start the project once (it will crash without a config)  
+First create this directory if it doesn't already exist `~/.local/share/godot/app_userdata/DreamDeck` or just start the project once (it will crash without a config)  
 In this path create a `config.json`.
 My personal config can be found [here](https://github.com/jcronenberg/dotfiles/blob/master/various/executable_config.json) for reference.  
-Note: icons need to be stored in `~/.local/share/godot/app_userdata/TouchMacroboard/icons`
+Note: icons need to be stored in `~/.local/share/godot/app_userdata/DreamDeck/icons`

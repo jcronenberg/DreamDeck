@@ -5,7 +5,7 @@
 # instance of the Spotify Linux client over dbus, providing an interface not
 # unlike mpc.
 #
-# This is a modified version for use with the TouchMacroboard application
+# This is a modified version for use with the DreamDeck application
 #
 # Copyright (C) 2013 Wander Nauta
 #

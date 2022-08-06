@@ -10,7 +10,7 @@ config_version=4
 
 [application]
 
-config/name="TouchMacroboard"
+config/name="DreamDeck"
 run/main_scene="res://scenes/Main.tscn"
 run/low_processor_mode=true
 run/low_processor_mode_sleep_usec=20700

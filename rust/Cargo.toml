@@ -1,5 +1,5 @@
 [package]
-name = "touch_macroboard_rust_lib"
+name = "dreamdeck"
 version = "0.1.0"
 edition = "2021"
 
