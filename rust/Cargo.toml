@@ -10,5 +10,5 @@ crate-type = ["cdylib"]
 
 [dependencies]
 evdev = "0.11.4"
-gdnative = "0.10"
+gdnative = { git = "https://github.com/godot-rust/godot-rust.git", features = ["custom-godot"] }
 nix = "0.23.1"
