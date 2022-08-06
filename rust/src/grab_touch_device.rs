@@ -193,7 +193,7 @@ impl GrabTouchDevice {
 
     /// Godot _process function
     #[export]
-    fn _process(&mut self, owner: &Node, delta: f32) {
+    fn _physics_process(&mut self, owner: &Node, delta: f32) {
         // If not connected, retry to connect
         if !self.grabbed {
             // Store delta
