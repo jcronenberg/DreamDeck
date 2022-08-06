@@ -36,4 +36,5 @@ func _on_LineEdit_text_entered(new_text):
 
 
 func _on_AboveText_meta_clicked(meta):
+# warning-ignore:return_value_discarded
 	OS.shell_open(meta)

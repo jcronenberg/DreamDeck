@@ -47,6 +47,7 @@ func show_name_with_icon():
 	$AppName.visible = true
 
 func _on_AppButton_pressed():
+# warning-ignore:return_value_discarded
 	OS.execute(app, arguments, false)
 
 func save():
