@@ -41,6 +41,38 @@ func load_config(path):
 	return config_data
 
 
+func plugin_validation(name: String) -> String:
+	var conf_dir_path: String = "user://plugins/" + name
+	var conf_path: String = conf_dir_path + "/config.json"
+	ensure_dir_exists(conf_dir_path)
+	return conf_path
+
+
+# Get a plugin's config
+# If no config is present, it creates the file and returns an empty dict
+# name: Name of the plugin, for reading/creating the correct dir in user://plugins/
+func get_plugin_config(name: String):
+	var conf_path := plugin_validation(name)
+	return load_config(conf_path)
+
+
+# Save new data to the plugin's config file
+# Old data is completely overwritten, so the caller should make sure all data is present
+# name: Name of the plugin, for writing/creating the correct dir in user://plugins/
+# new_data: The data to be written, should be parseable by to_json
+func save_plugin_config(name: String, new_data) -> bool:
+	var conf_path := plugin_validation(name)
+	var config_file = File.new()
+
+	# Save new_data
+	if config_file.open(conf_path, File.WRITE) != OK:
+		push_error("Couldn't create plugin config file for: " + name)
+		return false
+	config_file.store_line(to_json(new_data))
+
+	return true
+
+
 func get_config_data():
 	return data
 
