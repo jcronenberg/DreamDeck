@@ -65,5 +65,5 @@ func save_internal_config(new_data):
 func ensure_dir_exists(path):
 	var dir = Directory.new()
 	if dir.open(path) != OK:
-		if dir.make_dir(path) != OK:
+		if dir.make_dir_recursive(path) != OK:
 			push_warning("Couldn't create " + path + " dir")
