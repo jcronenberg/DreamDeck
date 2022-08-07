@@ -124,7 +124,6 @@ impl GrabTouchDevice {
     /// This is for a manual call by the handler
     #[export]
     fn reconnect_device(&mut self, owner: &Node) {
-        godot_print!("reconnecting device");
         self.set_device(owner, self.device_name.clone());
     }
 

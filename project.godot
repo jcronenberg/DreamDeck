@@ -24,7 +24,6 @@ config/icon="res://resources/general/dreamdeck_icon.png"
 
 ConfigLoader="*res://scripts/ConfigLoader.gd"
 HandleTouchEvents="*res://scripts/HandleTouchEvents.gd"
-GrabTouchDevice="*res://rust/GrabTouchDevice.gdns"
 
 [debug]
 

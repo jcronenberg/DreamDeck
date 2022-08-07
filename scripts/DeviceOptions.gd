@@ -3,11 +3,10 @@ extends OptionButton
 var device_list: Array
 var default_device: String
 
-onready var grab_touch_devices_script = get_node("/root/GrabTouchDevice")
 onready var handler = get_node("/root/HandleTouchEvents")
 onready var config_loader = get_node("/root/ConfigLoader")
 
-func get_items():
+func get_items(grab_touch_devices_script):
 	device_list = grab_touch_devices_script.call("get_devices")
 	self.clear()
 	self.add_item("Devices")
@@ -33,7 +32,11 @@ func set_default_device():
 	handler.call_deferred("set_device", default_device)
 
 func _ready():
-	get_items()
+	var grab_touch_devices_script = handler.get_grab_touch_devices_script()
+	if not grab_touch_devices_script:
+		queue_free()
+		return
+	get_items(grab_touch_devices_script)
 	set_default_device()
 
 

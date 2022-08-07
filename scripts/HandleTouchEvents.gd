@@ -8,15 +8,28 @@ var in_focus: bool = true
 var screen_divide_by: float = 1.0
 
 # Nodes
-onready var grab_touch_devices_script = get_node("/root/GrabTouchDevice")
+var grab_touch_devices_script
 onready var config_loader = get_node("/root/ConfigLoader")
 
 func _ready():
 	event_lmb.button_index = 1
 	var config_data = config_loader.get_config_data()
 	if config_data.has("settings"):
+		if config_data["settings"].has("enable_touch"):
+			if config_data["settings"]["enable_touch"]:
+				grab_touch_devices_script = load("res://rust/GrabTouchDevice.gdns").new()
+				add_child(grab_touch_devices_script)
 		if config_data["settings"].has("screen_divide_by"):
 			screen_divide_by = config_data["settings"]["screen_divide_by"]
+
+
+func reconnect_device():
+	grab_touch_devices_script.call("reconnect_device")
+
+
+func get_grab_touch_devices_script():
+	return grab_touch_devices_script
+
 
 # These functions are unfortunately necessary as we need to call
 # call_deferred() otherwise we run into burrow issues
