@@ -1,5 +1,8 @@
 extends Control
 
+# Plugin
+const PLUGIN_NAME = "SpotifyPanel"
+
 # Script stuff
 var download_dir_path = OS.get_user_data_dir() + "/cache"
 
@@ -55,7 +58,7 @@ var device_list := []
 var playback_active := true # This gets set to false when the api doesn't provide playback-state anymore
 
 # Config vars
-var internal_config_data
+var plugin_config
 var config_completed: bool = false # Stop all calls while we setup the config
 var input_stage: int = 0 # At what stage the input is, since we have to ask for 3 user inputs
 var input_scene
@@ -115,11 +118,11 @@ func load_configs():
 			# Add + 0.1 to offset it a bit to METADATA_REFRESH
 			DEVICES_REFRESH = config_data["spotify_panel"]["refresh_interval"] * 3 + 0.1
 
-	# Load internal config
-	internal_config_data = config_loader.get_internal_config_data()
-	if internal_config_data.has("spotify_panel"):
-		refresh_token = internal_config_data["spotify_panel"]["refresh_token"]
-		encoded_client = internal_config_data["spotify_panel"]["encoded_client"]
+	# Load plugin config
+	plugin_config = config_loader.get_plugin_config(PLUGIN_NAME)
+	if plugin_config:
+		refresh_token = plugin_config["refresh_token"]
+		encoded_client = plugin_config["encoded_client"]
 		config_completed = true
 	else:
 		create_config()
@@ -283,12 +286,12 @@ func _on_get_request_completed(_result, response_code, _headers, body):
 		# Set vars
 		refresh_token = json_result["refresh_token"]
 		access_token = json_result["access_token"]
-		# Add to internal_config_data
-		internal_config_data["spotify_panel"] = {}
-		internal_config_data["spotify_panel"]["refresh_token"] = refresh_token
-		internal_config_data["spotify_panel"]["encoded_client"] = encoded_client
-		# Save internal_config_data
-		config_loader.save_internal_config(internal_config_data)
+		# Add to plugin_config
+		plugin_config = {}
+		plugin_config["refresh_token"] = refresh_token
+		plugin_config["encoded_client"] = encoded_client
+		# Save plugin_config
+		config_loader.save_plugin_config(PLUGIN_NAME, plugin_config)
 	# POST /api/token refresh_token result
 	elif json_result.has("access_token"):
 		access_token = json_result["access_token"]
