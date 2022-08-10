@@ -108,10 +108,12 @@ func load_configs():
 			if config_data["spotify_panel"]["disabled"]:
 				queue_free()
 		if config_data["spotify_panel"].has("legacy"):
-			if config_data["spotify_panel"]["legacy"]:
+			if config_data["spotify_panel"]["legacy"] and OS.get_name() == "X11":
 				var legacy_instance = load("res://plugins/SpotifyPanelLegacy/scenes/SpotifyPanelLegacy.tscn").instance()
 				get_parent().call_deferred("add_child", legacy_instance)
 				queue_free()
+			elif (config_data["spotify_panel"]["legacy"]):
+				push_error("You have enabled the spotify legacy version on a non linux platform. This doesn't work, ignoring.")
 		if config_data["spotify_panel"].has("refresh_interval"):
 			METADATA_REFRESH = config_data["spotify_panel"]["refresh_interval"]
 			# We don't need to refresh devices as often
