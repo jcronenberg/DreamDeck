@@ -16,9 +16,11 @@ func _ready():
 	var config_data = config_loader.get_config_data()
 	if config_data.has("settings"):
 		if config_data["settings"].has("enable_touch"):
-			if config_data["settings"]["enable_touch"]:
+			if config_data["settings"]["enable_touch"] and OS.get_name() == "X11":
 				grab_touch_devices_script = load("res://rust/GrabTouchDevice.gdns").new()
 				add_child(grab_touch_devices_script)
+			elif (config_data["settings"]["enable_touch"]):
+				push_error("You have touch enabled, but touch is only available on Linux systems")
 		if config_data["settings"].has("screen_divide_by"):
 			screen_divide_by = config_data["settings"]["screen_divide_by"]
 
