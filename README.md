@@ -45,3 +45,14 @@ The program will crash without a configuration present, see the following sectio
 First create this directory if it doesn't already exist `~/.local/share/godot/app_userdata/DreamDeck` or just start the project once (it will crash without a config)  
 Here you will have to create some config files, see this [link](https://github.com/jcronenberg/dotfiles/tree/master/various/DreamDeck) for an example configuration. Copy those files into the above directory and modify them to fit your needs.  
 Note: icons need to be stored in `~/.local/share/godot/app_userdata/DreamDeck/icons` the path in `plugins/Macroboard/config` is relative to that directory.
+
+## Plugins
+### Connect to Spotify's API
+1. Go to the [Spotify dashboard](https://developer.spotify.com/dashboard/applications)
+1. Click `Create an app`
+    - You now can see your `Client ID` and `Client Secret`
+1. Now click `Edit Settings`
+1. Add `http://localhost:8888/callback` to the Redirect URIs
+1. Scroll down and click `Save`
+1. You are now ready to authenticate with Spotify!
+1. Follow instructions shown by DreamDeck
