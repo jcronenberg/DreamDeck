@@ -3,8 +3,8 @@ extends Control
 # Plugin
 const PLUGIN_NAME = "SpotifyPanel"
 
-# Script stuff
-var download_dir_path = OS.get_user_data_dir() + "/cache"
+# Download cache
+var cache_dir_path: String = OS.get_user_data_dir() + "/cache"
 
 # Metadata refresh timer
 var METADATA_REFRESH := 1.0 # state_refresh needs to be not evenly divisible by this
@@ -24,7 +24,7 @@ const repeat_modes = [
 	"track"
 	]
 # Texture resources
-var repeat_textures = [
+var repeat_textures := [
 	load("res://resources/SpotifyPanel/repeat.tres"),
 	load("res://resources/SpotifyPanel/repeat_selected.tres"),
 	load("res://resources/SpotifyPanel/repeat_1_selected.tres")
@@ -63,6 +63,26 @@ var config_completed: bool = false # Stop all calls while we setup the config
 var input_stage: int = 0 # At what stage the input is, since we have to ask for 3 user inputs
 var input_scene
 
+# Config stage texts
+var config_stage1_text: String = "No existing configuration for the Spotify Panel found\n" \
+								 + "You need to create a developer application\n" \
+								 + "Instructions can be found [url=" \
+								 + "https://github.com/jcronenberg/DreamDeck#connect-to-spotifys-api" \
+								 + "]here[/url]\n\n" \
+								 + "Enter the Client ID"
+var config_stage2_text: String = "Enter the Client Secret"
+func create_auth_link() -> String:
+	return "https://accounts.spotify.com/authorize?client_id=" \
+		+ client_id \
+		+ "&response_type=code&scope=" \
+		+ scope \
+		+ "&redirect_uri=" \
+		+ redirect_uri
+func config_stage3_text() -> String:
+	return "Click this [url=" \
+		   + create_auth_link() \
+		   + "]link[/url] and authorize your account\nThen paste the url here:"
+
 # Nodes
 onready var config_loader := get_node("/root/ConfigLoader")
 onready var http_get := get_node("HTTPGet")
@@ -71,7 +91,7 @@ onready var http_get_devices := get_node("HTTPGetDevices")
 
 func _ready():
 	# Ensure prerequisites exist
-	ensure_dir_exists(download_dir_path)
+	ensure_dir_exists(cache_dir_path)
 
 	# Load configs
 	load_configs()
@@ -100,8 +120,9 @@ func _physics_process(delta):
 		devices_delta = 0.0
 
 
+# Load config from config_loader and apply the settings to local variables
 func load_configs():
-	# Load config
+	# Load global config
 	var config_data = config_loader.get_config_data()
 	if config_data.has("spotify_panel"):
 		if config_data["spotify_panel"].has("disabled"):
@@ -134,7 +155,7 @@ func load_configs():
 func create_config():
 	input_scene = load("res://scenes/UserInputPopup.tscn").instance()
 	get_node("/root/Main/InputCenterContainer").add_child(input_scene)
-	input_scene.create_dialog("Client ID", "Client ID")
+	input_scene.create_dialog(config_stage1_text, "Client ID")
 	input_scene.connect("apply_text", self, "_on_text_config")
 	input_scene.connect("cancelled", self, "_on_config_cancel")
 
@@ -157,21 +178,13 @@ func _on_text_config(text):
 	# 1st state: client_id
 	if input_stage == 0:
 		client_id = text
-		input_scene.create_dialog("Client Secret", "Client Secret")
+		input_scene.create_dialog(config_stage2_text, "Client Secret")
 		input_stage = 1
 	elif input_stage == 1:
 		client_secret = text
 		encoded_client = Marshalls.utf8_to_base64(client_id + ":" + client_secret)
-		var link = "https://accounts.spotify.com/authorize?client_id=" \
-			+ client_id \
-			+ "&response_type=code&scope=" \
-			+ scope \
-			+ "&redirect_uri=" \
-			+ redirect_uri
-		input_scene.create_dialog("Click this [url=" \
-			+ link \
-			+ "]link[/url] and authorize your account\nThen paste the url here:", \
-			  "Url e.g. like: http://localhost:8888/callback?code=...")
+		input_scene.create_dialog(config_stage3_text(), \
+								  "Url e.g. like: http://localhost:8888/callback?code=...")
 		input_stage = 2
 	elif input_stage == 2:
 		input_scene.hide()
@@ -234,13 +247,16 @@ func set_device(device, play=true):
 
 
 func request_authorization():
-	var headers = ["Content-Type: application/x-www-form-urlencoded" ,"Authorization: Basic " + encoded_client]
-	var data = "grant_type=authorization_code&code=" + authorization_code + "&redirect_uri=" + redirect_uri
+	var headers = ["Content-Type: application/x-www-form-urlencoded", \
+				   "Authorization: Basic " + encoded_client]
+	var data = "grant_type=authorization_code&code=" + authorization_code \
+			   + "&redirect_uri=" + redirect_uri
 	send_get_command("https://accounts.spotify.com/api/token", headers, 2, data)
 
 
 func request_new_token():
-	var headers = ["Content-Type: application/x-www-form-urlencoded" ,"Authorization: Basic " + encoded_client]
+	var headers = ["Content-Type: application/x-www-form-urlencoded", \
+				   "Authorization: Basic " + encoded_client]
 	var data = "grant_type=refresh_token&refresh_token=" + refresh_token
 	send_get_command("https://accounts.spotify.com/api/token", headers, 2, data)
 
@@ -393,7 +409,7 @@ func send_command(endpoint, method, no_update=true, body=""):
 # TODO maybe switch to godot download function
 func download_cover():
 	var filename = art_url.right(art_url.find_last("/") + 1) + ".jpeg"
-	var args: PoolStringArray = ["-O", download_dir_path + "/" + filename]
+	var args: PoolStringArray = ["-O", cache_dir_path + "/" + filename]
 # warning-ignore:return_value_discarded
 	args.insert(0, art_url)
 	if OS.execute("wget", args):
@@ -423,11 +439,11 @@ func ensure_dir_exists(path):
 			push_warning("Couldn't create " + path + " dir")
 
 
-# Deletes all files in download_dir_path
+# Deletes all files in cache_dir_path
 # since we don't want to slowly fill the users .local dir
 func clear_cache():
 	var dir = Directory.new()
-	if dir.open(download_dir_path) == OK:
+	if dir.open(cache_dir_path) == OK:
 		dir.list_dir_begin()
 		var file_name = dir.get_next()
 		while file_name != "":
