@@ -87,40 +87,40 @@ text = "Quit"
 script = ExtResource( 7 )
 
 [node name="ElementSeparator" type="HBoxContainer" parent="VSeparator"]
-margin_top = 104.0
+margin_top = 94.0
 margin_right = 1920.0
 margin_bottom = 1080.0
 size_flags_vertical = 3
 
 [node name="MacroMargin" type="MarginContainer" parent="VSeparator/ElementSeparator"]
 margin_right = 1416.0
-margin_bottom = 976.0
+margin_bottom = 986.0
 size_flags_horizontal = 3
 custom_constants/margin_right = 50
-custom_constants/margin_top = 50
+custom_constants/margin_top = 30
 custom_constants/margin_left = 50
 custom_constants/margin_bottom = 50
 
 [node name="Macroboard" parent="VSeparator/ElementSeparator/MacroMargin" instance=ExtResource( 5 )]
 margin_left = 50.0
-margin_top = 50.0
+margin_top = 30.0
 margin_right = 1366.0
-margin_bottom = 926.0
+margin_bottom = 936.0
 size_flags_horizontal = 3
 
 [node name="SpotifyMargin" type="MarginContainer" parent="VSeparator/ElementSeparator"]
 margin_left = 1420.0
 margin_right = 1920.0
-margin_bottom = 976.0
+margin_bottom = 986.0
 size_flags_vertical = 3
 custom_constants/margin_right = 50
 custom_constants/margin_left = 50
 
 [node name="SpotifyPanel" parent="VSeparator/ElementSeparator/SpotifyMargin" instance=ExtResource( 4 )]
 margin_left = 50.0
-margin_top = 88.0
+margin_top = 93.0
 margin_right = 450.0
-margin_bottom = 888.0
+margin_bottom = 893.0
 
 [node name="InputCenterContainer" type="CenterContainer" parent="."]
 anchor_right = 1.0
