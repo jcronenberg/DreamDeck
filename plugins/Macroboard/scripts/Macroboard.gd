@@ -6,6 +6,9 @@ const PLUGIN_NAME = "Macroboard"
 # Global nodes
 onready var config_loader = get_node("/root/ConfigLoader")
 
+# Global vars
+var button_min_size: Vector2 = Vector2(150, 150)
+
 func _ready():
 	load_from_config()
 
@@ -15,7 +18,7 @@ func load_from_config():
 	var data = config_loader.get_plugin_config(PLUGIN_NAME)
 
 	# Load button settings
-	var button_min_size = Vector2(data["button_settings"]["height"], data["button_settings"]["width"])
+	button_min_size = Vector2(data["button_settings"]["height"], data["button_settings"]["width"])
 
 	# Load buttons
 	# Iterate through rows in data
@@ -44,7 +47,8 @@ func load_from_config():
 
 func save():
 	var save_dict = {
-		"layout" : {}
+		"layout" : {},
+		"button_settings": {"height": button_min_size.x, "width": button_min_size.y}
 	}
 	var row_count = 0
 	for rows in $RowSeparator.get_children():
