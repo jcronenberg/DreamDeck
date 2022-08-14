@@ -3,9 +3,6 @@ extends Control
 # Plugin
 const PLUGIN_NAME = "SpotifyPanel"
 
-# Download cache
-var cache_dir_path: String = OS.get_user_data_dir() + "/cache"
-
 # Metadata refresh timer
 var METADATA_REFRESH := 1.0 # state_refresh needs to be not evenly divisible by this
 var metadata_delta := 1.0
@@ -88,6 +85,10 @@ onready var config_loader := get_node("/root/ConfigLoader")
 onready var http_get := get_node("HTTPGet")
 onready var http_post := get_node("HTTPPost")
 onready var http_get_devices := get_node("HTTPGetDevices")
+
+# Download cache
+onready var cache_dir_path: String = config_loader.get_conf_dir() + "cache"
+
 
 func _ready():
 	# Ensure prerequisites exist
@@ -428,7 +429,7 @@ func create_texture_from_image(image_path):
 
 
 func change_cover(filename):
-	var complete_cover_path = "user://cache/" + filename
+	var complete_cover_path = config_loader.get_conf_dir() + "cache/" + filename
 	$Background/AlbumArt.texture = create_texture_from_image(complete_cover_path)
 
 

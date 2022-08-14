@@ -1,10 +1,13 @@
 extends Control
 
+# Global nodes
+onready var config_loader = get_node("/root/ConfigLoader")
+
 onready var worker_thread = Thread.new()
-var download_dir_path = OS.get_user_data_dir() + "/cache"
 var script_res_path = "res://custom_resources/sp"
-var script_user_path = OS.get_user_data_dir() + "/scripts/sp"
-var script_dir_path = OS.get_user_data_dir() + "/scripts"
+onready var download_dir_path = config_loader.get_conf_dir() + "/cache"
+onready var script_user_path = config_loader.get_conf_dir() + "/scripts/sp"
+onready var script_dir_path = config_loader.get_conf_dir() + "/scripts"
 const metadata_refresh = 0.95 # state_refresh needs to be not evenly divisible by this
 const state_refresh = 5.0
 var metadata_delta := 0.0
@@ -31,8 +34,6 @@ var repeat_state: int = 0
 var play_state: bool = false
 var shuffle_state: bool = false
 var volume_state: float = 0.0
-
-onready var config_loader = get_node("/root/ConfigLoader")
 
 func _ready():
 	# Ensure prerequisites exist
@@ -136,7 +137,7 @@ func create_texture_from_image(image_path):
 	return texture
 
 func change_cover(filename):
-	var complete_cover_path = "user://cache/" + filename
+	var complete_cover_path = config_loader.get_conf_dir() + "cache/" + filename
 	$Background/AlbumArt.texture = create_texture_from_image(complete_cover_path)
 
 func ensure_dir_exists(path):

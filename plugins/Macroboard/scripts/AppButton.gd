@@ -6,6 +6,9 @@ export var app_name: String
 export var icon_path: String
 export var show_app_name: bool = false
 
+# Global nodes
+onready var config_loader = get_node("/root/ConfigLoader")
+
 
 func _ready():
 	apply_change()
@@ -25,7 +28,7 @@ func apply_change():
 
 func set_logo():
 	if icon_path:
-		var complete_icon_path = "user://icons/" + icon_path
+		var complete_icon_path = config_loader.get_conf_dir() + "icons/" + icon_path
 		var image = Image.new()
 		image.load(complete_icon_path)
 		var texture = ImageTexture.new()

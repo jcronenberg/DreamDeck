@@ -37,6 +37,10 @@ window/size/fullscreen=true
 window/vsync/use_vsync=false
 window/energy_saving/keep_screen_on=false
 
+[editor]
+
+main_run_args="--confdir=local_config"
+
 [input]
 
 ui_accept={

@@ -4,3 +4,5 @@ export.cfg
 
 rust/target
 rust/Cargo.lock
+
+local_config
