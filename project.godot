@@ -25,6 +25,7 @@ config/windows_native_icon="res://resources/general/dreamdeck_icon.ico"
 
 ConfigLoader="*res://scripts/AutoLoad/ConfigLoader.gd"
 HandleTouchEvents="*res://scripts/AutoLoad/HandleTouchEvents.gd"
+GlobalSignals="*res://scripts/AutoLoad/GlobalSignals.gd"
 
 [debug]
 

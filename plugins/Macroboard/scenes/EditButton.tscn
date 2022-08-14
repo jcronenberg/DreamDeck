@@ -17,5 +17,3 @@ margin_bottom = -30.0
 texture = ExtResource( 2 )
 expand = true
 stretch_mode = 6
-
-[connection signal="pressed" from="." to="." method="_on_AppButton_pressed"]
