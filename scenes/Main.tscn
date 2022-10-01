@@ -10,6 +10,7 @@
 [node name="Main" type="Control"]
 anchor_right = 1.0
 anchor_bottom = 1.0
+theme = ExtResource( 2 )
 
 [node name="VSeparator" type="VBoxContainer" parent="."]
 anchor_right = 1.0
@@ -31,7 +32,6 @@ margin_bottom = 62.0
 rect_min_size = Vector2( 400, 0 )
 size_flags_horizontal = 0
 size_flags_vertical = 4
-theme = ExtResource( 2 )
 text = "Devices"
 align = 1
 script = ExtResource( 3 )
