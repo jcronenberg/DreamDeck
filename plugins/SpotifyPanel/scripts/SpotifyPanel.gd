@@ -4,7 +4,7 @@ extends Control
 const PLUGIN_NAME = "SpotifyPanel"
 
 # Downloader
-const DOWNLOADER = preload("res://scripts/helper/downloader.gd")
+const DOWNLOADER = preload("res://scripts/helper/Downloader.gd")
 # DOWNLOADER instance
 var downloader: DOWNLOADER
 

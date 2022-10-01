@@ -1,11 +1,11 @@
 [gd_scene load_steps=8 format=2]
 
-[ext_resource path="res://scripts/GrabCheckButton.gd" type="Script" id=1]
+[ext_resource path="res://scripts/Main/GrabCheckButton.gd" type="Script" id=1]
 [ext_resource path="res://themes/MainTheme.tres" type="Theme" id=2]
-[ext_resource path="res://scripts/DeviceOptions.gd" type="Script" id=3]
+[ext_resource path="res://scripts/Main/DeviceOptions.gd" type="Script" id=3]
 [ext_resource path="res://plugins/SpotifyPanel/scenes/SpotifyPanel.tscn" type="PackedScene" id=4]
 [ext_resource path="res://plugins/Macroboard/scenes/Macroboard.tscn" type="PackedScene" id=5]
-[ext_resource path="res://scripts/ReconnectButton.gd" type="Script" id=6]
+[ext_resource path="res://scripts/Main/ReconnectButton.gd" type="Script" id=6]
 [ext_resource path="res://scripts/Main/QuitButton.gd" type="Script" id=7]
 
 [node name="Main" type="Control"]

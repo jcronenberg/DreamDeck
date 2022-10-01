@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=2]
 
 [ext_resource path="res://themes/MainTheme.tres" type="Theme" id=1]
-[ext_resource path="res://scripts/UserInputPopup.gd" type="Script" id=2]
+[ext_resource path="res://scripts/UserInputPopup/UserInputPopup.gd" type="Script" id=2]
 
 [node name="UserInputPopup" type="WindowDialog"]
 anchor_left = 0.5
