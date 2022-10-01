@@ -3,6 +3,11 @@ extends Control
 # Plugin
 const PLUGIN_NAME = "SpotifyPanel"
 
+# Downloader
+const DOWNLOADER = preload("res://scripts/helper/downloader.gd")
+# DOWNLOADER instance
+var downloader: DOWNLOADER
+
 # Metadata refresh timer
 var METADATA_REFRESH := 1.0 # state_refresh needs to be not evenly divisible by this
 var metadata_delta := 1.0
@@ -410,12 +415,14 @@ func send_command(endpoint, method, no_update=true, body=""):
 # TODO maybe switch to godot download function
 func download_cover():
 	var filename = art_url.right(art_url.find_last("/") + 1) + ".jpeg"
-	var args: PoolStringArray = ["-O", cache_dir_path + "/" + filename]
-# warning-ignore:return_value_discarded
-	args.insert(0, art_url)
-	if OS.execute("wget", args):
-		push_warning("Failed to download cover")
-		return
+
+	# Set up downloader
+	downloader = DOWNLOADER.new()
+
+	# Download and wait for completion
+	downloader.download(art_url, cache_dir_path + "/" + filename)
+	yield(downloader, "download_completed")
+
 	change_cover(filename)
 
 
