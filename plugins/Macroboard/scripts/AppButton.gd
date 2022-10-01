@@ -26,6 +26,17 @@ func apply_change():
 	else:
 		show_only_icon()
 
+	# Platform specific
+	# If the os is windows we have to run commands like this:
+	# OS.execute("CMD.exe", ["/c", ...])
+	if OS.get_name() == "Windows":
+		var args = ["/c", app]
+		app = "CMD.exe"
+		for arg in arguments:
+			args.append(arg)
+		arguments = args
+
+
 func set_logo():
 	if icon_path:
 		var complete_icon_path = config_loader.get_conf_dir() + "icons/" + icon_path
