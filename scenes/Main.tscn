@@ -35,7 +35,7 @@ custom_constants/separation = 50
 
 [node name="EditModeButton" type="Button" parent="VSeparator/MarginContainer/ControlsSeparator"]
 margin_top = 30.0
-margin_right = 110.0
+margin_right = 100.0
 margin_bottom = 70.0
 rect_min_size = Vector2( 100, 40 )
 size_flags_vertical = 4
@@ -113,6 +113,8 @@ custom_constants/margin_left = 50
 custom_constants/margin_bottom = 50
 
 [node name="Macroboard" parent="VSeparator/ElementSeparator/MacroMargin" instance=ExtResource( 5 )]
+anchor_right = 0.0
+anchor_bottom = 0.0
 margin_left = 50.0
 margin_top = 30.0
 margin_right = 1366.0
