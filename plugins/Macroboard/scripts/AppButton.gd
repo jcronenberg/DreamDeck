@@ -8,6 +8,7 @@ export var show_app_name: bool = false
 
 # Global nodes
 onready var config_loader = get_node("/root/ConfigLoader")
+onready var global_signals = get_node("/root/GlobalSignals")
 
 
 func _ready():
@@ -61,6 +62,16 @@ func show_name_with_icon():
 	$AppName.visible = true
 
 func _on_AppButton_pressed():
+	# If we are in edit mode we don't execute the command, but instead
+	# open the prompt to edit this button
+	if global_signals.get_edit_state():
+		var macroboard = get_parent()
+		while macroboard.name != "Macroboard":
+			macroboard = macroboard.get_parent()
+
+		macroboard.edit_button(self)
+		return
+
 # warning-ignore:return_value_discarded
 	OS.execute(app, arguments, false)
 

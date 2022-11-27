@@ -25,6 +25,7 @@ config/windows_native_icon="res://resources/general/dreamdeck_icon.ico"
 
 ConfigLoader="*res://scripts/AutoLoad/ConfigLoader.gd"
 HandleTouchEvents="*res://scripts/AutoLoad/HandleTouchEvents.gd"
+GlobalSignals="*res://scripts/AutoLoad/GlobalSignals.gd"
 
 [debug]
 
@@ -36,6 +37,8 @@ window/size/width=1920
 window/size/height=1080
 window/size/fullscreen=true
 window/vsync/use_vsync=false
+window/per_pixel_transparency/allowed=true
+window/per_pixel_transparency/enabled=true
 window/energy_saving/keep_screen_on=false
 
 [editor]

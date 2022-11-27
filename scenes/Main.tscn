@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=2]
+[gd_scene load_steps=10 format=2]
 
 [ext_resource path="res://scripts/Main/GrabCheckButton.gd" type="Script" id=1]
 [ext_resource path="res://themes/MainTheme.tres" type="Theme" id=2]
@@ -7,6 +7,8 @@
 [ext_resource path="res://plugins/Macroboard/scenes/Macroboard.tscn" type="PackedScene" id=5]
 [ext_resource path="res://scripts/Main/ReconnectButton.gd" type="Script" id=6]
 [ext_resource path="res://scripts/Main/QuitButton.gd" type="Script" id=7]
+[ext_resource path="res://scripts/Main/EditModeButton.gd" type="Script" id=8]
+[ext_resource path="res://scripts/Main/TransparentBgButton.gd" type="Script" id=9]
 
 [node name="Main" type="Control"]
 anchor_right = 1.0
@@ -32,15 +34,35 @@ size_flags_horizontal = 5
 size_flags_vertical = 0
 custom_constants/separation = 50
 
+[node name="EditModeButton" type="Button" parent="VSeparator/MarginContainer/ControlsSeparator"]
+margin_top = 30.0
+margin_right = 110.0
+margin_bottom = 70.0
+rect_min_size = Vector2( 110, 40 )
+size_flags_vertical = 4
+text = "Edit Mode"
+script = ExtResource( 8 )
+
+[node name="TransparentBgButton" type="Button" parent="VSeparator/MarginContainer/ControlsSeparator"]
+margin_left = 160.0
+margin_top = 30.0
+margin_right = 320.0
+margin_bottom = 70.0
+rect_min_size = Vector2( 160, 40 )
+size_flags_vertical = 4
+text = "Transparent Bg"
+script = ExtResource( 9 )
+
 [node name="LeftSeparator" type="Control" parent="VSeparator/MarginContainer/ControlsSeparator"]
-margin_right = 423.0
+margin_left = 370.0
+margin_right = 608.0
 margin_bottom = 100.0
 size_flags_horizontal = 3
 
 [node name="DeviceOptions" type="OptionButton" parent="VSeparator/MarginContainer/ControlsSeparator"]
-margin_left = 473.0
+margin_left = 658.0
 margin_top = 38.0
-margin_right = 873.0
+margin_right = 1058.0
 margin_bottom = 62.0
 rect_min_size = Vector2( 400, 0 )
 size_flags_horizontal = 0
@@ -50,9 +72,9 @@ align = 1
 script = ExtResource( 3 )
 
 [node name="ReconnectButton" type="Button" parent="VSeparator/MarginContainer/ControlsSeparator"]
-margin_left = 923.0
+margin_left = 1108.0
 margin_top = 38.0
-margin_right = 1063.0
+margin_right = 1248.0
 margin_bottom = 62.0
 rect_min_size = Vector2( 140, 0 )
 size_flags_vertical = 4
@@ -61,8 +83,8 @@ text = "Reconnect"
 script = ExtResource( 6 )
 
 [node name="GrabCheckButton" type="CheckButton" parent="VSeparator/MarginContainer/ControlsSeparator"]
-margin_left = 1113.0
-margin_right = 1257.0
+margin_left = 1298.0
+margin_right = 1442.0
 margin_bottom = 100.0
 theme = ExtResource( 2 )
 pressed = true
@@ -71,7 +93,7 @@ align = 2
 script = ExtResource( 1 )
 
 [node name="RightSeparator" type="Control" parent="VSeparator/MarginContainer/ControlsSeparator"]
-margin_left = 1307.0
+margin_left = 1492.0
 margin_right = 1730.0
 margin_bottom = 100.0
 size_flags_horizontal = 3
@@ -97,13 +119,15 @@ margin_right = 1416.0
 margin_bottom = 976.0
 size_flags_horizontal = 3
 custom_constants/margin_right = 50
-custom_constants/margin_top = 50
+custom_constants/margin_top = 30
 custom_constants/margin_left = 50
 custom_constants/margin_bottom = 50
 
 [node name="Macroboard" parent="VSeparator/ElementSeparator/MacroMargin" instance=ExtResource( 5 )]
+anchor_right = 0.0
+anchor_bottom = 0.0
 margin_left = 50.0
-margin_top = 50.0
+margin_top = 30.0
 margin_right = 1366.0
 margin_bottom = 926.0
 size_flags_horizontal = 3
@@ -127,6 +151,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
 
+[connection signal="pressed" from="VSeparator/MarginContainer/ControlsSeparator/EditModeButton" to="VSeparator/MarginContainer/ControlsSeparator/EditModeButton" method="_on_EditModeButton_pressed"]
+[connection signal="pressed" from="VSeparator/MarginContainer/ControlsSeparator/TransparentBgButton" to="VSeparator/MarginContainer/ControlsSeparator/TransparentBgButton" method="_on_TransparentBgButton_pressed"]
 [connection signal="item_selected" from="VSeparator/MarginContainer/ControlsSeparator/DeviceOptions" to="VSeparator/MarginContainer/ControlsSeparator/DeviceOptions" method="_on_DeviceOptions_item_selected"]
 [connection signal="pressed" from="VSeparator/MarginContainer/ControlsSeparator/ReconnectButton" to="VSeparator/MarginContainer/ControlsSeparator/ReconnectButton" method="_on_ReconnectButton_pressed"]
 [connection signal="toggled" from="VSeparator/MarginContainer/ControlsSeparator/GrabCheckButton" to="VSeparator/MarginContainer/ControlsSeparator/GrabCheckButton" method="_on_GrabCheckButton_toggled"]
