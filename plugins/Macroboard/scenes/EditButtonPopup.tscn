@@ -67,6 +67,8 @@ custom_constants/separation = 14
 margin_right = 200.0
 margin_bottom = 24.0
 rect_min_size = Vector2( 200, 0 )
+hint_tooltip = "The path to the executable e.g. 'firefox' or '/home/example/firefox'"
+mouse_filter = 0
 text = "App"
 align = 2
 
@@ -86,6 +88,8 @@ custom_constants/separation = 14
 margin_right = 200.0
 margin_bottom = 24.0
 rect_min_size = Vector2( 200, 0 )
+hint_tooltip = "Arguments for the executable e.g. '--test example'"
+mouse_filter = 0
 text = "Arguments"
 align = 2
 
@@ -105,6 +109,8 @@ custom_constants/separation = 14
 margin_right = 200.0
 margin_bottom = 24.0
 rect_min_size = Vector2( 200, 0 )
+hint_tooltip = "Name that gets displayed if no icon is set or show_app_name is true"
+mouse_filter = 0
 text = "App Name"
 align = 2
 
@@ -124,6 +130,8 @@ custom_constants/separation = 14
 margin_right = 200.0
 margin_bottom = 24.0
 rect_min_size = Vector2( 200, 0 )
+hint_tooltip = "Relative path to the icon. Icons need to be stored in the config directory in a 'icons' directory."
+mouse_filter = 0
 text = "Icon Path"
 align = 2
 
@@ -143,6 +151,8 @@ custom_constants/separation = 8
 margin_right = 200.0
 margin_bottom = 24.0
 rect_min_size = Vector2( 200, 0 )
+hint_tooltip = "Displays the app_name in a small text below the icon"
+mouse_filter = 0
 text = "Show App Name"
 align = 2
 

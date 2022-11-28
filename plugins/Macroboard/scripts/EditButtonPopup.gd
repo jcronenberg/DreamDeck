@@ -15,7 +15,8 @@ func show_popup(row, pos, button) -> void:
 	cur_row = row
 	cur_pos = pos
 	button_to_edit = button
-	$"%Header".text = "Editing Button on Row: " + str(cur_row) + " Pos: " + str(cur_pos + 1)
+	$"%Header".text = "Editing Button on Row: " + str(cur_row) + " Pos: " + str(cur_pos + 1) + \
+		". Hover for a tooltip"
 	$MarginContainer/Rows/PositionSplit/LineEdit.text = str(cur_pos + 1)
 	if button:
 		fill_from_button_dict(button.save())

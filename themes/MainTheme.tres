@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=27 format=2]
+[gd_resource type="Theme" load_steps=28 format=2]
 
 [ext_resource path="res://fonts/Roboto-Regular.tres" type="DynamicFont" id=1]
 
@@ -131,6 +131,19 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
+[sub_resource type="StyleBoxFlat" id=28]
+bg_color = Color( 1, 1, 1, 1 )
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color( 1, 1, 1, 1 )
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+expand_margin_bottom = 4.0
+
 [sub_resource type="ImageTexture" id=25]
 
 [sub_resource type="ImageTexture" id=26]
@@ -181,6 +194,7 @@ PopupMenu/icons/radio_checked = SubResource( 21 )
 PopupMenu/icons/radio_unchecked = SubResource( 21 )
 PopupMenu/styles/hover = SubResource( 19 )
 PopupMenu/styles/panel = SubResource( 20 )
+TooltipPanel/styles/panel = SubResource( 28 )
 WindowDialog/colors/title_color = Color( 1, 1, 1, 1 )
 WindowDialog/constants/title_height = 0
 WindowDialog/icons/close = SubResource( 25 )
