@@ -79,6 +79,7 @@ func create_add_buttons() -> void:
 	for row in $RowSeparator.get_children():
 		var add_button_instance = add_button.instance()
 		row.add_child(add_button_instance)
+		add_button_instance.set_custom_minimum_size(button_min_size)
 		add_button_instance.row = row_counter
 		row_counter += 1
 
@@ -86,6 +87,7 @@ func create_add_buttons() -> void:
 	var new_row = macro_row.instance()
 	var add_button_instance = add_button.instance()
 	new_row.add_child(add_button_instance)
+	add_button_instance.set_custom_minimum_size(button_min_size)
 	add_button_instance.row = row_counter
 	$RowSeparator.add_child(new_row)
 
