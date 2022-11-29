@@ -111,8 +111,8 @@ impl GrabTouchDevice {
     }
 
     /// Set self.device by specified name
-    #[export]
-    fn set_device(&mut self, owner: &Node, name: String) {
+    #[method]
+    fn set_device(&mut self, #[base] owner: &Node, name: String) {
         self._get_devices();
 
         self.device_name = name;
@@ -122,8 +122,8 @@ impl GrabTouchDevice {
 
     /// Reconnect device the current device
     /// This is for a manual call by the handler
-    #[export]
-    fn reconnect_device(&mut self, owner: &Node) {
+    #[method]
+    fn reconnect_device(&mut self, #[base] owner: &Node) {
         self.set_device(owner, self.device_name.clone());
     }
 
@@ -143,8 +143,8 @@ impl GrabTouchDevice {
     }
 
     /// Get all devices that support AbsoluteAxisTypes
-    #[export]
-    fn get_devices(&mut self, _owner: &Node) -> Variant {
+    #[method]
+    fn get_devices(&mut self) -> Variant {
         self._get_devices();
 
         let mut device_list_string: Vec<String> = Vec::new();
@@ -161,8 +161,8 @@ impl GrabTouchDevice {
     }
 
     /// Grab the current self.device, set self.grabbed accordingly
-    #[export]
-    fn grab_device(&mut self, _owner: &Node) {
+    #[method]
+    fn grab_device(&mut self, #[base] _owner: &Node) {
         match self.device.as_mut() {
             Some(device) => {
                 device.grab().unwrap();
@@ -173,8 +173,8 @@ impl GrabTouchDevice {
     }
 
     /// Ungrab the current self.device, set self.grabbed accordingly
-    #[export]
-    fn ungrab_device(&mut self, _owner: &Node) {
+    #[method]
+    fn ungrab_device(&mut self, #[base] _owner: &Node) {
         match self.device.as_mut() {
             Some(device) => {
                 device.ungrab().unwrap();
@@ -185,14 +185,14 @@ impl GrabTouchDevice {
     }
 
     /// Godot _ready function
-    #[export]
-    fn _ready(&mut self, owner: &Node) {
+    #[method]
+    fn _ready(&mut self, #[base] owner: &Node) {
         self.handler = Some(Node::get_node(owner, NodePath::from_str("/root/HandleTouchEvents")).unwrap());
     }
 
     /// Godot _process function
-    #[export]
-    fn _physics_process(&mut self, owner: &Node, delta: f32) {
+    #[method]
+    fn _physics_process(&mut self, #[base] owner: &Node, delta: f32) {
         // If not connected, retry to connect
         if !self.grabbed {
             // Store delta
