@@ -70,10 +70,10 @@ impl GrabTouchDevice {
 
     /// Internal function to set self.device by specified id
     /// id needs to be a valid id for evdev::enumerate()
-    fn _set_device(&mut self, owner: &Node) {
+    fn _set_device(&mut self) {
         // Ensure that if a device is already grabbed we ungrab it first
         if self.grabbed {
-            self.ungrab_device(owner);
+            self.ungrab_device();
         }
 
         // Get id from device_list by matching name
@@ -107,24 +107,24 @@ impl GrabTouchDevice {
         self.device = Some(device);
 
         // Grab device
-        self.grab_device(owner);
+        self.grab_device();
     }
 
     /// Set self.device by specified name
     #[method]
-    fn set_device(&mut self, #[base] owner: &Node, name: String) {
+    fn set_device(&mut self, name: String) {
         self._get_devices();
 
         self.device_name = name;
 
-        self._set_device(owner);
+        self._set_device();
     }
 
     /// Reconnect device the current device
     /// This is for a manual call by the handler
     #[method]
-    fn reconnect_device(&mut self, #[base] owner: &Node) {
-        self.set_device(owner, self.device_name.clone());
+    fn reconnect_device(&mut self) {
+        self.set_device(self.device_name.clone());
     }
 
     /// Internal function that populates self.device_list
@@ -162,7 +162,7 @@ impl GrabTouchDevice {
 
     /// Grab the current self.device, set self.grabbed accordingly
     #[method]
-    fn grab_device(&mut self, #[base] _owner: &Node) {
+    fn grab_device(&mut self) {
         match self.device.as_mut() {
             Some(device) => {
                 device.grab().unwrap();
@@ -174,7 +174,7 @@ impl GrabTouchDevice {
 
     /// Ungrab the current self.device, set self.grabbed accordingly
     #[method]
-    fn ungrab_device(&mut self, #[base] _owner: &Node) {
+    fn ungrab_device(&mut self) {
         match self.device.as_mut() {
             Some(device) => {
                 device.ungrab().unwrap();
@@ -192,7 +192,7 @@ impl GrabTouchDevice {
 
     /// Godot _process function
     #[method]
-    fn _physics_process(&mut self, #[base] owner: &Node, delta: f32) {
+    fn _physics_process(&mut self, delta: f32) {
         // If not connected, retry to connect
         if !self.grabbed {
             // Store delta
@@ -201,7 +201,7 @@ impl GrabTouchDevice {
             // Try grabbing the device multiple times when a new device is connected
             // as sometimes it won't immediately grab the device
             if self.try_grab && self.retry_device <= RETRY_TIMER / 2.0 {
-                self.set_device(owner, self.device_name.clone());
+                self.set_device(self.device_name.clone());
             } else if self.try_grab {
                 self.try_grab = false;
             }
@@ -218,7 +218,7 @@ impl GrabTouchDevice {
                     self.try_grab = true;
 
                     // Try to connect to device
-                    self.set_device(owner, self.device_name.clone());
+                    self.set_device(self.device_name.clone());
                 }
 
                 // Reset timer
