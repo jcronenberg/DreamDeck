@@ -7,17 +7,16 @@ var config_path = conf_dir + "config.json"
 
 const conf_lib = preload("res://scripts/libraries/ConfLib.gd")
 
+onready var ArgumentParser = get_node("/root/ArgumentParser")
+
 
 func _ready():
-	# Parse arguments
-	var args := {}
-	for argument in OS.get_cmdline_args():
-		if argument.find("=") > -1:
-			var key_value = argument.split("=")
-			args[key_value[0].lstrip("--")] = key_value[1]
+	var new_conf_dir = ArgumentParser.get_arg("confdir")
+	if new_conf_dir:
+		if not new_conf_dir.ends_with("/"):
+			new_conf_dir = new_conf_dir + "/"
 
-	if args.has("confdir"):
-		conf_dir = args["confdir"] + "/"
+		conf_dir = new_conf_dir
 		config_path = conf_dir + "config.json"
 
 	# Initial loading of the global config
