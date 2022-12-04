@@ -37,14 +37,13 @@ cd ..
 # Building the project
 godot --export "Linux/X11"
 ```
-The binary can now be found in `bin/`  
-<strong>Important: The config system is still very much a work in progress!</strong>  
-The program will crash without a configuration present, see the following section how to create one.
+The binary can now be found in `bin/`
 
-### Creating a config file
-First create this directory if it doesn't already exist `~/.local/share/godot/app_userdata/DreamDeck` or just start the project once (it will crash without a config)  
-Here you will have to create some config files, see this [link](https://github.com/jcronenberg/dotfiles/tree/master/various/DreamDeck) for an example configuration. Copy those files into the above directory and modify them to fit your needs.  
-Note: icons need to be stored in `~/.local/share/godot/app_userdata/DreamDeck/icons` the path in `plugins/Macroboard/config` is relative to that directory.
+### Configuring
+The configuration files can be found in `~/.local/share/godot/app_userdata/DreamDeck` after the app was once launched.
+You can also specify a custom directory via a cli argument like this `--confdir=local_config` (Note that a `=` is mandatory because of the way godot handles cli arguments).  
+The macroboard can be edited in the app via the edit mode or via modifying the config files directly (just be careful when editing these).
+Note: icons need to be stored in the config directory in a `icons/` folder and the path in macroboard is relative to that directory.
 
 ## Plugins
 ### Connect to Spotify's API
