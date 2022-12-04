@@ -1,13 +1,13 @@
 extends Node
 
-var config_data
+var config_data: Dictionary
 
-var conf_dir = OS.get_user_data_dir() + "/"
+var conf_dir: String = OS.get_user_data_dir() + "/"
 
-const conf_lib = preload("res://scripts/libraries/ConfLib.gd")
+const conf_lib := preload("res://scripts/libraries/ConfLib.gd")
 var config = load("res://scripts/global/Config.gd").new()
 
-onready var ArgumentParser = get_node("/root/ArgumentParser")
+onready var ArgumentParser := get_node("/root/ArgumentParser")
 
 
 func _ready():
