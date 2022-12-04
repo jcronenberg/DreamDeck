@@ -1,11 +1,11 @@
 extends Node
 
-var data
+var config_data
 
 var conf_dir = OS.get_user_data_dir() + "/"
-var config_path = conf_dir + "config.json"
 
 const conf_lib = preload("res://scripts/libraries/ConfLib.gd")
+var config = load("res://scripts/global/Config.gd").new()
 
 onready var ArgumentParser = get_node("/root/ArgumentParser")
 
@@ -17,12 +17,15 @@ func _ready():
 			new_conf_dir = new_conf_dir + "/"
 
 		conf_dir = new_conf_dir
-		config_path = conf_dir + "config.json"
+		config.change_path(conf_dir)
+
+	# Now that path is set if it is changed we can load
+	config.load_config()
 
 	# Initial loading of the global config
-	data = conf_lib.load_config(config_path)
-	if not data:
-		push_error("Couldn't load config file")
+	config_data = config.get_config()
+	if not config_data:
+		push_error("Couldn't load config")
 		get_tree().quit()
 
 
@@ -54,7 +57,7 @@ func save_plugin_config(name: String, new_data) -> bool:
 
 # Returns the global config data
 func get_config_data():
-	return data
+	return config_data
 
 
 # Returns the directory of all configs, since this can be modified with arguments
