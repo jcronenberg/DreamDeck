@@ -26,10 +26,12 @@ func _init():
 
 
 func load_config() -> void:
+	conf_lib.ensure_dir_exists(path)
 	config.merge(conf_lib.load_config(path + FILENAME), true)
 
 
 func save() -> bool:
+	conf_lib.ensure_dir_exists(path)
 	return conf_lib.save_config(path + FILENAME, config)
 
 
