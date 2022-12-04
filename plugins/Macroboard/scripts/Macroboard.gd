@@ -23,6 +23,9 @@ func _ready() -> void:
 func load_from_config() -> void:
 	var data = config_loader.get_plugin_config(PLUGIN_NAME)
 
+	if not data or data == {}:
+		return
+
 	# Load button settings
 	button_min_size = Vector2(data["button_settings"]["height"], data["button_settings"]["width"])
 
