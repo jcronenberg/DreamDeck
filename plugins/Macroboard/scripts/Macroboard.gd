@@ -100,7 +100,7 @@ func create_add_buttons() -> void:
 func remove_add_buttons() -> void:
 	for row in $RowSeparator.get_children():
 		# If row only has one child, that child is a AddButton and we need to remove it
-		# Since that also frees its childs we are done with the whole row and can continue
+		# Since that also frees its children we are done with the whole row and can continue
 		if row.get_child_count() == 1:
 			row.free()
 			continue

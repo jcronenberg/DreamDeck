@@ -26,7 +26,7 @@ pub struct GrabTouchDevice {
     device: Option<Device>,
     /// String is formatted like this: "{id}: {name}"
     device_list: Option<HashMap<String, usize>>,
-    /// Handler for handeling events in godot
+    /// Handler for handling events in godot
     handler: Option<Ref<Node>>,
     /// State of device
     grabbed: bool,

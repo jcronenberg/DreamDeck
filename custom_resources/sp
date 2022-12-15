@@ -75,14 +75,14 @@ function sp-metadata {
   org.freedesktop.DBus.Properties.Get                                         \
   string:"$SP_MEMB" string:'Metadata'                                         \
   | grep -Ev "^method"                           `# Ignore the first line.`   \
-  | grep -Eo '("(.*)")|(\b[0-9][a-zA-Z0-9.]*\b)' `# Filter interesting fiels.`\
+  | grep -Eo '("(.*)")|(\b[0-9][a-zA-Z0-9.]*\b)' `# Filter interesting fields.`\
   | sed -E '2~2 a|'                              `# Mark odd fields.`         \
   | tr -d '\n'                                   `# Remove all newlines.`     \
   | sed -E 's/\|/\n/g'                           `# Restore newlines.`        \
   | sed -E 's/(xesam:)|(mpris:)//'               `# Remove ns prefixes.`      \
   | sed -E 's/^"//'                              `# Strip leading...`         \
   | sed -E 's/"$//'                              `# ...and trailing quotes.`  \
-  | sed -E 's/"+/|/'                             `# Regard "" as seperator.`  \
+  | sed -E 's/"+/|/'                             `# Regard "" as separator.`  \
   | sed -E 's/ +/ /g'                            `# Merge consecutive spaces.`
 }
 
@@ -96,7 +96,7 @@ function sp-getplay {
   org.freedesktop.DBus.Properties.Get                                         \
   string:"$SP_MEMB" string:'PlaybackStatus'                                   \
   | grep -Ev "^method"                           `# Ignore the first line.`   \
-  | grep -Eo '("(.*)")|(\b[0-9][a-zA-Z0-9.]*\b)' `# Filter interesting fiels.`\
+  | grep -Eo '("(.*)")|(\b[0-9][a-zA-Z0-9.]*\b)' `# Filter interesting fields.`\
   | sed -E 's/^"//'                              `# Strip leading...`         \
   | sed -E 's/"$//'                              `# ...and trailing quotes.`
 }
@@ -111,7 +111,7 @@ function sp-getloop {
   org.freedesktop.DBus.Properties.Get                                         \
   string:"$SP_MEMB" string:LoopStatus                                         \
   | grep -Ev "^method"                           `# Ignore the first line.`   \
-  | sed -n -e 's/^.*string //p'                  `# Everthing after string `   \
+  | sed -n -e 's/^.*string //p'                  `# Everything after string `   \
   | sed -E 's/^"//'                              `# Strip leading...`         \
   | sed -E 's/"$//'                              `# ...and trailing quotes.`
 }
@@ -137,7 +137,7 @@ function sp-getshuffle {
   org.freedesktop.DBus.Properties.Get                                         \
   string:"$SP_MEMB" string:Shuffle                                            \
   | grep -Ev "^method"                           `# Ignore the first line.`   \
-  | sed -n -e 's/^.*boolean //p'                 `# Everthing after boolean `
+  | sed -n -e 's/^.*boolean //p'                 `# Everything after boolean `
 }
 
 function sp-setshuffle {
@@ -161,7 +161,7 @@ function sp-getvolume {
   org.freedesktop.DBus.Properties.Get                                         \
   string:"$SP_MEMB" string:Volume                                            \
   | grep -Ev "^method"                           `# Ignore the first line.`   \
-  | sed -n -e 's/^.*double //p'                  `# Everthing after double `
+  | sed -n -e 's/^.*double //p'                  `# Everything after double `
 }
 
 function sp-setvolume {
