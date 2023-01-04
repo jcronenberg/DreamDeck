@@ -19,14 +19,10 @@ expand = true
 stretch_mode = 6
 
 [node name="AppName" type="Label" parent="."]
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-margin_left = -60.0
-margin_top = -35.0
-margin_right = 60.0
-margin_bottom = -20.0
+anchor_left = 0.1
+anchor_top = 0.75
+anchor_right = 0.9
+anchor_bottom = 0.92
 align = 1
 valign = 1
 clip_text = true
