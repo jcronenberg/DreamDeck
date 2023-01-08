@@ -1,0 +1,2 @@
+class_name DreamDeckConstants
+extends Reference

@@ -1,7 +1,5 @@
 extends Node
 
-var config_data: Dictionary
-
 var conf_dir: String = OS.get_user_data_dir() + "/"
 
 const conf_lib := preload("res://scripts/libraries/ConfLib.gd")
@@ -28,8 +26,7 @@ func _ready():
 	config.save()
 
 	# Initial loading of the global config
-	config_data = config.get_config()
-	if not config_data:
+	if not config.get_config():
 		push_error("Couldn't load config")
 		get_tree().quit()
 
@@ -62,10 +59,25 @@ func save_plugin_config(name: String, new_data) -> bool:
 
 # Returns the global config data
 func get_config_data():
-	return config_data
+	return config.get_config()
+
+
+func change_config_data(new_data):
+	if new_data.hash() == config.get_config().hash():
+		return
+	config.change_config(new_data)
+	save_config()
+
+
+func save_config():
+	config.save()
 
 
 # Returns the directory of all configs, since this can be modified with arguments
 # the returned path has a "/" at the end
 func get_conf_dir():
 	return conf_dir
+
+
+func on_config_changed():
+	get_node("/root/GlobalSignals").config_changed()

@@ -11,7 +11,7 @@ var button_to_edit: Node
 # button: if a new button is supposed to be created this has to be null
 #         otherwise if an existing button is supposed to be edited
 #         this should be the instance of said button
-func show_popup(row, pos, button) -> void:
+func show_popup(row, pos, button):
 	cur_row = row
 	cur_pos = pos
 	button_to_edit = button
@@ -26,7 +26,7 @@ func show_popup(row, pos, button) -> void:
 	visible = true
 
 
-func _on_ConfirmButton_pressed() -> void:
+func _on_ConfirmButton_pressed():
 	visible = false
 	# TODO error handling
 	cur_pos = int($MarginContainer/Rows/PositionSplit/LineEdit.text) - 1
@@ -34,12 +34,12 @@ func _on_ConfirmButton_pressed() -> void:
 	reset_prompt()
 
 
-func _on_CancelButton_pressed() -> void:
+func _on_CancelButton_pressed():
 	reset_prompt()
 	visible = false
 
 
-func _on_DeleteButton_pressed() -> void:
+func _on_DeleteButton_pressed():
 	reset_prompt()
 	if button_to_edit:
 		# Can't queue_free here as we need it gone to properly delete the row
@@ -64,7 +64,7 @@ func create_button_dict() -> Dictionary:
 
 
 # Takes a dict with a button's keys and fills all LineEdits with the values
-func fill_from_button_dict(button_dict) -> void:
+func fill_from_button_dict(button_dict):
 	$MarginContainer/Rows/AppSplit/LineEdit.text = button_dict["app"]
 	$MarginContainer/Rows/ArgumentsSplit/LineEdit.text = args_to_text(button_dict["arguments"])
 	$MarginContainer/Rows/AppNameSplit/LineEdit.text = button_dict["app_name"]
@@ -73,7 +73,7 @@ func fill_from_button_dict(button_dict) -> void:
 
 
 # Resets all LineEdit's to default state
-func reset_prompt() -> void:
+func reset_prompt():
 	$MarginContainer/Rows/AppSplit/LineEdit.text = ""
 	$MarginContainer/Rows/ArgumentsSplit/LineEdit.text = ""
 	$MarginContainer/Rows/AppNameSplit/LineEdit.text = ""

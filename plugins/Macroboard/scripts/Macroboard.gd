@@ -13,14 +13,14 @@ var macro_row = load("res://plugins/Macroboard/scenes/MacroRow.tscn")
 var app_button = load("res://plugins/Macroboard/scenes/AppButton.tscn")
 
 
-func _ready() -> void:
+func _ready():
 	load_from_config()
 	global_signals.connect("entered_edit_mode", self, "_on_entered_edit_mode")
 	global_signals.connect("exited_edit_mode", self, "_on_exited_edit_mode")
 
 
 # Loads the saved configuration and instances all rows and buttons
-func load_from_config() -> void:
+func load_from_config():
 	var data = config_loader.get_plugin_config(PLUGIN_NAME)
 
 	if not data or data == {}:
@@ -76,7 +76,7 @@ func save():
 
 # Adds AddButtons where they are appropriate
 # in this case at the end of all existing rows and creates a new row also containing a AddButton
-func create_add_buttons() -> void:
+func create_add_buttons():
 	var add_button = load("res://plugins/Macroboard/scenes/AddButton.tscn")
 	var row_counter: int = 0
 	for row in $RowSeparator.get_children():
@@ -97,7 +97,7 @@ func create_add_buttons() -> void:
 
 # Removes all AddButtons from this scene
 # and removes the last empty row
-func remove_add_buttons() -> void:
+func remove_add_buttons():
 	for row in $RowSeparator.get_children():
 		# If row only has one child, that child is a AddButton and we need to remove it
 		# Since that also frees its children we are done with the whole row and can continue
@@ -110,11 +110,11 @@ func remove_add_buttons() -> void:
 			add_button.free()
 
 
-func _on_entered_edit_mode() -> void:
+func _on_entered_edit_mode():
 	create_add_buttons()
 
 
-func _on_exited_edit_mode() -> void:
+func _on_exited_edit_mode():
 	# Need to first remove as otherwise we run the risk of trying to save the edit buttons
 	remove_add_buttons()
 
@@ -124,7 +124,7 @@ func _on_exited_edit_mode() -> void:
 
 
 # Function to be called when the AddButton is pressed
-func AddButton_pressed(row, pos) -> void:
+func AddButton_pressed(row, pos):
 	$EditButtonPopup.show_popup(row, pos, null)
 
 
@@ -134,7 +134,7 @@ func AddButton_pressed(row, pos) -> void:
 # button_dict: dictionary containing all keys that this button is supposed to have
 # button: if an existing button is to be edited this should be non null
 #         and contain the button's instance
-func add_or_edit_button(row, pos, button_dict, button) -> void:
+func add_or_edit_button(row, pos, button_dict, button):
 	var row_node := $RowSeparator.get_child(row)
 
 	if not button:
@@ -165,7 +165,7 @@ func add_or_edit_button(row, pos, button_dict, button) -> void:
 # Edits all keys of a button instance with given dict values
 # button: scene of button that gets edited
 # button_dict: dict that contains all key value pairs that need to be set
-func edit_button_keys(button, button_dict) -> void:
+func edit_button_keys(button, button_dict):
 	# Iterate through all values that need to be set in button
 	for key in button_dict.keys():
 		# Only set attribute if value is set (may be unnecessary)
@@ -175,7 +175,7 @@ func edit_button_keys(button, button_dict) -> void:
 
 # Function to be called when an existing button is pressed in edit mode
 # button: the instance of the button itself calling this function
-func edit_button(button) -> void:
+func edit_button(button):
 	var pos_dict = calculate_pos(button)
 	$EditButtonPopup.show_popup(pos_dict["row"], pos_dict["pos"], button)
 
