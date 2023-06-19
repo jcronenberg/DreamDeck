@@ -38,6 +38,10 @@ pub struct GrabTouchDevice {
     device_name: String,
     /// Current /dev/input dir, used to detect input device changes
     input_dir: String,
+    /// The maximum absolute x axis value of current device
+    device_max_abs_x: i32,
+    /// The maximum absolute y axis value of current device
+    device_max_abs_y: i32,
 }
 
 /// Read content of INPUT_DIR_PATH
@@ -65,7 +69,20 @@ impl GrabTouchDevice {
             try_grab: false,
             device_name: String::new(),
             input_dir: read_input_dir(),
+            device_max_abs_x: 0,
+            device_max_abs_y: 0,
         }
+    }
+
+
+    #[method]
+    fn get_device_max_abs_x(&mut self) -> Variant {
+        return Variant::new(self.device_max_abs_x);
+    }
+
+    #[method]
+    fn get_device_max_abs_y(&mut self) -> Variant {
+        return Variant::new(self.device_max_abs_y);
     }
 
     /// Internal function to set self.device by specified id
@@ -102,6 +119,10 @@ impl GrabTouchDevice {
             raw_fd,
             Some(&mut event),
         ).unwrap();
+
+        // get and store max absolute axis values for the device
+        self.device_max_abs_x = device.get_abs_state().unwrap()[0].maximum;
+        self.device_max_abs_y = device.get_abs_state().unwrap()[1].maximum;
 
         // store device so we can fetch events in _process
         self.device = Some(device);

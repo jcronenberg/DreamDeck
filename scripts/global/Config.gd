@@ -12,7 +12,6 @@ const DEFAULT_CONFIG := {
 	"settings": {
 		"enable_touch": false,
 		"default_device": "",
-		"screen_divide_by": 1
 	}
 }
 
