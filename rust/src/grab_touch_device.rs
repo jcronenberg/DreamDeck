@@ -135,7 +135,8 @@ impl GrabTouchDevice {
         devices.reverse();
         let mut device_map: HashMap<String, usize> = HashMap::new();
         for (i, d) in devices.iter().enumerate() {
-           if d.supported_absolute_axes().map_or(false, |axes| axes.contains(AbsoluteAxisType::ABS_MT_POSITION_X)) {
+           if d.supported_absolute_axes().map_or(false, |axes| axes.contains(AbsoluteAxisType::ABS_X) &&
+                                                               axes.contains(AbsoluteAxisType::ABS_Y)) {
                device_map.insert(format!("{}", d.name().unwrap_or("Unnamed device")), i);
            }
         }
@@ -245,6 +246,8 @@ impl GrabTouchDevice {
                             } else if ev.kind() == AbsAxis(AbsoluteAxisType::ABS_Y) {
                                 unsafe { handler.call("y_coord_event", &[Variant::new(ev.value())]) };
                             } else if ev.kind() == Key(evdev::Key::BTN_TOUCH) {
+                                unsafe { handler.call("key_event", &[Variant::new(ev.value())]) };
+                            } else if ev.kind() == Key(evdev::Key::BTN_LEFT) {
                                 unsafe { handler.call("key_event", &[Variant::new(ev.value())]) };
                             }
                         }
