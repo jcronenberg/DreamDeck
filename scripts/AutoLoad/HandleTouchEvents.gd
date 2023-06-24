@@ -47,13 +47,18 @@ func get_grab_touch_devices_script():
 # These functions are unfortunately necessary as we need to call
 # call_deferred() otherwise we run into burrow issues
 func grab_device():
-	grab_touch_devices_script.call("grab_device")
+	var ret = grab_touch_devices_script.call("grab_device")
+	if typeof(ret) == TYPE_STRING:
+		push_warning("Failed grabbing device: " + ret)
 
 func ungrab_device():
 	grab_touch_devices_script.call("ungrab_device")
 
 func set_device(device_name):
-	grab_touch_devices_script.call("set_device", device_name)
+	var ret = grab_touch_devices_script.call("set_device", device_name)
+	if typeof(ret) == TYPE_STRING:
+		push_warning("Failed setting device: " + ret)
+	grab_device()
 	device_max_abs_x = grab_touch_devices_script.call("get_device_max_abs_x")
 	device_max_abs_y = grab_touch_devices_script.call("get_device_max_abs_y")
 	calculate_divide_by()

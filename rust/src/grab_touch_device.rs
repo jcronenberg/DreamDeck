@@ -87,7 +87,7 @@ impl GrabTouchDevice {
 
     /// Internal function to set self.device by specified id
     /// id needs to be a valid id for evdev::enumerate()
-    fn _set_device(&mut self) {
+    fn _set_device(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         // Ensure that if a device is already grabbed we ungrab it first
         if self.grabbed {
             self.ungrab_device();
@@ -96,7 +96,7 @@ impl GrabTouchDevice {
         // Get id from device_list by matching name
         let id: usize = *match self.device_list.as_ref().unwrap().get(self.device_name.as_str()) {
             Some(id) => id,
-            None => return,
+            None => return Err("Device not found".into()),
         };
 
         // Get device by id
@@ -106,17 +106,17 @@ impl GrabTouchDevice {
 
         // Nonblocking stuff
         let raw_fd = device.as_raw_fd();
-        let _ = nix::fcntl::fcntl(raw_fd, FcntlArg::F_SETFL(OFlag::O_NONBLOCK));
+        nix::fcntl::fcntl(raw_fd, FcntlArg::F_SETFL(OFlag::O_NONBLOCK))?;
 
-        let epoll_fd = epoll::epoll_create1(epoll::EpollCreateFlags::EPOLL_CLOEXEC).unwrap();
+        let epoll_fd = epoll::epoll_create1(epoll::EpollCreateFlags::EPOLL_CLOEXEC)?;
         let epoll_fd = unsafe { OwnedFd::from_raw_fd(epoll_fd) };
         let mut event = epoll::EpollEvent::new(epoll::EpollFlags::EPOLLIN, 0);
-        let _ = epoll::epoll_ctl(
+        epoll::epoll_ctl(
             epoll_fd.as_raw_fd(),
             epoll::EpollOp::EpollCtlAdd,
             raw_fd,
             Some(&mut event),
-        );
+        )?;
 
         // get and store max absolute axis values for the device
         self.device_max_abs_x = device.get_abs_state().unwrap()[0].maximum;
@@ -125,18 +125,22 @@ impl GrabTouchDevice {
         // store device so we can fetch events in _process
         self.device = Some(device);
 
-        // Grab device
-        self.grab_device();
+        Ok(())
     }
 
     /// Set self.device by specified name
     #[method]
-    fn set_device(&mut self, name: String) {
+    fn set_device(&mut self, name: String) -> Variant {
         self._get_devices();
 
         self.device_name = name;
 
-        self._set_device();
+        match self._set_device() {
+            Err(e) => return Variant::new(e.to_string()),
+            _ => (),
+        }
+
+        Variant::new(true)
     }
 
     /// Reconnect device the current device
@@ -181,14 +185,18 @@ impl GrabTouchDevice {
 
     /// Grab the current self.device, set self.grabbed accordingly
     #[method]
-    fn grab_device(&mut self) {
+    fn grab_device(&mut self) -> Variant {
         match self.device.as_mut() {
             Some(device) => {
-                device.grab().unwrap();
+                match device.grab() {
+                    Err(e) => return Variant::new(e.to_string()),
+                    _ => (),
+                };
                 self.grabbed = true;
             }
-            None => return,
+            None => (),
         }
+        Variant::new(true)
     }
 
     /// Ungrab the current self.device, set self.grabbed accordingly
