@@ -85,8 +85,7 @@ impl GrabTouchDevice {
         return Variant::new(self.device_max_abs_y);
     }
 
-    /// Internal function to set self.device by specified id
-    /// id needs to be a valid id for evdev::enumerate()
+    /// Internal function to set self.device to matching self.device_name
     fn _set_device(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         // Ensure that if a device is already grabbed we ungrab it first
         if self.grabbed {
