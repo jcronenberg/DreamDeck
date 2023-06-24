@@ -3,7 +3,7 @@ use nix::{
     fcntl::{FcntlArg, OFlag},
     sys::epoll,
 };
-use std::os::unix::io::{AsRawFd, RawFd};
+use std::os::fd::{AsRawFd, FromRawFd, OwnedFd};
 use std::collections::HashMap;
 use evdev::{
     Device,
@@ -100,25 +100,23 @@ impl GrabTouchDevice {
         };
 
         // Get device by id
-        let mut devices = evdev::enumerate()
-            .collect::<Vec<_>>();
+        let mut devices = evdev::enumerate().map(|t| t.1).collect::<Vec<_>>();
         devices.reverse();
         let device = devices.into_iter().nth(id).unwrap();
 
         // Nonblocking stuff
         let raw_fd = device.as_raw_fd();
-        nix::fcntl::fcntl(raw_fd, FcntlArg::F_SETFL(OFlag::O_NONBLOCK)).unwrap();
+        let _ = nix::fcntl::fcntl(raw_fd, FcntlArg::F_SETFL(OFlag::O_NONBLOCK));
 
-        let epoll_fd = Epoll::new(epoll::epoll_create1(
-            epoll::EpollCreateFlags::EPOLL_CLOEXEC,
-        ).unwrap());
+        let epoll_fd = epoll::epoll_create1(epoll::EpollCreateFlags::EPOLL_CLOEXEC).unwrap();
+        let epoll_fd = unsafe { OwnedFd::from_raw_fd(epoll_fd) };
         let mut event = epoll::EpollEvent::new(epoll::EpollFlags::EPOLLIN, 0);
-        epoll::epoll_ctl(
+        let _ = epoll::epoll_ctl(
             epoll_fd.as_raw_fd(),
             epoll::EpollOp::EpollCtlAdd,
             raw_fd,
             Some(&mut event),
-        ).unwrap();
+        );
 
         // get and store max absolute axis values for the device
         self.device_max_abs_x = device.get_abs_state().unwrap()[0].maximum;
@@ -151,8 +149,7 @@ impl GrabTouchDevice {
     /// Internal function that populates self.device_list
     /// Only devices that support AbsoluteAxisTypes are listed
     fn _get_devices(&mut self) {
-        let mut devices = evdev::enumerate()
-            .collect::<Vec<_>>();
+        let mut devices = evdev::enumerate().map(|t| t.1).collect::<Vec<_>>();
         devices.reverse();
         let mut device_map: HashMap<String, usize> = HashMap::new();
         for (i, d) in devices.iter().enumerate() {
@@ -286,19 +283,5 @@ impl GrabTouchDevice {
             }
             None => return,
         }
-    }
-}
-
-struct Epoll(RawFd);
-
-impl Epoll {
-    pub(crate) fn new(fd: RawFd) -> Self {
-        Epoll(fd)
-    }
-}
-
-impl AsRawFd for Epoll {
-    fn as_raw_fd(&self) -> RawFd {
-        self.0
     }
 }
