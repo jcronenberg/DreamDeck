@@ -7,7 +7,7 @@ const DEFAULT_CONFIG := {
 	"Spotify Panel": {
 		"Legacy": false,
 		"Disabled": true,
-		"Refresh Interval": 1.0
+		"Refresh Interval": 5.0
 	},
 	"Touch": {
 		"Enabled": false,
