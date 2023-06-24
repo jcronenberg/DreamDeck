@@ -8,11 +8,13 @@ const DOWNLOADER = preload("res://scripts/helper/Downloader.gd")
 # DOWNLOADER instance
 var downloader: DOWNLOADER
 
+# Plugin state
+
 # Metadata refresh timer
-var METADATA_REFRESH := 1.0 # state_refresh needs to be not evenly divisible by this
+var metadata_refresh := 1.0 # state_refresh needs to be not evenly divisible by this
 var metadata_delta := 1.0
 # Device refresh timers
-var DEVICES_REFRESH := 5.2 # TODO this is pretty ugly. Implement a queue
+var devices_refresh := 5.2 # TODO this is pretty ugly. Implement a queue
 var devices_delta := 4.0
 # Skips one metadata update, useful for e.g. play/pause button
 # as if we don't skip, it can end up being updated by the metadata refresh to the wrong state
@@ -100,7 +102,10 @@ func _ready():
 	ensure_dir_exists(cache_dir_path)
 
 	# Load configs
-	load_configs()
+	load_global_config()
+	load_plugin_config()
+	# Handle for settings changed event
+	get_node("/root/GlobalSignals").connect("config_changed", self, "_on_config_changed")
 
 	# Clear cache dir to not fill the user dir with endless albumarts
 	clear_cache()
@@ -113,40 +118,45 @@ func _ready():
 
 
 func _physics_process(delta):
+	if not visible:
+		return
 	if not config_completed:
 		return
 	metadata_delta += delta
-	if metadata_delta >= METADATA_REFRESH:
+	if metadata_delta >= metadata_refresh:
 		request_state()
 		metadata_delta = 0.0
 	devices_delta += delta
-	if devices_delta >= DEVICES_REFRESH and access_token:
+	if devices_delta >= devices_refresh and access_token:
 		var headers = ["Authorization: Bearer " + access_token, "Content-Type: application/json"]
 		http_get_devices.request(base_api_url + "/me/player/devices", headers, true, 0, "")
 		devices_delta = 0.0
 
 
+func _on_config_changed():
+	load_global_config()
+
+
 # Load config from config_loader and apply the settings to local variables
-func load_configs():
+func load_global_config():
 	# Load global config
 	var config_data = config_loader.get_config_data()
-	if config_data.has("spotify_panel"):
-		if config_data["spotify_panel"].has("disabled"):
-			if config_data["spotify_panel"]["disabled"]:
-				queue_free()
-		if config_data["spotify_panel"].has("legacy"):
-			if config_data["spotify_panel"]["legacy"] and OS.get_name() == "X11":
-				var legacy_instance = load("res://plugins/SpotifyPanelLegacy/scenes/SpotifyPanelLegacy.tscn").instance()
-				get_parent().call_deferred("add_child", legacy_instance)
-				queue_free()
-			elif (config_data["spotify_panel"]["legacy"]):
-				push_error("You have enabled the spotify legacy version on a non linux platform. This doesn't work, ignoring.")
-		if config_data["spotify_panel"].has("refresh_interval"):
-			METADATA_REFRESH = config_data["spotify_panel"]["refresh_interval"]
-			# We don't need to refresh devices as often
-			# Add + 0.1 to offset it a bit to METADATA_REFRESH
-			DEVICES_REFRESH = config_data["spotify_panel"]["refresh_interval"] * 3 + 0.1
+	if config_data["Spotify Panel"]["Disabled"]:
+		visible = false
+	else:
+		visible = true
+	if config_data["Spotify Panel"]["Legacy"] and OS.get_name() == "X11":
+		var legacy_instance = load("res://plugins/SpotifyPanelLegacy/scenes/SpotifyPanelLegacy.tscn").instance()
+		get_parent().call_deferred("add_child", legacy_instance)
+		queue_free()
+	elif (config_data["Spotify Panel"]["Legacy"]):
+		push_error("You have enabled the spotify legacy version on a non linux platform. This doesn't work, ignoring.")
+	metadata_refresh = config_data["Spotify Panel"]["Refresh Interval"]
+	# We don't need to refresh devices as often
+	# Add + 0.1 to offset it a bit to metadata_refresh
+	devices_refresh = config_data["Spotify Panel"]["Refresh Interval"] * 3 + 0.1
 
+func load_plugin_config():
 	# Load plugin config
 	plugin_config = config_loader.get_plugin_config(PLUGIN_NAME)
 	if plugin_config:
@@ -412,7 +422,6 @@ func send_command(endpoint, method, no_update=true, body=""):
 	http_post.request(base_api_url + endpoint, headers, true, method, body)
 
 
-# TODO maybe switch to godot download function
 func download_cover():
 	var filename = art_url.right(art_url.find_last("/") + 1) + ".jpeg"
 

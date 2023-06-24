@@ -14,7 +14,7 @@ const _headers: Array = [
 	"Accept: */*",
 ]
 
-func download(url: String, file_path: String = "user://") -> void:
+func download(url: String, file_path: String = "user://"):
 	# RegEx for parsing the URL
 	var url_regex = RegEx.new()
 	url_regex.compile("^https?:\\/\\/(?<host>[^\\/]+\\.[a-z]{2,})(?<path>(?>\\/.*)*)$")
@@ -79,7 +79,7 @@ func download(url: String, file_path: String = "user://") -> void:
 	emit_signal("download_completed")
 
 
-func _store_body_to_file(http_client: HTTPClient, file_path: String) -> void:
+func _store_body_to_file(http_client: HTTPClient, file_path: String):
 	var file: File = File.new()
 	file.open(file_path, File.WRITE)
 

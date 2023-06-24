@@ -4,15 +4,16 @@ var path: String = OS.get_user_data_dir() + "/"
 
 const FILENAME := "config.json"
 const DEFAULT_CONFIG := {
-	"spotify_panel": {
-		"legacy": false,
-		"disabled": false,
-		"refresh_interval": 1
+	"Spotify Panel": {
+		"Legacy": false,
+		"Disabled": true,
+		"Refresh Interval": 1.0
 	},
-	"settings": {
-		"enable_touch": false,
-		"default_device": "",
-	}
+	"Touch": {
+		"Enabled": false,
+		"Default Device": "",
+	},
+	"Transparent Background": false,
 }
 
 var config: Dictionary
@@ -24,9 +25,9 @@ func _init():
 	config = DEFAULT_CONFIG
 
 
-func load_config() -> void:
+func load_config():
 	conf_lib.ensure_dir_exists(path)
-	config.merge(conf_lib.load_config(path + FILENAME), true)
+	conf_lib.conf_merge(config, conf_lib.load_config(path + FILENAME))
 
 
 func save() -> bool:
@@ -34,8 +35,12 @@ func save() -> bool:
 	return conf_lib.save_config(path + FILENAME, config)
 
 
-func change_path(new_path) -> void:
+func change_path(new_path):
 	path = new_path
+
+
+func change_config(new_config):
+	conf_lib.conf_merge(config, new_config)
 
 
 func get_config() -> Dictionary:

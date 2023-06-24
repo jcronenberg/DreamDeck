@@ -45,3 +45,15 @@ static func ensure_dir_exists(path):
 	if dir.open(path) != OK:
 		if dir.make_dir_recursive(path) != OK:
 			push_warning("Couldn't create " + path + " dir")
+
+
+# Merges dict2 into dict1, overwriting the values in dict1 recursively for Dictionaries
+# Sanitizes against user input, by only copying if dict1 already contains the key and ensuring matching type
+static func conf_merge(dict1: Dictionary, dict2: Dictionary):
+	for key in dict2.keys():
+		if not dict1.has(key):
+			continue
+		if typeof(dict1[key]) == TYPE_DICTIONARY:
+			conf_merge(dict1[key], dict2[key])
+		elif typeof(dict2[key]) == typeof(dict1[key]):
+			dict1[key] = dict2[key]
