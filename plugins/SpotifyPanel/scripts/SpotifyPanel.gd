@@ -118,8 +118,6 @@ func _ready():
 
 
 func _physics_process(delta):
-	if not visible:
-		return
 	if not config_completed:
 		return
 	metadata_delta += delta
