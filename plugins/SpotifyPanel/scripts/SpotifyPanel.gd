@@ -474,10 +474,10 @@ func clear_cache():
 # Button functions
 func _on_PlayPauseButton_pressed():
 	if not playback_active:
+		play_state = true
 		set_device(device_list[$Background/Controls/DeviceOptions.selected], play_state)
 		playback_active = true
-		return
-	if play_state:
+	elif play_state:
 		send_command("/me/player/pause", 3)
 		play_state = false
 	else:
