@@ -1,38 +1,26 @@
 extends Resource
 
-var path: String = OS.get_user_data_dir() + "/"
-
-const FILENAME := "config.json"
-const DEFAULT_CONFIG := {
-	"Spotify Panel": {
-		"Legacy": false,
-		"Disabled": true,
-		"Refresh Interval": 5.0
-	},
-	"Touch": {
-		"Enabled": false,
-		"Default Device": "",
-	},
-	"Transparent Background": false,
-}
-
 var config: Dictionary
+var path: String
+var filename: String
 
 const conf_lib := preload("res://scripts/libraries/ConfLib.gd")
 
 
-func _init():
-	config = DEFAULT_CONFIG
+func _init(initial_config, initial_path):
+	config = initial_config
+	path = initial_path.get_base_dir()
+	filename = initial_path.trim_prefix(path + "/")
 
 
 func load_config():
 	conf_lib.ensure_dir_exists(path)
-	conf_lib.conf_merge(config, conf_lib.load_config(path + FILENAME))
+	conf_lib.conf_merge(config, conf_lib.load_config(path + filename))
 
 
 func save() -> bool:
 	conf_lib.ensure_dir_exists(path)
-	return conf_lib.save_config(path + FILENAME, config)
+	return conf_lib.save_config(path + filename, config)
 
 
 func change_path(new_path):

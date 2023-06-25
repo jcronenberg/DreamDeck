@@ -1,9 +1,23 @@
 extends Node
 
+const FILENAME := "config.json"
+const DEFAULT_CONFIG := {
+	"Spotify Panel": {
+		"Legacy": false,
+		"Disabled": true,
+		"Refresh Interval": 5.0
+	},
+	"Touch": {
+		"Enabled": false,
+		"Default Device": "",
+	},
+	"Transparent Background": false,
+}
+
 var conf_dir: String = OS.get_user_data_dir() + "/"
 
 const conf_lib := preload("res://scripts/libraries/ConfLib.gd")
-var config = load("res://scripts/global/Config.gd").new()
+var config = load("res://scripts/global/Config.gd").new(DEFAULT_CONFIG, conf_dir + FILENAME)
 
 onready var ArgumentParser := get_node("/root/ArgumentParser")
 
