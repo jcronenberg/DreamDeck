@@ -34,11 +34,6 @@ func _ready():
 	# Now that path is set if it is changed we can load
 	config.load_config()
 
-	# FIXME remove when we have a better method of saving
-	# For now we save immediately when config is loaded
-	# this should keep the existing config but also create the file on first launch
-	config.save()
-
 	# Initial loading of the global config
 	if not config.get_config():
 		push_error("Couldn't load config")
