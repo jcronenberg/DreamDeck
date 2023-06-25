@@ -474,7 +474,7 @@ func clear_cache():
 # Button functions
 func _on_PlayPauseButton_pressed():
 	if not playback_active:
-		set_device(device_list[$Background/Controls/DeviceOptions.selected])
+		set_device(device_list[$Background/Controls/DeviceOptions.selected], play_state)
 		playback_active = true
 		return
 	if play_state:
@@ -490,7 +490,7 @@ func _on_SkipBackButton_pressed():
 
 
 func _on_DeviceOptions_item_selected(index:int):
-	set_device(device_list[index])
+	set_device(device_list[index], play_state)
 
 
 func _on_SkipForwardButton_pressed():
