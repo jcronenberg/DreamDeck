@@ -3,8 +3,6 @@ extends Node
 const FILENAME := "config.json"
 const DEFAULT_CONFIG := {
 	"Spotify Panel": {
-		"Legacy": false,
-		"Disabled": true,
 		"Refresh Interval": 5.0
 	},
 	"Touch": {

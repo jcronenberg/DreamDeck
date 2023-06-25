@@ -139,16 +139,6 @@ func _on_config_changed():
 func load_global_config():
 	# Load global config
 	var config_data = config_loader.get_config_data()
-	if config_data["Spotify Panel"]["Disabled"]:
-		visible = false
-	else:
-		visible = true
-	if config_data["Spotify Panel"]["Legacy"] and OS.get_name() == "X11":
-		var legacy_instance = load("res://plugins/SpotifyPanelLegacy/scenes/SpotifyPanelLegacy.tscn").instance()
-		get_parent().call_deferred("add_child", legacy_instance)
-		queue_free()
-	elif (config_data["Spotify Panel"]["Legacy"]):
-		push_error("You have enabled the spotify legacy version on a non linux platform. This doesn't work, ignoring.")
 	metadata_refresh = config_data["Spotify Panel"]["Refresh Interval"]
 	# We don't need to refresh devices as often
 	# Add + 0.1 to offset it a bit to metadata_refresh
