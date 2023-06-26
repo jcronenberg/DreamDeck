@@ -9,8 +9,8 @@ const conf_lib := preload("res://scripts/libraries/ConfLib.gd")
 
 func _init(initial_config, initial_path):
 	config = initial_config
-	path = initial_path.get_base_dir()
-	filename = initial_path.trim_prefix(path + "/")
+	path = initial_path.get_base_dir() + "/"
+	filename = initial_path.trim_prefix(path)
 
 
 func load_config():
