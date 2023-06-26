@@ -3,18 +3,18 @@ extends Node
 var loaded := false
 
 
-func load(node):
+func load():
 	if OS.get_name() != "X11":
 		push_error("SpotifyPanelLegacy only works on linux")
 		return
 	if not loaded:
-		node.get_node("/root/Main/VSeparator/ElementSeparator/SpotifyMargin").add_child(
+		get_node("/root/Main/VSeparator/ElementSeparator/SpotifyMargin").add_child(
 			load("res://plugins/SpotifyPanelLegacy/scenes/SpotifyPanelLegacy.tscn").instance()
 			)
 		loaded = true
 
 
-func unload(node):
+func unload():
 	if loaded:
-		node.get_node("/root/Main/VSeparator/ElementSeparator/SpotifyMargin/SpotifyPanelLegacy").queue_free()
+		get_node("/root/Main/VSeparator/ElementSeparator/SpotifyMargin/SpotifyPanelLegacy").queue_free()
 		loaded = false

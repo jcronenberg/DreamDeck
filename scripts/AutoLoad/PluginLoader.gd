@@ -57,10 +57,11 @@ func handle_config():
 		if not plugin in plugin_loaders.keys():
 			# TODO maybe catch the case where Loader.gd doesn't exist
 			plugin_loaders[plugin] = load("res://plugins/" + plugin + "/Loader.gd").new()
+			add_child(plugin_loaders[plugin])
 		if config_data[plugin]:
-			plugin_loaders[plugin].load(self)
+			plugin_loaders[plugin].load()
 		else:
-			plugin_loaders[plugin].unload(self)
+			plugin_loaders[plugin].unload()
 
 
 func list_plugins() -> Array:

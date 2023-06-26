@@ -3,15 +3,15 @@ extends Node
 var loaded := false
 
 
-func load(node):
+func load():
 	if not loaded:
-		node.get_node("/root/Main/VSeparator/ElementSeparator/SpotifyMargin").add_child(
+		get_node("/root/Main/VSeparator/ElementSeparator/SpotifyMargin").add_child(
 			load("res://plugins/SpotifyPanel/scenes/SpotifyPanel.tscn").instance()
 			)
 		loaded = true
 
 
-func unload(node):
+func unload():
 	if loaded:
-		node.get_node("/root/Main/VSeparator/ElementSeparator/SpotifyMargin/SpotifyPanel").queue_free()
+		get_node("/root/Main/VSeparator/ElementSeparator/SpotifyMargin/SpotifyPanel").queue_free()
 		loaded = false

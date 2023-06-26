@@ -3,15 +3,15 @@ extends Node
 var loaded := false
 
 
-func load(node):
+func load():
 	if not loaded:
-		node.get_node("/root/Main/VSeparator/ElementSeparator/MacroMargin").add_child(
+		get_node("/root/Main/VSeparator/ElementSeparator/MacroMargin").add_child(
 			load("res://plugins/Macroboard/scenes/Macroboard.tscn").instance()
 			)
 		loaded = true
 
 
-func unload(node):
+func unload():
 	if loaded:
-		node.get_node("/root/Main/VSeparator/ElementSeparator/MacroMargin/Macroboard").queue_free()
+		get_node("/root/Main/VSeparator/ElementSeparator/MacroMargin/Macroboard").queue_free()
 		loaded = false
