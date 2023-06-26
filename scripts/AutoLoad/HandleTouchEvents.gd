@@ -14,9 +14,9 @@ var divide_y_by: float = 0.0
 # Nodes
 var grab_touch_devices_script
 onready var config_loader = get_node("/root/ConfigLoader")
-onready var device_options = get_node("/root/Main/VSeparator/MarginContainer/ControlsSeparator/DeviceOptions")
-onready var reconnect_button = get_node("/root/Main/VSeparator/MarginContainer/ControlsSeparator/ReconnectButton")
-onready var grab_check_button = get_node("/root/Main/VSeparator/MarginContainer/ControlsSeparator/GrabCheckButton")
+onready var device_options = get_node("/root/Main/VSeparator/MarginContainer/ControlsSeparator/TouchControls/TouchSeparator/DeviceOptions")
+onready var reconnect_button = get_node("/root/Main/VSeparator/MarginContainer/ControlsSeparator/TouchControls/TouchSeparator/ReconnectButton")
+onready var grab_check_button = get_node("/root/Main/VSeparator/MarginContainer/ControlsSeparator/TouchControls/TouchSeparator/GrabCheckButton")
 
 func _ready():
 	get_tree().get_root().connect("size_changed", self, "_on_main_window_resized")
