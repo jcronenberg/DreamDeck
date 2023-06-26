@@ -1,6 +1,6 @@
 extends Button
 
-onready var handler = get_node("/root/HandleTouchEvents")
+onready var handler = get_node("../..")
 
 
 func _on_ReconnectButton_pressed():

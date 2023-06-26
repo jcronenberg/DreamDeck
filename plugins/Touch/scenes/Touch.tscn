@@ -1,28 +1,30 @@
-[gd_scene load_steps=5 format=2]
+[gd_scene load_steps=6 format=2]
 
 [ext_resource path="res://scripts/Main/ReconnectButton.gd" type="Script" id=1]
 [ext_resource path="res://scripts/Main/GrabCheckButton.gd" type="Script" id=2]
 [ext_resource path="res://themes/MainTheme.tres" type="Theme" id=3]
 [ext_resource path="res://scripts/Main/DeviceOptions.gd" type="Script" id=4]
+[ext_resource path="res://plugins/Touch/scripts/Touch.gd" type="Script" id=5]
 
-[node name="TouchControls" type="Control"]
+[node name="Touch" type="Control"]
 margin_left = 110.0
 margin_right = 1730.0
 margin_bottom = 100.0
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 2.0
+script = ExtResource( 5 )
 
-[node name="TouchSeparator" type="HBoxContainer" parent="."]
+[node name="ControlsSeparator" type="HBoxContainer" parent="."]
 anchor_right = 1.0
 anchor_bottom = 1.0
 custom_constants/separation = 50
 
-[node name="LeftMargin" type="Control" parent="TouchSeparator"]
+[node name="LeftMargin" type="Control" parent="ControlsSeparator"]
 margin_right = 368.0
 margin_bottom = 100.0
 size_flags_horizontal = 3
 
-[node name="DeviceOptions" type="OptionButton" parent="TouchSeparator"]
+[node name="DeviceOptions" type="OptionButton" parent="ControlsSeparator"]
 margin_left = 418.0
 margin_top = 40.0
 margin_right = 818.0
@@ -33,7 +35,7 @@ size_flags_vertical = 4
 align = 1
 script = ExtResource( 4 )
 
-[node name="ReconnectButton" type="Button" parent="TouchSeparator"]
+[node name="ReconnectButton" type="Button" parent="ControlsSeparator"]
 margin_left = 868.0
 margin_top = 38.0
 margin_right = 1008.0
@@ -44,7 +46,7 @@ theme = ExtResource( 3 )
 text = "Reconnect"
 script = ExtResource( 1 )
 
-[node name="GrabCheckButton" type="CheckButton" parent="TouchSeparator"]
+[node name="GrabCheckButton" type="CheckButton" parent="ControlsSeparator"]
 margin_left = 1058.0
 margin_right = 1202.0
 margin_bottom = 100.0
@@ -54,12 +56,12 @@ text = "Grabbed"
 align = 2
 script = ExtResource( 2 )
 
-[node name="RightMargin" type="Control" parent="TouchSeparator"]
+[node name="RightMargin" type="Control" parent="ControlsSeparator"]
 margin_left = 1252.0
 margin_right = 1620.0
 margin_bottom = 100.0
 size_flags_horizontal = 3
 
-[connection signal="item_selected" from="TouchSeparator/DeviceOptions" to="TouchSeparator/DeviceOptions" method="_on_DeviceOptions_item_selected"]
-[connection signal="pressed" from="TouchSeparator/ReconnectButton" to="TouchSeparator/ReconnectButton" method="_on_ReconnectButton_pressed"]
-[connection signal="toggled" from="TouchSeparator/GrabCheckButton" to="TouchSeparator/GrabCheckButton" method="_on_GrabCheckButton_toggled"]
+[connection signal="item_selected" from="ControlsSeparator/DeviceOptions" to="ControlsSeparator/DeviceOptions" method="_on_DeviceOptions_item_selected"]
+[connection signal="pressed" from="ControlsSeparator/ReconnectButton" to="ControlsSeparator/ReconnectButton" method="_on_ReconnectButton_pressed"]
+[connection signal="toggled" from="ControlsSeparator/GrabCheckButton" to="ControlsSeparator/GrabCheckButton" method="_on_GrabCheckButton_toggled"]

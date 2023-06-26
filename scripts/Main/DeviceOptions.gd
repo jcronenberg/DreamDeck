@@ -3,14 +3,11 @@ extends OptionButton
 var device_list: Array
 var default_device: String
 
-onready var handler = get_node("/root/HandleTouchEvents")
+onready var handler = get_node("../..")
 onready var config_loader = get_node("/root/ConfigLoader")
 
-func get_items():
-	# This is a weird issue of seemingly being invoked before onready triggers
-	if not handler:
-		handler = get_node("/root/HandleTouchEvents")
 
+func get_items():
 	device_list = handler.get_devices()
 	self.clear()
 	self.add_item("Devices")
@@ -19,8 +16,16 @@ func get_items():
 	for i in range(device_list.size()):
 		self.add_item(device_list[i], i)
 
-func set_default_device(device_name):
-	default_device = device_name
+
+func set_default_device():
+	if not device_list:
+		get_items()
+
+	default_device = config_loader.get_config_data()["Touch"]["Default Device"]
+
+	if not default_device:
+		return
+
 	# This is a hack to enable setting the default_device even if it is not connected
 	# TODO: Improve this in the future
 	if device_list.has(default_device):
@@ -29,12 +34,6 @@ func set_default_device(device_name):
 		self.add_item(default_device, len(device_list))
 		self.select(len(device_list) + 2)
 	handler.call_deferred("set_device", default_device)
-
-func enable(device_name):
-	visible = true
-	get_items()
-	if device_name:
-		set_default_device(device_name)
 
 
 func _on_DeviceOptions_item_selected(index):

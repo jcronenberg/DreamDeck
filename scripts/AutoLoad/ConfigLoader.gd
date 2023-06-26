@@ -6,7 +6,6 @@ const DEFAULT_CONFIG := {
 		"Refresh Interval": 5.0
 	},
 	"Touch": {
-		"Enabled": false,
 		"Default Device": "",
 	},
 	"Transparent Background": false,
