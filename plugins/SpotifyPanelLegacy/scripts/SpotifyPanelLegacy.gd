@@ -66,6 +66,9 @@ func _physics_process(delta):
 			worker_thread.start(self, "get_metadata")
 		metadata_delta = 0.0
 
+func _exit_tree():
+	worker_thread.wait_to_finish()
+
 func execute_sp_command(command: PoolStringArray):
 	var args = [script_user_path]
 	for c in command:
