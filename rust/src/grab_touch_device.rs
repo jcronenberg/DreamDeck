@@ -17,6 +17,12 @@ const RETRY_TIMER: f32 = 0.5;
 /// The input devices path
 const INPUT_DIR_PATH: &str = "/dev/input/";
 
+macro_rules! PARSE_EVENT {
+    ($owner:expr,$function:expr,$event:expr) => {
+        $owner.get_parent().unwrap().assume_safe().call($function, &[Variant::new($event.value())])
+    };
+}
+
 /// GrabTouchDevice "class"
 /// Handles all evdev functions and then calls handler functions
 #[derive(NativeClass)]
@@ -26,8 +32,6 @@ pub struct GrabTouchDevice {
     device: Option<Device>,
     /// String is formatted like this: "{id}: {name}"
     device_list: Option<HashMap<String, usize>>,
-    /// Handler for handling events in godot
-    handler: Option<Ref<Node>>,
     /// State of device
     grabbed: bool,
     /// Timer for trying to reconnect
@@ -63,7 +67,6 @@ impl GrabTouchDevice {
         GrabTouchDevice {
             device: None,
             device_list: None,
-            handler: None,
             grabbed: false,
             retry_device: 0.0,
             try_grab: false,
@@ -210,15 +213,9 @@ impl GrabTouchDevice {
         }
     }
 
-    /// Godot _ready function
-    #[method]
-    fn _ready(&mut self, #[base] owner: &Node) {
-        self.handler = Some(Node::get_node(owner, NodePath::from_str("/root/HandleTouchEvents")).unwrap());
-    }
-
     /// Godot _process function
     #[method]
-    fn _physics_process(&mut self, delta: f32) {
+    fn _physics_process(&mut self, #[base] owner: &Node, delta: f32) {
         // If not connected, retry to connect
         if !self.grabbed {
             // Store delta
@@ -258,22 +255,16 @@ impl GrabTouchDevice {
             Some(device) => {
                 match device.fetch_events() {
                     Ok(iterator) => {
-                        // Make sure we have a handler
-                        let handler = match self.handler {
-                            Some(handler) => unsafe { handler.assume_safe() },
-                            None => { godot_print!("Handler missing"); return },
-                        };
-
                         // Match event
                         for ev in iterator {
                             if ev.kind() == AbsAxis(AbsoluteAxisType::ABS_X) {
-                                unsafe { handler.call("x_coord_event", &[Variant::new(ev.value())]) };
+                                unsafe { PARSE_EVENT!(owner, "x_coord_event", ev) };
                             } else if ev.kind() == AbsAxis(AbsoluteAxisType::ABS_Y) {
-                                unsafe { handler.call("y_coord_event", &[Variant::new(ev.value())]) };
+                                unsafe { PARSE_EVENT!(owner, "y_coord_event", ev) };
                             } else if ev.kind() == Key(evdev::Key::BTN_TOUCH) {
-                                unsafe { handler.call("key_event", &[Variant::new(ev.value())]) };
+                                unsafe { PARSE_EVENT!(owner, "key_event", ev) };
                             } else if ev.kind() == Key(evdev::Key::BTN_LEFT) {
-                                unsafe { handler.call("key_event", &[Variant::new(ev.value())]) };
+                                unsafe { PARSE_EVENT!(owner, "key_event", ev) };
                             }
                         }
                     }

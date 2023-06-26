@@ -131,3 +131,5 @@ func handle_event():
 	# if we don't first set x and y it will use the previous position
 	if !event_lmb.pressed or (x_changed and y_changed):
 		Input.parse_input_event(event_lmb)
+		if OS.has_feature("editor"):
+			 get_node("/root/Main/DebugCursor").rect_position = event_lmb.position
