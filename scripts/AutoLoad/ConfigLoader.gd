@@ -1,6 +1,5 @@
 extends Node
 
-const FILENAME := "config.json"
 const DEFAULT_CONFIG := {
 	"Spotify Panel": {
 		"Refresh Interval": 5.0
@@ -14,7 +13,7 @@ const DEFAULT_CONFIG := {
 var conf_dir: String = OS.get_user_data_dir() + "/"
 
 const conf_lib := preload("res://scripts/libraries/ConfLib.gd")
-var config = load("res://scripts/global/Config.gd").new(DEFAULT_CONFIG, conf_dir + FILENAME)
+var config = load("res://scripts/global/Config.gd").new(DEFAULT_CONFIG, conf_dir + "config.json")
 
 onready var ArgumentParser := get_node("/root/ArgumentParser")
 
