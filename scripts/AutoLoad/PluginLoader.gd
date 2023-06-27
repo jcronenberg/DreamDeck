@@ -12,15 +12,14 @@ var plugin_loaders: Dictionary
 
 
 func _ready():
-	config = load("res://scripts/global/Config.gd").new(DEFAULT_CONFIG, conf_dir + FILENAME)
-
 	var new_conf_dir = ArgumentParser.get_arg("confdir")
 	if new_conf_dir:
 		if not new_conf_dir.ends_with("/"):
 			new_conf_dir = new_conf_dir + "/"
 
 		conf_dir = new_conf_dir
-		config.change_path(conf_dir)
+
+	config = load("res://scripts/global/Config.gd").new(DEFAULT_CONFIG, conf_dir + FILENAME)
 
 	discover_plugins()
 

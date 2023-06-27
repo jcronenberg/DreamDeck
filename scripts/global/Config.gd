@@ -23,10 +23,6 @@ func save() -> bool:
 	return conf_lib.save_config(path + filename, config)
 
 
-func change_path(new_path):
-	path = new_path
-
-
 func change_config(new_config):
 	conf_lib.conf_merge(config, new_config)
 

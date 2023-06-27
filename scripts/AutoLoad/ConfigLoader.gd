@@ -13,7 +13,7 @@ const DEFAULT_CONFIG := {
 var conf_dir: String = OS.get_user_data_dir() + "/"
 
 const conf_lib := preload("res://scripts/libraries/ConfLib.gd")
-var config = load("res://scripts/global/Config.gd").new(DEFAULT_CONFIG, conf_dir + "config.json")
+var config
 
 onready var ArgumentParser := get_node("/root/ArgumentParser")
 
@@ -25,7 +25,8 @@ func _ready():
 			new_conf_dir = new_conf_dir + "/"
 
 		conf_dir = new_conf_dir
-		config.change_path(conf_dir)
+
+	config = load("res://scripts/global/Config.gd").new(DEFAULT_CONFIG, conf_dir + "config.json")
 
 	# Now that path is set if it is changed we can load
 	config.load_config()
