@@ -94,7 +94,7 @@ onready var http_post := get_node("HTTPPost")
 onready var http_get_devices := get_node("HTTPGetDevices")
 
 # Download cache
-onready var cache_dir_path: String = config_loader.get_conf_dir() + "cache"
+onready var cache_dir_path: String = config_loader.get_conf_dir() + "cache/SpotifyPanel/"
 
 
 func _ready():
@@ -417,7 +417,7 @@ func download_cover():
 	downloader = DOWNLOADER.new()
 
 	# Download and wait for completion
-	downloader.download(art_url, cache_dir_path + "/" + filename)
+	downloader.download(art_url, cache_dir_path + filename)
 	yield(downloader, "download_completed")
 
 	change_cover(filename)
@@ -433,7 +433,7 @@ func create_texture_from_image(image_path):
 
 
 func change_cover(filename):
-	var complete_cover_path = config_loader.get_conf_dir() + "cache/" + filename
+	var complete_cover_path = cache_dir_path + filename
 	$Background/AlbumArt.texture = create_texture_from_image(complete_cover_path)
 
 

@@ -5,7 +5,7 @@ onready var config_loader = get_node("/root/ConfigLoader")
 
 onready var worker_thread = Thread.new()
 var script_res_path = "res://custom_resources/sp"
-onready var download_dir_path = config_loader.get_conf_dir() + "/cache"
+onready var download_dir_path = config_loader.get_conf_dir() + "/cache/SpotifyPanel/"
 onready var script_user_path = config_loader.get_conf_dir() + "/scripts/sp"
 onready var script_dir_path = config_loader.get_conf_dir() + "/scripts"
 const metadata_refresh = 0.95 # state_refresh needs to be not evenly divisible by this
@@ -124,7 +124,7 @@ func set_metadata(new_metadata):
 
 func download_cover():
 	var filename = art_url.right(art_url.find_last("/") + 1) + ".jpeg"
-	var args: PoolStringArray = ["-O", download_dir_path + "/" + filename]
+	var args: PoolStringArray = ["-O", download_dir_path + filename]
 # warning-ignore:return_value_discarded
 	args.insert(0, art_url)
 	if OS.execute("wget", args):
@@ -140,7 +140,7 @@ func create_texture_from_image(image_path):
 	return texture
 
 func change_cover(filename):
-	var complete_cover_path = config_loader.get_conf_dir() + "cache/" + filename
+	var complete_cover_path = download_dir_path + filename
 	$Background/AlbumArt.texture = create_texture_from_image(complete_cover_path)
 
 func ensure_dir_exists(path):
