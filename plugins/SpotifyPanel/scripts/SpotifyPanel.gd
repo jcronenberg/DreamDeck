@@ -116,6 +116,11 @@ func _ready():
 # warning-ignore:return_value_discarded
 	http_get_devices.connect("request_completed", self, "_on_get_request_completed")
 
+	# Initial state request, because otherwise it would take a pretty long time on first load
+	# This will likely first just establish access_token, but makes startup still a lot faster
+	# Again a request queue would be make this a lot nicer
+	request_state()
+
 
 func _physics_process(delta):
 	if not config_completed:
