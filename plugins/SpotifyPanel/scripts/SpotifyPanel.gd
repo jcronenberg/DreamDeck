@@ -97,6 +97,11 @@ onready var http_get_devices := get_node("HTTPGetDevices")
 # Download cache
 onready var cache_dir_path: String = plugin_loader.get_cache_dir(PLUGIN_NAME)
 
+# Configs
+onready var conf_dir = plugin_loader.get_conf_dir(PLUGIN_NAME)
+onready var config = load("res://scripts/global/Config.gd").new({"Refresh Interval": 5.0}, conf_dir + "config.json")
+onready var credentials = load("res://scripts/global/Config.gd").new({"refresh_token": "", "encoded_client": ""}, conf_dir + "credentials.json")
+
 
 func _ready():
 	# Ensure prerequisites exist
@@ -152,13 +157,15 @@ func load_global_config():
 
 func load_plugin_config():
 	# Load plugin config
-	plugin_config = config_loader.get_plugin_config(PLUGIN_NAME)
-	if plugin_config:
+	credentials.load_config()
+	plugin_config = credentials.get_config()
+	print(plugin_config)
+	if not plugin_config["refresh_token"]:
+		create_config()
+	else:
 		refresh_token = plugin_config["refresh_token"]
 		encoded_client = plugin_config["encoded_client"]
 		config_completed = true
-	else:
-		create_config()
 
 
 # Creates the first dialog and connects the functions
@@ -319,7 +326,7 @@ func _on_get_request_completed(_result, response_code, _headers, body):
 		plugin_config["refresh_token"] = refresh_token
 		plugin_config["encoded_client"] = encoded_client
 		# Save plugin_config
-		config_loader.save_plugin_config(PLUGIN_NAME, plugin_config)
+		credentials.save()
 	# POST /api/token refresh_token result
 	elif json_result.has("access_token"):
 		access_token = json_result["access_token"]
