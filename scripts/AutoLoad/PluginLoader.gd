@@ -63,6 +63,14 @@ func handle_config():
 			plugin_loaders[plugin].unload()
 
 
+func get_conf_dir(name):
+	return conf_dir + "plugins/" + name + "/"
+
+
+func get_cache_dir(name):
+	return conf_dir + "cache/" + name + "/"
+
+
 func list_plugins() -> Array:
 	var files := []
 	var dir := Directory.new()
