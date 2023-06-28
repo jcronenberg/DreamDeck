@@ -89,12 +89,13 @@ func config_stage3_text() -> String:
 
 # Nodes
 onready var config_loader := get_node("/root/ConfigLoader")
+onready var plugin_loader := get_node("/root/PluginLoader")
 onready var http_get := get_node("HTTPGet")
 onready var http_post := get_node("HTTPPost")
 onready var http_get_devices := get_node("HTTPGetDevices")
 
 # Download cache
-onready var cache_dir_path: String = config_loader.get_conf_dir() + "cache/SpotifyPanel/"
+onready var cache_dir_path: String = plugin_loader.get_cache_dir(PLUGIN_NAME)
 
 
 func _ready():
