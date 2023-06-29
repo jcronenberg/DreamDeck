@@ -38,6 +38,9 @@ func _ready():
 	# Handle default device from options
 	device_options.set_default_device()
 
+	if OS.has_feature("editor"):
+		get_node("/root/Main/DebugCursor").visible = true
+
 
 func _on_main_window_resized():
 	current_screen_size = OS.get_screen_size()
