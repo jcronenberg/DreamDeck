@@ -5,7 +5,7 @@ var x_changed: bool = false
 var y_changed: bool = false
 var event_lmb = InputEventMouseButton.new()
 var in_focus: bool = true
-var main_window_size: Vector2
+var current_screen_size: Vector2
 var device_max_abs_x: int = 0
 var device_max_abs_y: int = 0
 var divide_x_by: float = 0.0
@@ -35,7 +35,7 @@ func _ready():
 
 
 func _on_main_window_resized():
-	main_window_size = OS.get_real_window_size()
+	current_screen_size = OS.get_screen_size()
 	calculate_divide_by()
 
 
@@ -68,8 +68,8 @@ func set_device(device_name):
 
 
 func calculate_divide_by():
-	divide_x_by = device_max_abs_x / main_window_size.x
-	divide_y_by = device_max_abs_y / main_window_size.y
+	divide_x_by = device_max_abs_x / current_screen_size.x
+	divide_y_by = device_max_abs_y / current_screen_size.y
 
 
 func x_coord_event(new_x):
