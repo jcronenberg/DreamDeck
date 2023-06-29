@@ -213,6 +213,19 @@ impl GrabTouchDevice {
         }
     }
 
+    /// Returns true if something changed in input_dir
+    fn _compare_input_dir(&mut self) -> bool {
+        let new_dir = read_input_dir();
+
+        // Check if input devices changed
+        if self.input_dir != new_dir {
+            // Store the new input_dir
+            self.input_dir = new_dir;
+            return true
+        }
+        return false
+    }
+
     /// Godot _process function
     #[method]
     fn _physics_process(&mut self, #[base] owner: &Node, delta: f32) {
@@ -231,15 +244,8 @@ impl GrabTouchDevice {
 
             // If cumulative delta is over timer
             if self.retry_device >= RETRY_TIMER {
-                // Read input dir
-                let new_dir = read_input_dir();
-
-                // Check if input devices changed
-                if self.input_dir != new_dir {
-                    // Store the new input_dir
-                    self.input_dir = read_input_dir();
+                if self._compare_input_dir() {
                     self.try_grab = true;
-
                     // Try to connect to device
                     self.set_device(self.device_name.clone());
                 }
