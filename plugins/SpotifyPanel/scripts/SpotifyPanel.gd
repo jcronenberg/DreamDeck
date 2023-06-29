@@ -159,7 +159,6 @@ func load_plugin_config():
 	# Load plugin config
 	credentials.load_config()
 	plugin_config = credentials.get_config()
-	print(plugin_config)
 	if not plugin_config["refresh_token"]:
 		create_config()
 	else:
