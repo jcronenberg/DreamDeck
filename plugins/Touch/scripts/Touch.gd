@@ -19,6 +19,11 @@ onready var reconnect_button = get_node("ControlsSeparator/ReconnectButton")
 onready var grab_check_button = get_node("ControlsSeparator/GrabCheckButton")
 
 
+# Non fullscreen functions
+var window_area_min: Vector2 = Vector2(0, 0)
+var window_area_max: Vector2 = Vector2(0, 0)
+
+
 func _ready():
 	grab_touch_devices_script = load("res://rust/GrabTouchDevice.gdns").new()
 	add_child(grab_touch_devices_script)
@@ -37,6 +42,13 @@ func _ready():
 func _on_main_window_resized():
 	current_screen_size = OS.get_screen_size()
 	calculate_divide_by()
+	if not OS.is_window_fullscreen():
+		calculate_window_area()
+
+
+func calculate_window_area():
+	window_area_min = OS.get_window_position() - OS.get_screen_position()
+	window_area_max = OS.get_window_position() + OS.get_window_size() - OS.get_screen_position()
 
 
 func reconnect_device():
@@ -95,6 +107,16 @@ func handle_event():
 	# This check is necessary because the button down event is the first event
 	# if we don't first set x and y it will use the previous position
 	if !event_lmb.pressed or (x_changed and y_changed):
-		Input.parse_input_event(event_lmb)
+		# If window is not fullscreen we have to calculate if the touch was within the area of the window
+		# If it wasn't we skip the event
+		if (not OS.is_window_fullscreen()) and \
+			((event_lmb.position.x > window_area_max.x or event_lmb.position.x < window_area_min.x) or \
+			 (event_lmb.position.y > window_area_max.y or event_lmb.position.y < window_area_min.y)):
+			return
+
+		# We can't modify event_lmb directly as this would also alter future events
+		var mod_event = event_lmb.duplicate()
+		mod_event.position -= window_area_min
+		Input.parse_input_event(mod_event)
 		if OS.has_feature("editor"):
-			 get_node("/root/Main/DebugCursor").rect_position = event_lmb.position
+			 get_node("/root/Main/DebugCursor").rect_position = mod_event.position
