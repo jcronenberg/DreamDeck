@@ -71,7 +71,7 @@ impl GrabTouchDevice {
             retry_device: 0.0,
             try_grab: false,
             device_name: String::new(),
-            input_dir: read_input_dir(),
+            input_dir: String::new(),
             device_max_abs_x: 0,
             device_max_abs_y: 0,
         }
@@ -155,6 +155,11 @@ impl GrabTouchDevice {
     /// Internal function that populates self.device_list
     /// Only devices that support AbsoluteAxisTypes are listed
     fn _get_devices(&mut self) {
+        // Only refresh self.device_list if change in input_dir occurred
+        if ! self._compare_input_dir() {
+            return
+        }
+
         let mut devices = evdev::enumerate().map(|t| t.1).collect::<Vec<_>>();
         devices.reverse();
         let mut device_map: HashMap<String, usize> = HashMap::new();
