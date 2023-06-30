@@ -56,21 +56,13 @@ margin_bottom = 1080.0
 size_flags_vertical = 3
 
 [node name="MacroMargin" type="MarginContainer" parent="VSeparator/ElementSeparator"]
-margin_right = 1816.0
+margin_right = 1920.0
 margin_bottom = 976.0
 size_flags_horizontal = 3
 custom_constants/margin_right = 50
 custom_constants/margin_top = 30
 custom_constants/margin_left = 50
 custom_constants/margin_bottom = 50
-
-[node name="SpotifyMargin" type="MarginContainer" parent="VSeparator/ElementSeparator"]
-margin_left = 1820.0
-margin_right = 1920.0
-margin_bottom = 976.0
-size_flags_vertical = 3
-custom_constants/margin_right = 50
-custom_constants/margin_left = 50
 
 [node name="InputCenterContainer" type="CenterContainer" parent="."]
 anchor_right = 1.0

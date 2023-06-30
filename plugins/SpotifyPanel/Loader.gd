@@ -13,7 +13,7 @@ func load():
 
 func unload():
 	if loaded:
-		get_node("/root/Main/VSeparator/ElementSeparator/SpotifyMargin/SpotifyPanel").queue_free()
+		get_node("/root/Main/VSeparator/ElementSeparator/SpotifyMargin").queue_free()
 		loaded = false
 
 
@@ -41,7 +41,7 @@ func _process(_delta):
 
 
 func add_scene(resource):
-	get_node("/root/Main/VSeparator/ElementSeparator/SpotifyMargin").add_child(
+	get_node("/root/Main/VSeparator/ElementSeparator").add_child(
 		resource.instance()
 		)
 	loaded = true
