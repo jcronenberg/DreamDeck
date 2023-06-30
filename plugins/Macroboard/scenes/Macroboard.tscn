@@ -15,3 +15,5 @@ custom_constants/separation = 10
 
 [node name="EditButtonPopup" parent="." instance=ExtResource( 1 )]
 visible = false
+
+[connection signal="item_rect_changed" from="." to="." method="_on_Macroboard_item_rect_changed"]

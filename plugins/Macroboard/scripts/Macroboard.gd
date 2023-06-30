@@ -2,6 +2,7 @@ extends Control
 
 # Constants
 const PLUGIN_NAME = "Macroboard"
+const BUTTON_GAP = 10
 
 # Global nodes
 onready var config_loader = get_node("/root/ConfigLoader")
@@ -11,6 +12,8 @@ onready var global_signals = get_node("/root/GlobalSignals")
 var button_min_size: Vector2 = Vector2(150, 150) # default size
 var macro_row = load("res://plugins/Macroboard/scenes/MacroRow.tscn")
 var app_button = load("res://plugins/Macroboard/scenes/AppButton.tscn")
+
+var max_buttons := Vector2(0, 0)
 
 
 func _ready():
@@ -80,13 +83,17 @@ func create_add_buttons():
 	var add_button = load("res://plugins/Macroboard/scenes/AddButton.tscn")
 	var row_counter: int = 0
 	for row in $RowSeparator.get_children():
+		row_counter += 1
+		if row.get_child_count() >= max_buttons.x:
+			continue
 		var add_button_instance = add_button.instance()
 		row.add_child(add_button_instance)
 		add_button_instance.set_custom_minimum_size(button_min_size)
-		add_button_instance.row = row_counter
-		row_counter += 1
+		add_button_instance.row = row_counter - 1
 
 	# Add new row to the end, since we want to enable creating a new row
+	if row_counter >= max_buttons.y:
+		return
 	var new_row = macro_row.instance()
 	var add_button_instance = add_button.instance()
 	new_row.add_child(add_button_instance)
@@ -154,12 +161,10 @@ func add_or_edit_button(row, pos, button_dict, button):
 
 	row_node.move_child(button, pos)
 
-	# 2 Nodes on a row should only happen when the row is new
-	# Then we reset the edit buttons as this has the effect of adding
-	# a new row
-	if row_node.get_child_count() == 2:
-		remove_add_buttons()
-		create_add_buttons()
+	# Remove and readd edit buttons, because either a new row can be created or
+	# the existing edit button would violate max_buttons
+	remove_add_buttons()
+	create_add_buttons()
 
 
 # Edits all keys of a button instance with given dict values
@@ -201,3 +206,14 @@ func calculate_pos(button) -> Dictionary:
 		row_counter += 1
 
 	return {"row": row_counter, "pos": pos_counter}
+
+
+# This calculates how many rows and buttons per row are possible
+# based on current size
+func calculate_size() -> Vector2:
+	var size = get_size()
+	return Vector2(floor((size.x + BUTTON_GAP) / (button_min_size.x + BUTTON_GAP)), floor((size.y + BUTTON_GAP) / (button_min_size.y + BUTTON_GAP)))
+
+
+func _on_Macroboard_item_rect_changed():
+	max_buttons = calculate_size()
