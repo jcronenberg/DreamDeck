@@ -8,7 +8,7 @@ func load():
 		push_error("SpotifyPanelLegacy only works on linux")
 		return
 	if not loaded:
-		get_node("/root/Main/VSeparator/ElementSeparator/SpotifyMargin").add_child(
+		get_node("/root/Main/VSeparator/ElementSeparator").add_child(
 			load("res://plugins/SpotifyPanelLegacy/scenes/SpotifyPanelLegacy.tscn").instance()
 			)
 		loaded = true
@@ -16,5 +16,5 @@ func load():
 
 func unload():
 	if loaded:
-		get_node("/root/Main/VSeparator/ElementSeparator/SpotifyMargin/SpotifyPanelLegacy").queue_free()
+		get_node("/root/Main/VSeparator/ElementSeparator/SpotifyMargin").queue_free()
 		loaded = false
