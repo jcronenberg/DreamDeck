@@ -15,6 +15,12 @@ var app_button = load("res://plugins/Macroboard/scenes/AppButton.tscn")
 
 var max_buttons := Vector2(0, 0)
 
+# Configs
+onready var plugin_loader := get_node("/root/PluginLoader")
+onready var conf_dir = plugin_loader.get_conf_dir(PLUGIN_NAME)
+# Page0 hardcoded for now, because we don't support multiple pages yet
+onready var layout_config = load("res://scripts/global/Config.gd").new({"Page0": []}, conf_dir + "layout.json")
+
 
 func _ready():
 	load_from_config()
@@ -32,14 +38,25 @@ func load_from_config():
 	# Load button settings
 	button_min_size = Vector2(data["button_settings"]["height"], data["button_settings"]["width"])
 
+	layout_config.load_config()
+	var layout = layout_config.get_config()
+
+	# This is just for the transition away from saving the layout in config.json
+	# TODO delete in the future
+	if layout["Page0"].size() == 0:
+		layout["Page0"] = create_array_from_dict(data)
+		layout_config.change_config(layout)
+		layout_config.save()
+		config_loader.save_plugin_config(PLUGIN_NAME, {"button_settings": {"height": button_min_size.x, "width": button_min_size.y}})
+
 	# Load buttons
-	# Iterate through rows in data
-	for row in data["layout"].values():
+	# Iterate through rows in layout
+	for row in layout["Page0"]:
 		# Instance row so we can modify it
 		var cur_row = macro_row.instance()
 
 		# Iterate through buttons in row
-		for button in row.values():
+		for button in row:
 			# Instance button so we can modify it
 			var new_button = app_button.instance()
 			# Apply button settings
@@ -53,28 +70,40 @@ func load_from_config():
 		# Add row to scene
 		$RowSeparator.add_child(cur_row)
 
-# Returns a dict that contains all necessary information to save this instance
-# The returned dict can be saved to a file and loaded when the app starts
+
+# This function is just for the transition away from saving the layout in config.json
+# TODO delete in the future
+func create_array_from_dict(data) -> Array:
+	var button_array := []
+	for row in data["layout"].values():
+		var row_array := []
+		# Iterate through buttons in row
+		for button in row.values():
+			row_array.append(button)
+
+		button_array.append(row_array)
+
+	return button_array
+
+# Saves plugin config and layout
+# Layout is created from existing button layout
 func save():
-	var save_dict = {
-		"layout" : {},
-		"button_settings": {"height": button_min_size.x, "width": button_min_size.y}
-	}
+	config_loader.save_plugin_config(PLUGIN_NAME, {"button_settings": {"height": button_min_size.x, "width": button_min_size.y}})
+	var button_array := []
 	var row_count = 0
 	for row in $RowSeparator.get_children():
 		# Don't add a row if it is empty
 		if row.get_child_count() <= 0:
 			continue
 
-		save_dict["layout"]["row" + str(row_count)] = {}
+		button_array.append([])
 
-		var button_count = 0
 		for button in row.get_children():
-			save_dict["layout"]["row" + str(row_count)]["button" + str(button_count)] = button.save()
-			button_count += 1
+			button_array[row_count].append(button.save())
 		row_count += 1
 
-	return save_dict
+	layout_config.change_config({"Page0": button_array})
+	layout_config.save()
 
 
 # Adds AddButtons where they are appropriate
@@ -125,7 +154,7 @@ func _on_exited_edit_mode():
 	# Need to first remove as otherwise we run the risk of trying to save the edit buttons
 	remove_add_buttons()
 
-	config_loader.save_plugin_config(PLUGIN_NAME, save())
+	save()
 
 	$EditButtonPopup.visible = false
 
