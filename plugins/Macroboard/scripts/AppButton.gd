@@ -16,7 +16,7 @@ func _ready():
 
 func apply_change():
 	if icon_path:
-		set_logo()
+		set_image()
 	elif app_name:
 		text = app_name
 	else:
@@ -38,7 +38,7 @@ func apply_change():
 		arguments = args
 
 
-func set_logo():
+func set_image():
 	if icon_path:
 		var complete_icon_path = config_loader.get_conf_dir() + "icons/" + icon_path
 		var image = Image.new()
