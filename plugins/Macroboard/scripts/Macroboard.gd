@@ -38,6 +38,8 @@ func _ready():
 # But this may also lead to problems in the future so look here if something is acting strange
 func _process(_delta):
 	load_config()
+	_on_Macroboard_item_rect_changed()
+	load_buttons()
 	initializing = false
 	set_process(false)
 
@@ -62,8 +64,6 @@ func load_config():
 		layout_config.change_config(layout)
 		layout_config.save()
 		config_loader.save_plugin_config(PLUGIN_NAME, {"button_settings": {"height": button_min_size.x, "width": button_min_size.y}})
-
-	load_buttons()
 
 
 func free_rows():
