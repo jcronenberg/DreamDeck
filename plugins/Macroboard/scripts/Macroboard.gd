@@ -35,6 +35,12 @@ var initializing = true
 func _ready():
 	global_signals.connect("entered_edit_mode", self, "_on_entered_edit_mode")
 	global_signals.connect("exited_edit_mode", self, "_on_exited_edit_mode")
+	global_signals.connect("config_changed", self, "_on_config_changed")
+
+
+func _on_config_changed():
+	load_config()
+	_on_size_changed()
 
 
 # FIXME This is a hack, because on startup the window gets resized a lot
@@ -43,7 +49,8 @@ func _ready():
 # But this may also lead to problems in the future so look here if something is acting strange
 func _process(_delta):
 	load_config()
-	_on_Macroboard_item_rect_changed()
+	layout_config.load_config()
+	_on_size_changed()
 	load_buttons()
 	initializing = false
 	set_process(false)
@@ -59,12 +66,11 @@ func load_config():
 	# Load button settings
 	button_min_size = Vector2(data["button_settings"]["height"], data["button_settings"]["width"])
 
-	layout_config.load_config()
-	var layout = layout_config.get_config()
-
 	# This is just for the transition away from saving the layout in config.json
 	# TODO delete in the future
-	if layout["Page0"].size() == 0:
+	if "layout" in data.keys():
+		layout_config.load_config()
+		var layout = layout_config.get_config()
 		layout["Page0"] = create_array_from_dict(data)
 		layout_config.change_config(layout)
 		layout_config.save()
@@ -326,7 +332,7 @@ func calculate_size() -> Vector2:
 	return Vector2(floor((size.x + BUTTON_GAP) / (button_min_size.x + BUTTON_GAP)), floor((size.y + BUTTON_GAP) / (button_min_size.y + BUTTON_GAP)))
 
 
-func _on_Macroboard_item_rect_changed():
+func _on_size_changed():
 	max_buttons = calculate_size()
 	# Because we don't want to reload a bunch of times at startup
 	if not initializing:
