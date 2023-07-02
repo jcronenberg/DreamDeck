@@ -14,6 +14,7 @@ onready var global_signals = get_node("/root/GlobalSignals")
 func _ready():
 	apply_change()
 
+
 func apply_change():
 	if icon_path:
 		set_image()
@@ -47,6 +48,7 @@ func set_image():
 		texture.create_from_image(image)
 		$Icon.texture = texture
 
+
 func show_only_icon():
 	$Icon.margin_bottom = -20
 	$Icon.margin_left = 20
@@ -54,12 +56,14 @@ func show_only_icon():
 	$AppName.visible = false
 	$AppName.autowrap = true
 
+
 func show_name_with_icon():
 	$Icon.margin_bottom = -50
 	$Icon.margin_left = 35
 	$Icon.margin_right = -35
 	$AppName.text = app_name
 	$AppName.visible = true
+
 
 func _on_AppButton_pressed():
 	# If we are in edit mode we don't execute the command, but instead
@@ -72,7 +76,6 @@ func _on_AppButton_pressed():
 		macroboard.edit_button(self)
 		return
 
-# warning-ignore:return_value_discarded
 	OS.execute(app, arguments, false)
 
 func save():

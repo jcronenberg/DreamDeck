@@ -15,10 +15,10 @@ func show_popup(row, pos, button):
 	cur_row = row
 	cur_pos = pos
 	button_to_edit = button
-	$"%Header".text = "Editing Button on Row: " + str(cur_row) + " Pos: " + str(cur_pos + 1) + \
+	$"%Header".text = "Editing Button on Row: " + str(cur_row + 1) + " Pos: " + str(cur_pos + 1) + \
 		". Hover for a tooltip"
 	$MarginContainer/Rows/PositionSplit/LineEdit.text = str(cur_pos + 1)
-	if button:
+	if button.has_method("save"):
 		fill_from_button_dict(button.save())
 		$"%DeleteButton".visible = true
 	else:
@@ -44,10 +44,8 @@ func _on_DeleteButton_pressed():
 	if button_to_edit:
 		# Can't queue_free here as we need it gone to properly delete the row
 		# because remove_add_buttons only delete's the row when no button is present
-		button_to_edit.free()
+		get_parent().delete_button(button_to_edit)
 
-	get_parent().remove_add_buttons()
-	get_parent().create_add_buttons()
 	visible = false
 
 

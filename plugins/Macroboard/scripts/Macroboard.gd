@@ -12,7 +12,9 @@ onready var global_signals = get_node("/root/GlobalSignals")
 var button_min_size: Vector2 = Vector2(150, 150) # default size
 var macro_row = load("res://plugins/Macroboard/scenes/MacroRow.tscn")
 var app_button = load("res://plugins/Macroboard/scenes/AppButton.tscn")
+var no_button = load("res://plugins/Macroboard/scenes/NoButton.tscn")
 
+# The maximum amount of buttons we can currently display
 var max_buttons := Vector2(0, 0)
 
 # Configs
@@ -21,15 +23,27 @@ onready var conf_dir = plugin_loader.get_conf_dir(PLUGIN_NAME)
 # Page0 hardcoded for now, because we don't support multiple pages yet
 onready var layout_config = load("res://scripts/global/Config.gd").new({"Page0": []}, conf_dir + "layout.json")
 
+# To prevent reloading a bunch of times at startup
+var initializing = true
+
 
 func _ready():
-	load_from_config()
 	global_signals.connect("entered_edit_mode", self, "_on_entered_edit_mode")
 	global_signals.connect("exited_edit_mode", self, "_on_exited_edit_mode")
 
 
-# Loads the saved configuration and instances all rows and buttons
-func load_from_config():
+# FIXME This is a hack, because on startup the window gets resized a lot
+# so we need to wait for it all to settle and then we can handle adding buttons
+# this leads to way faster startup times
+# But this may also lead to problems in the future so look here if something is acting strange
+func _process(_delta):
+	load_config()
+	initializing = false
+	set_process(false)
+
+
+# Loads the saved configuration
+func load_config():
 	var data = config_loader.get_plugin_config(PLUGIN_NAME)
 
 	if not data or data == {}:
@@ -49,26 +63,46 @@ func load_from_config():
 		layout_config.save()
 		config_loader.save_plugin_config(PLUGIN_NAME, {"button_settings": {"height": button_min_size.x, "width": button_min_size.y}})
 
-	# Load buttons
-	# Iterate through rows in layout
-	for row in layout["Page0"]:
-		# Instance row so we can modify it
+	load_buttons()
+
+
+func free_rows():
+	for row in $RowSeparator.get_children():
+		row.queue_free()
+
+
+func load_buttons():
+	# For now we just completely rebuild the layout when size is changed
+	# TODO maybe improve this
+	free_rows()
+
+	var layout = layout_config.get_config()
+
+	for row in max_buttons.y:
 		var cur_row = macro_row.instance()
 
-		# Iterate through buttons in row
-		for button in row:
-			# Instance button so we can modify it
-			var new_button = app_button.instance()
-			# Apply button settings
+		for button in max_buttons.x:
+			var new_button
+
+			# Only if an entry exists at this position we add it
+			if layout["Page0"].size() > row and layout["Page0"][row].size() > button and layout["Page0"][row][button]:
+				new_button = app_button.instance()
+				edit_button_keys(new_button, layout["Page0"][row][button])
+			else:
+				new_button = no_button.instance()
+				new_button.init(row, button)
+
 			new_button.set_custom_minimum_size(button_min_size)
 
-			edit_button_keys(new_button, button)
-
-			# Add modified button to current row
 			cur_row.add_child(new_button)
 
-		# Add row to scene
+
 		$RowSeparator.add_child(cur_row)
+
+
+	# Since all buttons get reset, we need to account for edit mode
+	if global_signals.get_edit_state():
+		toggle_add_buttons()
 
 
 # This function is just for the transition away from saving the layout in config.json
@@ -85,12 +119,53 @@ func create_array_from_dict(data) -> Array:
 
 	return button_array
 
-# Saves plugin config and layout
-# Layout is created from existing button layout
-func save():
-	config_loader.save_plugin_config(PLUGIN_NAME, {"button_settings": {"height": button_min_size.x, "width": button_min_size.y}})
+
+# Removes original_button and replaces it with new_button
+func replace_button(original_button, new_button):
+	var row = original_button.get_parent()
+	var pos = original_button.get_index()
+
+	row.add_child(new_button)
+	row.move_child(new_button, pos)
+
+	original_button.queue_free()
+
+
+# Swaps button position inside row (Note: probably only works for same row right now)
+# TODO allow swapping between different rows
+func swap_buttons(button1, button2):
+	var button1_row = button1.get_parent()
+	var button1_pos = button1.get_index()
+	var button2_row = button2.get_parent()
+	var button2_pos = button2.get_index()
+
+	# Need to account for the fact that the buttons get removed
+	if button1_pos > button2_pos: button1_pos -= 1
+
+	button1_row.remove_child(button1)
+	button2_row.remove_child(button2)
+
+	button1_row.add_child(button2)
+	button1_row.move_child(button2, button1_pos)
+	button2_row.add_child(button1)
+	button2_row.move_child(button1, button2_pos)
+
+
+# "Deletes" a button by replacing it with a no_button instance
+func delete_button(button):
+	var new_no_button = no_button.instance()
+	var button_pos = calculate_pos(button)
+	new_no_button.init(button_pos[0], button_pos[1])
+	replace_button(button, new_no_button)
+
+	# Because we are guaranteed currently in edit mode
+	new_no_button.toggle_add_button()
+
+
+# Creates the layout array from the existing nodes inside the macroboard
+func create_layout_array() -> Array:
 	var button_array := []
-	var row_count = 0
+	var row_count := 0
 	for row in $RowSeparator.get_children():
 		# Don't add a row if it is empty
 		if row.get_child_count() <= 0:
@@ -99,101 +174,120 @@ func save():
 		button_array.append([])
 
 		for button in row.get_children():
-			button_array[row_count].append(button.save())
+			if button.has_method("save"):
+				button_array[row_count].append(button.save())
+			else:
+				button_array[row_count].append(null)
+
 		row_count += 1
 
-	layout_config.change_config({"Page0": button_array})
+	return button_array
+
+
+# Since the save function will create arrays containing large amounts of unnecessary nulls
+# This function checks if a null really indicates a necessary empty position
+# and deletes unnecessary nulls
+# E.g. if [button, null, button] the null is required to indicate an empty space
+# but for [button, null, button, null] the last null isn't required
+func clear_appended_nulls(array: Array):
+	var last_not_null_row := -1
+	var last_not_null := -1
+	for i in array.size():
+		for j in array[i].size():
+			if array[i][j]:
+				last_not_null = j
+				last_not_null_row = i
+		array[i].resize(last_not_null + 1)
+		last_not_null = -1
+
+	array.resize(last_not_null_row + 1)
+
+
+# This is a special merge for 2 arrays
+# It only overwrites entries in original_array if there is something
+# at that place in new_array
+# This is so we don't overwrite/clear existing buttons only because
+# they aren't currently displayed e.g. because of current window size
+func merge_layout_array(original_array: Array, new_array: Array):
+	for i in new_array.size():
+		if i >= original_array.size():
+			original_array.append(new_array[i])
+		else:
+			for j in new_array[i].size():
+				if j >= original_array[i].size():
+					original_array[i].append(new_array[i][j])
+				else:
+					original_array[i][j] = new_array[i][j]
+
+
+# Saves plugin config and layout
+# Layout is created from existing button layout
+func save():
+	config_loader.save_plugin_config(PLUGIN_NAME, {"button_settings": {"height": button_min_size.x, "width": button_min_size.y}})
+
+	var layout = layout_config.get_config()
+	merge_layout_array(layout["Page0"], create_layout_array())
+	clear_appended_nulls(layout["Page0"])
+
+	layout_config.change_config(layout)
 	layout_config.save()
 
 
-# Adds AddButtons where they are appropriate
-# in this case at the end of all existing rows and creates a new row also containing a AddButton
-func create_add_buttons():
-	var add_button = load("res://plugins/Macroboard/scenes/AddButton.tscn")
-	var row_counter: int = 0
+# Toggles visibility of empty buttons to allow adding buttons in empty spaces
+func toggle_add_buttons():
 	for row in $RowSeparator.get_children():
-		row_counter += 1
-		if row.get_child_count() >= max_buttons.x:
-			continue
-		var add_button_instance = add_button.instance()
-		row.add_child(add_button_instance)
-		add_button_instance.set_custom_minimum_size(button_min_size)
-		add_button_instance.row = row_counter - 1
-
-	# Add new row to the end, since we want to enable creating a new row
-	if row_counter >= max_buttons.y:
-		return
-	var new_row = macro_row.instance()
-	var add_button_instance = add_button.instance()
-	new_row.add_child(add_button_instance)
-	add_button_instance.set_custom_minimum_size(button_min_size)
-	add_button_instance.row = row_counter
-	$RowSeparator.add_child(new_row)
-
-
-# Removes all AddButtons from this scene
-# and removes the last empty row
-func remove_add_buttons():
-	for row in $RowSeparator.get_children():
-		# If row only has one child, that child is a AddButton and we need to remove it
-		# Since that also frees its children we are done with the whole row and can continue
-		if row.get_child_count() == 1:
-			row.free()
-			continue
-
-		var add_button = row.get_child(row.get_child_count() - 1)
-		if add_button.name == "AddButton":
-			add_button.free()
+		for button in row.get_children():
+			if button.has_method("toggle_add_button"):
+				button.toggle_add_button()
 
 
 func _on_entered_edit_mode():
-	create_add_buttons()
+	toggle_add_buttons()
 
 
 func _on_exited_edit_mode():
-	# Need to first remove as otherwise we run the risk of trying to save the edit buttons
-	remove_add_buttons()
+	toggle_add_buttons()
 
 	save()
 
+	# If there is a popup left open we need to close it
 	$EditButtonPopup.visible = false
 
 
 # Function to be called when the AddButton is pressed
-func AddButton_pressed(row, pos):
-	$EditButtonPopup.show_popup(row, pos, null)
+func AddButton_pressed(row, pos, button):
+	$EditButtonPopup.show_popup(row, pos, button)
 
 
 # Adds or edits a button
 # row: row in which this button belongs
 # pos: position in row this button is supposed to be
 # button_dict: dictionary containing all keys that this button is supposed to have
-# button: if an existing button is to be edited this should be non null
-#         and contain the button's instance
+# button: instance of the button from which the change was requested
 func add_or_edit_button(row, pos, button_dict, button):
 	var row_node := $RowSeparator.get_child(row)
 
-	if not button:
-		button = app_button.instance()
+	if not button.has_method("save"):
+		var new_button = app_button.instance()
 		# Apply button settings
-		button.set_custom_minimum_size(button_min_size)
-		row_node.add_child(button)
+		new_button.set_custom_minimum_size(button_min_size)
+		replace_button(button, new_button)
+		button = new_button
 
 	# Check for valid pos
-	# child_count - 2 because we need to account for the edit button
 	# and child_count returns amount of children but pos starts at 0
-	if pos > row_node.get_child_count() - 2:
-		pos = row_node.get_child_count() - 2
+	if pos > row_node.get_child_count() - 1:
+		pos = row_node.get_child_count() - 1
+	# Don't allow invalid negative or 0 number
+	elif pos < 0:
+		pos = 0
 
 	edit_button_keys(button, button_dict)
 	button.apply_change()
 
-	row_node.move_child(button, pos)
-
-	# Remove and readd edit buttons, because either a new row can be created or
-	# the existing edit button would violate max_buttons
-	remove_add_buttons()
-	create_add_buttons()
+	# If a position change is requested
+	if row_node.get_child(pos) != button:
+		swap_buttons(row_node.get_child(pos), button)
 
 
 # Edits all keys of a button instance with given dict values
@@ -210,31 +304,14 @@ func edit_button_keys(button, button_dict):
 # Function to be called when an existing button is pressed in edit mode
 # button: the instance of the button itself calling this function
 func edit_button(button):
-	var pos_dict = calculate_pos(button)
-	$EditButtonPopup.show_popup(pos_dict["row"], pos_dict["pos"], button)
+	var button_pos = calculate_pos(button)
+	$EditButtonPopup.show_popup(button_pos[0], button_pos[1], button)
 
 
 # This calculates the position of a button
-# Returns a dict with keys: row and pos
-# May need reevaluating in the future as this is a pretty clumsy approach
-func calculate_pos(button) -> Dictionary:
-	var row: Node = button.get_parent()
-	var row_parent: Node = row.get_parent()
-
-	var row_counter := 0
-	var pos_counter := 0
-
-	for child in row.get_children():
-		if child == button:
-			break
-		pos_counter += 1
-
-	for child in row_parent.get_children():
-		if child == row:
-			break
-		row_counter += 1
-
-	return {"row": row_counter, "pos": pos_counter}
+# Returns an array with [0] = row, [1] = pos
+func calculate_pos(button) -> Array:
+	return [button.get_parent().get_index(), button.get_index()]
 
 
 # This calculates how many rows and buttons per row are possible
@@ -246,3 +323,6 @@ func calculate_size() -> Vector2:
 
 func _on_Macroboard_item_rect_changed():
 	max_buttons = calculate_size()
+	# Because we don't want to reload a bunch of times at startup
+	if not initializing:
+		load_buttons()
