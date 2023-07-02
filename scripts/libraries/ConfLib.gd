@@ -57,3 +57,5 @@ static func conf_merge(dict1: Dictionary, dict2: Dictionary):
 			conf_merge(dict1[key], dict2[key])
 		elif typeof(dict2[key]) == typeof(dict1[key]):
 			dict1[key] = dict2[key]
+		elif typeof(dict1[key]) == TYPE_INT:
+			dict1[key] = int(dict2[key])
