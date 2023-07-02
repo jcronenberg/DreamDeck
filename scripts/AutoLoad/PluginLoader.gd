@@ -6,9 +6,11 @@ const DEFAULT_CONFIG := {
 	"Macroboard": true,
 }
 
+const conf_lib := preload("res://scripts/libraries/ConfLib.gd")
 var conf_dir: String = OS.get_user_data_dir() + "/"
 var config
 var plugin_loaders: Dictionary
+var plugin_configs: Dictionary
 
 
 func _ready():
@@ -63,11 +65,27 @@ func handle_config():
 			plugin_loaders[plugin].unload()
 
 
-func get_conf_dir(name):
-	return conf_dir + "plugins/" + name + "/"
+func get_plugin_config(name: String, plugin_default_config):
+	conf_lib.ensure_dir_exists(plugin_path(name))
+	if not name in plugin_configs.keys():
+		plugin_configs[name] = load("res://scripts/global/Config.gd").new(plugin_default_config, plugin_path(name) + "config.json")
+
+	plugin_configs[name].load_config()
+	return plugin_configs[name].get_config()
 
 
-func get_cache_dir(name):
+func save_plugin_config(name: String, new_data) -> bool:
+	conf_lib.ensure_dir_exists(plugin_path(name))
+	return conf_lib.save_config(plugin_path(name) + "config.json", new_data)
+
+
+func get_conf_dir(name: String):
+	conf_lib.ensure_dir_exists(plugin_path(name))
+	return plugin_path(name)
+
+
+func get_cache_dir(name: String):
+	conf_lib.ensure_dir_exists(conf_dir + "cache/" + name + "/")
 	return conf_dir + "cache/" + name + "/"
 
 
@@ -87,3 +105,8 @@ func list_plugins() -> Array:
 	dir.list_dir_end()
 
 	return files
+
+
+# Has trailing slash
+func plugin_path(name) -> String:
+	return conf_dir + "plugins/" + name + "/"
