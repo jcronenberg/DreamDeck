@@ -4,6 +4,12 @@ extends Control
 onready var config_loader = get_node("/root/ConfigLoader")
 onready var plugin_loader = get_node("/root/PluginLoader")
 
+# Submenus
+var options_submenu
+var plugins_submenu
+var plugin_options_submenu
+var edit_mode_button
+
 
 func _ready():
 	construct_main_menu()
@@ -20,19 +26,34 @@ func construct_main_menu():
 	new_button = submenu_button.instance()
 	new_button.rect_size.x = 400
 	new_button.init("Options", config_loader.get_config_data())
+	options_submenu = new_button
 	$Menu/OptionSeparator.add_child(new_button)
 	# Plugins
 	new_button = submenu_button.instance()
 	new_button.rect_size.x = 400
 	new_button.init("Plugins", plugin_loader.get_config())
+	plugins_submenu = new_button
+	$Menu/OptionSeparator.add_child(new_button)
+	# Plugin options
+	new_button = submenu_button.instance()
+	new_button.rect_size.x = 400
+	new_button.init("Plugin options", plugin_loader.get_all_plugin_configs())
+	plugin_options_submenu = new_button
 	$Menu/OptionSeparator.add_child(new_button)
 	# Edit Mode
 	new_button = execute_function_button.instance()
 	new_button.init("Edit Mode", "/root/GlobalSignals", "toggle_edit_mode")
 	new_button.rect_size.x = 400
+	edit_mode_button = new_button
 	$Menu/OptionSeparator.add_child(new_button)
 
 
+func edit_plugin_options():
+	plugin_options_submenu.clear_submenu()
+	plugin_options_submenu.add_submenu(plugin_loader.get_all_plugin_configs())
+
+
 func construct_config():
-	config_loader.change_config_data($Menu/OptionSeparator.get_child(1).construct_dict())
-	plugin_loader.change_config($Menu/OptionSeparator.get_child(2).construct_dict())
+	config_loader.change_config_data(options_submenu.construct_dict())
+	plugin_loader.change_config(plugins_submenu.construct_dict())
+	plugin_loader.change_all_plugin_configs(plugin_options_submenu.construct_dict())
