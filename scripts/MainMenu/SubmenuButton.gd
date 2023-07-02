@@ -37,6 +37,15 @@ func add_submenu(dict):
 		change_submenu_size(new_button.rect_size.x)
 
 
+# Resets submenu to original state, so that a different submenu can be added
+func clear_submenu():
+	for child in $SubmenuBg/OptionSeparator.get_children():
+		child.queue_free()
+
+	$SubmenuBg.rect_min_size.y = 0
+	$SubmenuBg.rect_min_size.x = 0
+
+
 # Shows submenu if button is of type SUBMENU
 func toggle_submenu():
 	hide_other_open_submenu()
