@@ -37,32 +37,6 @@ func _ready():
 		get_tree().quit()
 
 
-# Prepares everything for the plugin config
-# ensures directory exists and returns the config's path
-func plugin_conf_preparation(name: String) -> String:
-	var plugin_conf_dir_path: String = conf_dir + "plugins/" + name
-	var plugin_conf_path: String = plugin_conf_dir_path + "/config.json"
-	conf_lib.ensure_dir_exists(plugin_conf_dir_path)
-	return plugin_conf_path
-
-
-# Get a plugin's config
-# If no config is present, it creates the file and returns an empty dict
-# name: Name of the plugin, for reading/creating the correct dir in conf_dir/plugins/
-func get_plugin_config(name: String):
-	var plugin_conf_path := plugin_conf_preparation(name)
-	return conf_lib.load_config(plugin_conf_path)
-
-
-# Save new data to the plugin's config file
-# Old data is completely overwritten, so the caller should make sure all data is present
-# name: Name of the plugin, for writing/creating the correct dir in conf_dir/plugins/
-# new_data: The data to be written, should be parseable by to_json
-func save_plugin_config(name: String, new_data) -> bool:
-	var plugin_conf_path := plugin_conf_preparation(name)
-	return conf_lib.save_config(plugin_conf_path, new_data)
-
-
 # Returns the global config data
 func get_config_data():
 	return config.get_config()
