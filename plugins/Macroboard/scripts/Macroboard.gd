@@ -5,7 +5,6 @@ const PLUGIN_NAME = "Macroboard"
 const BUTTON_GAP = 10
 
 # Global nodes
-onready var config_loader = get_node("/root/ConfigLoader")
 onready var global_signals = get_node("/root/GlobalSignals")
 
 # Global vars
@@ -22,6 +21,12 @@ onready var plugin_loader := get_node("/root/PluginLoader")
 onready var conf_dir = plugin_loader.get_conf_dir(PLUGIN_NAME)
 # Page0 hardcoded for now, because we don't support multiple pages yet
 onready var layout_config = load("res://scripts/global/Config.gd").new({"Page0": []}, conf_dir + "layout.json")
+const DEFAULT_CONFIG := {
+	"button_settings": {
+		"height": 150,
+		"width": 150
+	}
+}
 
 # To prevent reloading a bunch of times at startup
 var initializing = true
@@ -46,7 +51,7 @@ func _process(_delta):
 
 # Loads the saved configuration
 func load_config():
-	var data = config_loader.get_plugin_config(PLUGIN_NAME)
+	var data = plugin_loader.get_plugin_config(PLUGIN_NAME, DEFAULT_CONFIG)
 
 	if not data or data == {}:
 		return
@@ -63,7 +68,7 @@ func load_config():
 		layout["Page0"] = create_array_from_dict(data)
 		layout_config.change_config(layout)
 		layout_config.save()
-		config_loader.save_plugin_config(PLUGIN_NAME, {"button_settings": {"height": button_min_size.x, "width": button_min_size.y}})
+		plugin_loader.save_plugin_config(PLUGIN_NAME, {"button_settings": {"height": button_min_size.x, "width": button_min_size.y}})
 
 
 func free_rows():
@@ -223,7 +228,7 @@ func merge_layout_array(original_array: Array, new_array: Array):
 # Saves plugin config and layout
 # Layout is created from existing button layout
 func save():
-	config_loader.save_plugin_config(PLUGIN_NAME, {"button_settings": {"height": button_min_size.x, "width": button_min_size.y}})
+	plugin_loader.save_plugin_config(PLUGIN_NAME, {"button_settings": {"height": button_min_size.x, "width": button_min_size.y}})
 
 	var layout = layout_config.get_config()
 	merge_layout_array(layout["Page0"], create_layout_array())
