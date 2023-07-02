@@ -17,6 +17,10 @@ func init(ini_key, ini_value):
 func return_value():
 	var ret_val = value_node.text
 	match type:
+		TYPE_INT:
+			if ret_val.is_valid_integer():
+				# Because json doesn't handle int
+				return ret_val.to_float()
 		TYPE_REAL:
 			if ret_val.is_valid_float():
 				return ret_val.to_float()
