@@ -76,7 +76,8 @@ func get_plugin_config(name: String, plugin_default_config):
 
 func save_plugin_config(name: String, new_data) -> bool:
 	conf_lib.ensure_dir_exists(plugin_path(name))
-	return conf_lib.save_config(plugin_path(name) + "config.json", new_data)
+	plugin_configs[name].change_config(new_data)
+	return plugin_configs[name].save()
 
 
 func get_conf_dir(name: String):
