@@ -74,6 +74,20 @@ func get_plugin_config(name: String, plugin_default_config):
 	return plugin_configs[name].get_config()
 
 
+func get_all_plugin_configs() -> Dictionary:
+	var configs := {}
+	for plugin in plugin_configs.keys():
+		configs[plugin] = plugin_configs[plugin].get_config()
+
+	return configs
+
+
+func change_all_plugin_configs(new_data: Dictionary):
+	for plugin in new_data:
+		plugin_configs[plugin].change_config(new_data[plugin])
+		plugin_configs[plugin].save()
+
+
 func save_plugin_config(name: String, new_data) -> bool:
 	conf_lib.ensure_dir_exists(plugin_path(name))
 	plugin_configs[name].change_config(new_data)
