@@ -22,9 +22,9 @@ onready var conf_dir = plugin_loader.get_conf_dir(PLUGIN_NAME)
 # Page0 hardcoded for now, because we don't support multiple pages yet
 onready var layout_config = load("res://scripts/global/Config.gd").new({"Page0": []}, conf_dir + "layout.json")
 const DEFAULT_CONFIG := {
-	"button_settings": {
-		"height": 150,
-		"width": 150
+	"Button Settings": {
+		"Height": 150,
+		"Width": 150
 	}
 }
 
@@ -64,7 +64,7 @@ func load_config():
 		return
 
 	# Load button settings
-	button_min_size = Vector2(data["button_settings"]["height"], data["button_settings"]["width"])
+	button_min_size = Vector2(data["Button Settings"]["Height"], data["Button Settings"]["Width"])
 
 	# This is just for the transition away from saving the layout in config.json
 	# TODO delete in the future
@@ -75,7 +75,7 @@ func load_config():
 		layout["Page0"] = create_array_from_dict(raw_conf)
 		layout_config.change_config(layout)
 		layout_config.save()
-		plugin_loader.save_plugin_config(PLUGIN_NAME, {"button_settings": {"height": button_min_size.x, "width": button_min_size.y}})
+		plugin_loader.save_plugin_config(PLUGIN_NAME, {"Button Settings": {"Height": button_min_size.x, "Width": button_min_size.y}})
 
 
 func free_rows():
@@ -235,7 +235,7 @@ func merge_layout_array(original_array: Array, new_array: Array):
 # Saves plugin config and layout
 # Layout is created from existing button layout
 func save():
-	plugin_loader.save_plugin_config(PLUGIN_NAME, {"button_settings": {"height": button_min_size.x, "width": button_min_size.y}})
+	plugin_loader.save_plugin_config(PLUGIN_NAME, {"Button Settings": {"Height": button_min_size.x, "Width": button_min_size.y}})
 
 	var layout = layout_config.get_config()
 	merge_layout_array(layout["Page0"], create_layout_array())
