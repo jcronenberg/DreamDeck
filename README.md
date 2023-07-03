@@ -21,23 +21,15 @@ You will need rust/cargo and godot 3 (3.5 recommended).
 # Download
 ## Clone the project
 git clone https://github.com/jcronenberg/DreamDeck
-## cd into the project
-cd DreamDeck
 
-# Building the rust library
-## cd to rust dir
-cd rust
-## Build the library
-## Note: release is required as it is the linked library
-##       it is also recommended as the debug build is too slow for use
-cargo build --release
-## cd back
-cd ..
-
-# Building the project
-godot --export "Linux/X11"
+# Build for Linux and Windows
+make
+# Build for just Linux
+make linux
+# Build for just Windows
+make windows
 ```
-The binary can now be found in `bin/`
+The binaries can now be found in `bin/`
 
 ### Configuring
 The configuration files can be found in `~/.local/share/godot/app_userdata/DreamDeck` after the app was once launched.
