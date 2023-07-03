@@ -3,7 +3,7 @@ extends PopupPanel
 const TWEEN_SPEED := 0.5
 const MAX_MENU_MARGIN: float = 400.0
 
-onready var option_button := load("res://scenes/MainMenu/SubmenuButton.tscn")
+onready var setting_button := load("res://scenes/MainMenu/SubmenuButton.tscn")
 
 
 func show_menu():
@@ -20,13 +20,13 @@ func show_menu():
 	# the fading out wouldn't work smoothly
 	# Shouldn't be an issue because the names of these buttons should
 	# not be changeable anyway
-	for child in $OptionSeparator.get_children():
+	for child in $SettingSeparator.get_children():
 		child.clip_text = true
 
 
 func hide_menu():
 	get_node("/root/GlobalSignals").config_changed()
-	for child in $OptionSeparator.get_children():
+	for child in $SettingSeparator.get_children():
 		if child.has_method("hide_submenu"):
 			child.hide_submenu()
 	set_menu_button_border_width(0)
@@ -59,5 +59,5 @@ func set_menu_button_border_width(value):
 
 
 func set_min_size(value):
-	for child in $OptionSeparator.get_children():
+	for child in $SettingSeparator.get_children():
 		child.rect_min_size.x = value

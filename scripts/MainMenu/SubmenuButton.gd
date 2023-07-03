@@ -17,10 +17,10 @@ func add_submenu(dict):
 		var new_button
 		match typeof(dict[key]):
 			TYPE_BOOL:
-				new_button = load("res://scenes/MainMenu/OptionToggle.tscn").instance()
+				new_button = load("res://scenes/MainMenu/SettingToggle.tscn").instance()
 				new_button.init(key, dict[key])
 			TYPE_INT,TYPE_REAL,TYPE_STRING:
-				new_button = load("res://scenes/MainMenu/OptionLineEdit.tscn").instance()
+				new_button = load("res://scenes/MainMenu/SettingLineEdit.tscn").instance()
 				new_button.init(key, dict[key])
 			TYPE_DICTIONARY:
 				new_button = load("res://scenes/MainMenu/SubmenuButton.tscn").instance()

@@ -71,7 +71,7 @@ func get_plugin_config(name: String, plugin_default_config):
 		plugin_configs[name] = load("res://scripts/global/Config.gd").new(plugin_default_config, plugin_path(name) + "config.json")
 
 	plugin_configs[name].load_config()
-	get_node("/root/Main/MainMenu").edit_plugin_options()
+	get_node("/root/Main/MainMenu").edit_plugin_settings()
 	return plugin_configs[name].get_config()
 
 

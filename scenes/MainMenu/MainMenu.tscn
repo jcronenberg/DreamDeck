@@ -33,12 +33,12 @@ margin_right = 400.0
 custom_styles/panel = SubResource( 1 )
 script = ExtResource( 3 )
 
-[node name="OptionSeparator" type="VBoxContainer" parent="Menu"]
+[node name="SettingSeparator" type="VBoxContainer" parent="Menu"]
 margin_right = 400.0
 margin_bottom = 1080.0
 custom_constants/separation = 0
 
-[node name="AppNameLabel" type="Label" parent="Menu/OptionSeparator"]
+[node name="AppNameLabel" type="Label" parent="Menu/SettingSeparator"]
 margin_right = 400.0
 margin_bottom = 100.0
 rect_min_size = Vector2( 0, 100 )
