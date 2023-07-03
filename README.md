@@ -16,7 +16,7 @@ There is also support for basic buttons, that execute shell scripts or launch pr
 
 ## Installation
 ### Building the project
-You will need rust/cargo and godot 3 (3.5 recommended).
+You will need rust/cargo and godot 3 (the latest stable).
 ```bash
 # Download
 ## Clone the project
