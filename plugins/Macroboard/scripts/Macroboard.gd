@@ -68,10 +68,11 @@ func load_config():
 
 	# This is just for the transition away from saving the layout in config.json
 	# TODO delete in the future
-	if "layout" in data.keys():
+	var raw_conf = load("res://scripts/libraries/ConfLib.gd").load_config(conf_dir + "config.json")
+	if "layout" in raw_conf.keys():
 		layout_config.load_config()
 		var layout = layout_config.get_config()
-		layout["Page0"] = create_array_from_dict(data)
+		layout["Page0"] = create_array_from_dict(raw_conf)
 		layout_config.change_config(layout)
 		layout_config.save()
 		plugin_loader.save_plugin_config(PLUGIN_NAME, {"button_settings": {"height": button_min_size.x, "width": button_min_size.y}})
