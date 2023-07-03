@@ -168,6 +168,7 @@ func delete_button(button):
 	var new_no_button = no_button.instance()
 	var button_pos = calculate_pos(button)
 	new_no_button.init(button_pos[0], button_pos[1])
+	new_no_button.set_custom_minimum_size(button_min_size)
 	replace_button(button, new_no_button)
 
 	# Because we are guaranteed currently in edit mode
