@@ -1,9 +1,6 @@
 extends Node
 
 const DEFAULT_CONFIG := {
-	"Touch": {
-		"Default Device": "",
-	},
 	"Transparent Background": false,
 }
 

@@ -1,5 +1,7 @@
 extends Control
 
+const PLUGIN_NAME = "Touch"
+
 # Vars
 var x_changed: bool = false
 var y_changed: bool = false
@@ -13,15 +15,19 @@ var divide_y_by: float = 0.0
 
 # Nodes
 var grab_touch_devices_script
-onready var config_loader = get_node("/root/ConfigLoader")
 onready var device_options = get_node("ControlsSeparator/DeviceOptions")
 onready var reconnect_button = get_node("ControlsSeparator/ReconnectButton")
 onready var grab_check_button = get_node("ControlsSeparator/GrabCheckButton")
 
-
 # Non fullscreen functions
 var window_area_min: Vector2 = Vector2(0, 0)
 var window_area_max: Vector2 = Vector2(0, 0)
+
+# Config
+onready var plugin_loader := get_node("/root/PluginLoader")
+const DEFAULT_CONFIG = {
+	"Default Device": ""
+}
 
 
 func _ready():
@@ -35,8 +41,8 @@ func _ready():
 	# Set event_lmb to left mouse button
 	event_lmb.button_index = 1
 
-	# Handle default device from options
-	device_options.set_default_device()
+	# Handle default device from plugin config
+	load_config()
 
 	if OS.has_feature("editor"):
 		get_node("/root/Main/DebugCursor").visible = true
@@ -47,6 +53,10 @@ func _on_main_window_resized():
 	calculate_divide_by()
 	if not OS.is_window_fullscreen():
 		calculate_window_area()
+
+
+func load_config():
+	device_options.set_default_device(plugin_loader.get_plugin_config(PLUGIN_NAME, DEFAULT_CONFIG)["Default Device"])
 
 
 func calculate_window_area():

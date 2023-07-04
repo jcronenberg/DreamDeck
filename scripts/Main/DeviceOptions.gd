@@ -1,10 +1,8 @@
 extends OptionButton
 
 var device_list: Array
-var default_device: String
 
 onready var handler = get_node("../..")
-onready var config_loader = get_node("/root/ConfigLoader")
 
 
 func get_items():
@@ -17,11 +15,9 @@ func get_items():
 		self.add_item(device_list[i], i)
 
 
-func set_default_device():
+func set_default_device(default_device):
 	if not device_list:
 		get_items()
-
-	default_device = config_loader.get_config()["Touch"]["Default Device"]
 
 	if not default_device:
 		return
