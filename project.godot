@@ -28,8 +28,8 @@ boot_splash/show_image=false
 boot_splash/fullsize=false
 boot_splash/use_filter=false
 boot_splash/bg_color=Color( 0.141176, 0.141176, 0.141176, 1 )
-config/icon="res://resources/general/dreamdeck_icon.png"
-config/windows_native_icon="res://resources/general/dreamdeck_icon.ico"
+config/icon="res://resources/general/dreamdeck.png"
+config/windows_native_icon="res://resources/general/dreamdeck.ico"
 
 [autoload]
 

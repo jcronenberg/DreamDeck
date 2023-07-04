@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/dreamdeck_icon.png-d8593d589d24291d93a3fc5a8952fe5b.stex"
+path="res://.import/dreamdeck.png-e2d1568e0b21f9b30b678092ff9aad29.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://resources/general/dreamdeck_icon.png"
-dest_files=[ "res://.import/dreamdeck_icon.png-d8593d589d24291d93a3fc5a8952fe5b.stex" ]
+source_file="res://resources/general/dreamdeck.png"
+dest_files=[ "res://.import/dreamdeck.png-e2d1568e0b21f9b30b678092ff9aad29.stex" ]
 
 [params]
 

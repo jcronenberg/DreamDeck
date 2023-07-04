@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=DreamDeck
+Comment=
+Exec=/usr/local/bin/dreamdeck
+Icon=dreamdeck
+Terminal=false
+Type=Application
