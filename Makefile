@@ -10,19 +10,19 @@ DREAMDECK_LINUX = dreamdeck
 DREAMDECK_WINDOWS = dreamdeck.exe
 LIBDREAMDECK = libdreamdeck.so
 
-.PHONY: all windows linux _check-godot _check-godot-version _build-linux _build-windows rust-build clean rust-clean install uninstall
+.PHONY: all windows linux _check-godot _check-godot-version _build-linux _build-windows rust clean rust-clean install uninstall
 
 all:
-	$(MAKE) rust-build
+	$(MAKE) rust
 	$(MAKE) _build-linux
 	$(MAKE) _build-windows
 
 windows:
-	$(MAKE) rust-build
+	$(MAKE) rust
 	$(MAKE) _build-windows
 
 linux:
-	$(MAKE) rust-build
+	$(MAKE) rust
 	$(MAKE) _build-linux
 
 _check-godot:
@@ -42,7 +42,7 @@ _build-linux: _check-godot
 _build-windows: _check-godot
 	@$(GODOT_EXECUTABLE) --export --no-window "Windows Desktop"
 
-rust-build:
+rust:
 ifndef CARGO
 	$(error "Cargo not installed, rust is required")
 endif
