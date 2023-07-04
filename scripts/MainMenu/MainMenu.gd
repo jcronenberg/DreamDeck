@@ -54,6 +54,16 @@ func edit_plugin_settings():
 
 
 func construct_config():
-	config_loader.change_config(settings_submenu.construct_dict())
-	plugin_loader.change_activated_plugins(plugins_submenu.construct_dict())
-	plugin_loader.change_all_plugin_configs(plugin_settings_submenu.construct_dict())
+	var new_config
+	# Global config
+	new_config = settings_submenu.construct_dict()
+	if new_config.hash() != config_loader.get_config().hash():
+		config_loader.change_config(settings_submenu.construct_dict())
+
+	new_config = plugins_submenu.construct_dict()
+	if new_config.hash() != plugin_loader.get_activated_plugins().hash():
+		plugin_loader.change_activated_plugins(plugins_submenu.construct_dict())
+
+	new_config = plugin_settings_submenu.construct_dict()
+	if new_config.hash() != plugin_loader.get_all_plugin_configs().hash():
+		plugin_loader.change_all_plugin_configs(plugin_settings_submenu.construct_dict())
