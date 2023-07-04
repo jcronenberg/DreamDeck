@@ -1,9 +1,6 @@
 extends Node
 
 const DEFAULT_CONFIG := {
-	"Spotify Panel": {
-		"Refresh Interval": 5.0
-	},
 	"Touch": {
 		"Default Device": "",
 	},

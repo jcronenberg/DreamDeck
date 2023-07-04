@@ -88,7 +88,6 @@ func config_stage3_text() -> String:
 		   + "]link[/url] and authorize your account\nThen paste the url here:"
 
 # Nodes
-onready var config_loader := get_node("/root/ConfigLoader")
 onready var plugin_loader := get_node("/root/PluginLoader")
 onready var http_get := get_node("HTTPGet")
 onready var http_post := get_node("HTTPPost")
@@ -99,8 +98,11 @@ onready var cache_dir_path: String = plugin_loader.get_cache_dir(PLUGIN_NAME)
 
 # Configs
 onready var conf_dir = plugin_loader.get_conf_dir(PLUGIN_NAME)
-onready var config = load("res://scripts/global/Config.gd").new({"Refresh Interval": 5.0}, conf_dir + "config.json")
 onready var credentials = load("res://scripts/global/Config.gd").new({"refresh_token": "", "encoded_client": ""}, conf_dir + "credentials.json")
+
+const DEFAULT_CONFIG = {
+	"Refresh Interval": 5.0
+}
 
 
 func _ready():
@@ -108,10 +110,10 @@ func _ready():
 	ensure_dir_exists(cache_dir_path)
 
 	# Load configs
-	load_global_config()
 	load_plugin_config()
+	load_credentials()
 	# Handle for settings changed event
-	get_node("/root/GlobalSignals").connect("global_config_changed", self, "_on_global_config_changed")
+	get_node("/root/GlobalSignals").connect("plugin_configs_changed", self, "_on_plugin_configs_changed")
 
 	# Clear cache dir to not fill the user dir with endless albumarts
 	clear_cache()
@@ -142,20 +144,20 @@ func _physics_process(delta):
 		devices_delta = 0.0
 
 
-func _on_config_changed():
-	load_global_config()
+func _on_plugin_configs_changed():
+	load_plugin_config()
 
 
 # Load config from config_loader and apply the settings to local variables
-func load_global_config():
+func load_plugin_config():
 	# Load global config
-	var config_data = config_loader.get_config()
-	metadata_refresh = config_data["Spotify Panel"]["Refresh Interval"]
+	var config_data = plugin_loader.get_plugin_config(PLUGIN_NAME, DEFAULT_CONFIG)
+	metadata_refresh = config_data["Refresh Interval"]
 	# We don't need to refresh devices as often
 	# Add + 0.1 to offset it a bit to metadata_refresh
-	devices_refresh = config_data["Spotify Panel"]["Refresh Interval"] * 3 + 0.1
+	devices_refresh = config_data["Refresh Interval"] * 3 + 0.1
 
-func load_plugin_config():
+func load_credentials():
 	# Load plugin config
 	credentials.load_config()
 	plugin_config = credentials.get_config()
@@ -381,7 +383,8 @@ func set_song_state(data):
 	artist = data["artists"][0]["name"]
 	$Background/ArtistsName.text = artist
 
-	# Cover art
+	# Cover art 300x300, which makes most sense
+	# TODO make this configurable
 	var tmp = data["album"]["images"][1]["url"]
 	if art_url != tmp:
 		art_url = tmp
