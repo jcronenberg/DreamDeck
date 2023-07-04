@@ -56,18 +56,36 @@ func change_activated_plugins(new_data):
 func handle_activated_plugins():
 	var activated_plugins_data: Dictionary = activated_plugins.get_config()
 	for plugin in activated_plugins_data.keys():
-		if not plugin in plugin_loaders.keys():
+		# Plugin is activated and it wasn't previously loaded
+		if activated_plugins_data[plugin] and not plugin in plugin_loaders.keys():
 			# TODO maybe catch the case where Loader.gd doesn't exist
 			plugin_loaders[plugin] = load("res://plugins/" + plugin + "/Loader.gd").new()
 			add_child(plugin_loaders[plugin])
-		if activated_plugins_data[plugin]:
 			plugin_loaders[plugin].load()
-		else:
+		# Plugin isn't activated but was previously
+		elif not activated_plugins_data[plugin] and plugin in plugin_loaders.keys():
 			plugin_loaders[plugin].unload()
+			plugin_loaders[plugin].free()
+			plugin_loaders.erase(plugin)
+
+			# If plugin had settings we need to free and delete them from menu
+			if plugin in plugin_configs.keys():
+				plugin_configs.erase(plugin)
+				get_node("/root/Main/MainMenu").edit_plugin_settings()
 
 
 func get_plugin_config(name: String, plugin_default_config):
 	conf_lib.ensure_dir_exists(plugin_path(name))
+
+	# We check that name has a plugin_loader because otherwise
+	# there can be race conditions when freeing a plugin.
+	# Because the plugin loader will likely call queue_free when unloading
+	# but because there may still be nodes connected to the plugin_configs_changed signal,
+	# they may attempt to try loading their config, which was already freed
+	# then this gets triggered and would allocate a new config for a plugin that is exiting
+	if not name in plugin_loaders.keys():
+		return
+
 	if not name in plugin_configs.keys():
 		plugin_configs[name] = load("res://scripts/global/Config.gd").new(plugin_default_config, plugin_path(name) + "config.json")
 
@@ -86,6 +104,8 @@ func get_all_plugin_configs() -> Dictionary:
 
 func change_all_plugin_configs(new_data: Dictionary):
 	for plugin in new_data:
+		if not plugin in plugin_configs.keys():
+			continue
 		plugin_configs[plugin].change_config(new_data[plugin])
 		plugin_configs[plugin].save()
 

@@ -152,6 +152,9 @@ func _on_plugin_configs_changed():
 func load_plugin_config():
 	# Load global config
 	var config_data = plugin_loader.get_plugin_config(PLUGIN_NAME, DEFAULT_CONFIG)
+	if not config_data:
+		return
+
 	metadata_refresh = config_data["Refresh Interval"]
 	# We don't need to refresh devices as often
 	# Add + 0.1 to offset it a bit to metadata_refresh
