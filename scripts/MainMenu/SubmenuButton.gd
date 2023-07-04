@@ -44,6 +44,8 @@ func clear_submenu():
 
 	$SubmenuBg.rect_min_size.y = 0
 	$SubmenuBg.rect_min_size.x = 0
+	$SubmenuBg.rect_size.y = 0
+	$SubmenuBg.rect_size.x = 0
 
 
 # Shows submenu if button is of type SUBMENU
