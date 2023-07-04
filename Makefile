@@ -3,8 +3,14 @@ ifdef GODOT_EXECUTABLE
 	GODOT_VERSION := $(shell $(GODOT_EXECUTABLE) --version 2>/dev/null | cut -d'.' -f1)
 endif
 CARGO := $(shell command -v cargo 2> /dev/null)
+INSTALL_BIN = /usr/local/bin
+INSTALL_LIB = /usr/local/lib
+BUILD_DIR = bin
+DREAMDECK_LINUX = dreamdeck
+DREAMDECK_WINDOWS = dreamdeck.exe
+LIBDREAMDECK = libdreamdeck.so
 
-.PHONY: all windows linux _check-godot _check-godot-version _build-linux _build-windows rust-build clean rust-clean
+.PHONY: all windows linux _check-godot _check-godot-version _build-linux _build-windows rust-build clean rust-clean install uninstall
 
 all:
 	$(MAKE) rust-build
@@ -43,9 +49,19 @@ endif
 	cd rust && cargo build --release
 
 clean: rust-clean
-	rm -rf bin/*
+	rm $(BUILD_DIR)/$(DREAMDECK_LINUX)
+	rm $(BUILD_DIR)/$(DREAMDECK_WINDOWS)
+	rm $(BUILD_DIR)/$(LIBDREAMDECK)
 
 rust-clean:
 ifdef CARGO
 	cd rust && cargo clean
 endif
+
+install:
+	install bin/$(DREAMDECK_LINUX) $(INSTALL_BIN)
+	install bin/$(LIBDREAMDECK) $(INSTALL_LIB)
+
+uninstall:
+	rm $(INSTALL_BIN)/$(DREAMDECK_LINUX)
+	rm $(INSTALL_LIB)/$(LIBDREAMDECK)
