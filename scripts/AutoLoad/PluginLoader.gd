@@ -50,6 +50,7 @@ func change_activated_plugins(new_data):
 	activated_plugins.save()
 
 	handle_activated_plugins()
+	get_node("/root/GlobalSignals").activated_plugins_changed()
 
 
 func handle_activated_plugins():
@@ -87,6 +88,8 @@ func change_all_plugin_configs(new_data: Dictionary):
 	for plugin in new_data:
 		plugin_configs[plugin].change_config(new_data[plugin])
 		plugin_configs[plugin].save()
+
+	get_node("/root/GlobalSignals").plugin_configs_changed()
 
 
 func save_plugin_config(name: String, new_data) -> bool:

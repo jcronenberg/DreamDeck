@@ -6,10 +6,10 @@ onready var config_loader = get_node("/root/ConfigLoader")
 
 func _ready():
 	handle_config()
-	get_node("/root/GlobalSignals").connect("config_changed", self, "_on_config_changed")
+	get_node("/root/GlobalSignals").connect("global_config_changed", self, "_on_global_config_changed")
 
 
-func _on_config_changed():
+func _on_global_config_changed():
 	handle_config()
 
 

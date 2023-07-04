@@ -111,7 +111,7 @@ func _ready():
 	load_global_config()
 	load_plugin_config()
 	# Handle for settings changed event
-	get_node("/root/GlobalSignals").connect("config_changed", self, "_on_config_changed")
+	get_node("/root/GlobalSignals").connect("global_config_changed", self, "_on_global_config_changed")
 
 	# Clear cache dir to not fill the user dir with endless albumarts
 	clear_cache()

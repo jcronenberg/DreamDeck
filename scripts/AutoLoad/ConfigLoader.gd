@@ -47,6 +47,7 @@ func change_config(new_data):
 		return
 	config.change_config(new_data)
 	save_config()
+	get_node("/root/GlobalSignals").global_config_changed()
 
 
 func save_config():

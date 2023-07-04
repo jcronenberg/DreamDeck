@@ -35,10 +35,10 @@ var initializing = true
 func _ready():
 	global_signals.connect("entered_edit_mode", self, "_on_entered_edit_mode")
 	global_signals.connect("exited_edit_mode", self, "_on_exited_edit_mode")
-	global_signals.connect("config_changed", self, "_on_config_changed")
+	global_signals.connect("global_config_changed", self, "_on_global_config_changed")
 
 
-func _on_config_changed():
+func _on_global_config_changed():
 	load_config()
 	_on_size_changed()
 
