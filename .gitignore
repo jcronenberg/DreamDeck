@@ -2,7 +2,7 @@ bin/*
 .import/
 export.cfg
 
-rust/target
-rust/Cargo.lock
+plugins/Touch/rust/target
+plugins/Touch/rust/Cargo.lock
 
 local_config

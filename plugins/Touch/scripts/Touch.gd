@@ -25,7 +25,7 @@ var window_area_max: Vector2 = Vector2(0, 0)
 
 
 func _ready():
-	grab_touch_devices_script = load("res://rust/GrabTouchDevice.gdns").new()
+	grab_touch_devices_script = load("res://plugins/Touch/rust/GrabTouchDevice.gdns").new()
 	add_child(grab_touch_devices_script)
 
 	get_tree().get_root().connect("size_changed", self, "_on_main_window_resized")

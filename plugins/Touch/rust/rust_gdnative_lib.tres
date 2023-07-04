@@ -1,5 +1,5 @@
 [gd_resource type="GDNativeLibrary" format=2]
 
 [resource]
-entry/X11.64 = "res://rust/target/release/libdreamdeck.so"
+entry/X11.64 = "res://plugins/Touch/rust/target/release/libdreamdeck.so"
 dependency/X11.64 = [  ]

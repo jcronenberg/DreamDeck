@@ -3,6 +3,7 @@ ifdef GODOT_EXECUTABLE
 	GODOT_VERSION := $(shell $(GODOT_EXECUTABLE) --version 2>/dev/null | cut -d'.' -f1)
 endif
 CARGO := $(shell command -v cargo 2> /dev/null)
+RUST_DIR = plugins/Touch/rust
 INSTALL_BIN = /usr/local/bin/
 INSTALL_LIB = /usr/local/lib/
 ICON_DIR = /usr/local/share/icons/hicolor/256x256/apps/
@@ -51,7 +52,7 @@ rust:
 ifndef CARGO
 	$(error "Cargo not installed, rust is required")
 endif
-	cd rust && cargo build --release
+	cd $(RUST_DIR) && cargo build --release
 
 clean: rust-clean
 	rm -f $(BUILD_DIR)/$(DREAMDECK_LINUX)
@@ -60,7 +61,7 @@ clean: rust-clean
 
 rust-clean:
 ifdef CARGO
-	cd rust && cargo clean
+	cd $(RUST_DIR) && cargo clean
 endif
 
 install:
