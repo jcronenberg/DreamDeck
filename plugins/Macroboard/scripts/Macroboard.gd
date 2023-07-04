@@ -335,7 +335,10 @@ func calculate_size() -> Vector2:
 
 
 func _on_size_changed():
-	max_buttons = calculate_size()
+	var new_max_buttons = calculate_size()
+	if max_buttons == new_max_buttons:
+		return
+	max_buttons = new_max_buttons
 	# Because we don't want to reload a bunch of times at startup
 	if not initializing:
 		load_buttons()
