@@ -25,7 +25,7 @@ func construct_main_menu():
 	# Settings
 	new_button = submenu_button.instance()
 	new_button.rect_size.x = 400
-	new_button.init("Settings", config_loader.get_config_data())
+	new_button.init("Settings", config_loader.get_config())
 	settings_submenu = new_button
 	$Menu/SettingSeparator.add_child(new_button)
 	# Plugins
@@ -54,6 +54,6 @@ func edit_plugin_settings():
 
 
 func construct_config():
-	config_loader.change_config_data(settings_submenu.construct_dict())
+	config_loader.change_config(settings_submenu.construct_dict())
 	plugin_loader.change_config(plugins_submenu.construct_dict())
 	plugin_loader.change_all_plugin_configs(plugin_settings_submenu.construct_dict())

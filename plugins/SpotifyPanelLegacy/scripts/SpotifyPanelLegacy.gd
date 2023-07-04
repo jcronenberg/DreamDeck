@@ -41,7 +41,7 @@ func _ready():
 	ensure_script_exists()
 
 	# Load config
-	var config_data = config_loader.get_config_data()
+	var config_data = config_loader.get_config()
 	if config_data.has("spotify_panel"):
 		if config_data["spotify_panel"].has("disabled"):
 			if config_data["spotify_panel"]["disabled"]:

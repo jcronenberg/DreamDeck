@@ -38,11 +38,11 @@ func _ready():
 
 
 # Returns the global config data
-func get_config_data():
+func get_config():
 	return config.get_config()
 
 
-func change_config_data(new_data):
+func change_config(new_data):
 	if new_data.hash() == config.get_config().hash():
 		return
 	config.change_config(new_data)

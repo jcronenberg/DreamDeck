@@ -14,5 +14,5 @@ func _on_config_changed():
 
 
 func handle_config():
-	var config_data = config_loader.get_config_data()
+	var config_data = config_loader.get_config()
 	get_tree().get_root().transparent_bg = config_data["Transparent Background"]

@@ -21,7 +21,7 @@ func set_default_device():
 	if not device_list:
 		get_items()
 
-	default_device = config_loader.get_config_data()["Touch"]["Default Device"]
+	default_device = config_loader.get_config()["Touch"]["Default Device"]
 
 	if not default_device:
 		return

@@ -149,7 +149,7 @@ func _on_config_changed():
 # Load config from config_loader and apply the settings to local variables
 func load_global_config():
 	# Load global config
-	var config_data = config_loader.get_config_data()
+	var config_data = config_loader.get_config()
 	metadata_refresh = config_data["Spotify Panel"]["Refresh Interval"]
 	# We don't need to refresh devices as often
 	# Add + 0.1 to offset it a bit to metadata_refresh
