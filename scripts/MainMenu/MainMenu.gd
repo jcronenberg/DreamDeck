@@ -10,12 +10,17 @@ var plugins_submenu
 var plugin_settings_submenu
 var edit_mode_button
 
+# State
+var main_menu_constructed := false
+
 
 func _ready():
 	construct_main_menu()
 
 
 func construct_main_menu():
+	if main_menu_constructed:
+		return
 	# Load necessary button types
 	var submenu_button := load("res://scenes/MainMenu/SubmenuButton.tscn")
 	var execute_function_button := load("res://scenes/MainMenu/ExecuteFunctionButton.tscn")
@@ -47,8 +52,14 @@ func construct_main_menu():
 	edit_mode_button = new_button
 	$Menu/SettingSeparator.add_child(new_button)
 
+	main_menu_constructed = true
+
 
 func edit_plugin_settings():
+	# Because this may be called before _ready
+	if not main_menu_constructed:
+		_ready()
+
 	plugin_settings_submenu.clear_submenu()
 	plugin_settings_submenu.add_submenu(plugin_loader.get_all_plugin_configs())
 
