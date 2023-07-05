@@ -2,9 +2,6 @@
 extends Node
 class_name HttpServer
 
-# If `HttpRequest`s and `HttpResponse`s should be logged
-var _logging: bool = false
-
 # The ip address to bind the server to. Use * for all IP addresses [*]
 var bind_address: String = "*"
 
@@ -34,17 +31,18 @@ var _header_regex: RegEx = RegEx.new()
 var _local_base_path: String = "res://src"
 
 # Compile the required regex
-func _init(_logging: bool = false) -> void:
-	self._logging = _logging
+func _init() -> void:
 	set_process(false)
 	_method_regex.compile("^(?<method>GET) (?<path>[^ ]+) HTTP/1.1$")
 	_header_regex.compile("^(?<key>[^:]+): (?<value>.+)$")
 
 # Print a debug message in console, if the debug mode is enabled
-# 
+#
 # #### Parameters
 # - message: The message to be printed (only in debug mode)
 func _print_debug(message: String) -> void:
+	if not OS.has_feature("editor"):
+		return
 	var time = OS.get_datetime()
 	var time_return = "%02d-%02d-%02d %02d:%02d:%02d" % [time.year, time.month, time.day, time.hour, time.minute, time.second]
 	print_debug("[SERVER] ",time_return," >> ", message)
@@ -106,7 +104,7 @@ func stop():
 	self._server.stop()
 	set_process(false)
 	_print_debug("Server stopped.")
-	
+
 
 # Interpret a request string and perform the request
 #
@@ -167,7 +165,7 @@ func _perform_current_request(client: StreamPeer, request: HttpRequest):
 				"GET":
 					found = true
 					router.router.handle_get(request, response)
-	if not found:	
+	if not found:
 		response.send(404, "Not found")
 
 
@@ -176,9 +174,9 @@ func _perform_current_request(client: StreamPeer, request: HttpRequest):
 #
 # #### Parameters
 # - path: The path of the HttpRequest
-# - should_match_subfolder: (dafult [false]) if subfolders should be matched and grouped, 
+# - should_match_subfolder: (dafult [false]) if subfolders should be matched and grouped,
 #							used for HttpFileRouter
-# 
+#
 # Returns: A 2D array, containing a @regexp String and Dictionary of @params
 # 			[0] = @regexp --> the output expression as a String, to be compiled in RegExp
 # 			[1] = @params --> an Array of parameters, indexed by names
@@ -195,11 +193,11 @@ func _path_to_regexp(path: String, should_match_subfolders: bool = false) -> Arr
 			params.append(fragment)
 		else:
 			regexp += "/" + fragment
-	regexp += "[/#?]?$" if not should_match_subfolders else "(?<subpath>$|/.*)" 
+	regexp += "[/#?]?$" if not should_match_subfolders else "(?<subpath>$|/.*)"
 	return [regexp, params]
 
 
-# Extracts query parameters from a String query, 
+# Extracts query parameters from a String query,
 # building a Query Dictionary of param:value pairs
 #
 # #### Parameters
