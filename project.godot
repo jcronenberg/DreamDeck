@@ -13,9 +13,27 @@ _global_script_classes=[ {
 "class": "DreamDeckConstants",
 "language": "GDScript",
 "path": "res://scripts/global/Constants.gd"
+}, {
+"base": "Reference",
+"class": "HttpRequest",
+"language": "GDScript",
+"path": "res://plugins/SpotifyPanel/scripts/godottpd/http_request.gd"
+}, {
+"base": "Reference",
+"class": "HttpResponse",
+"language": "GDScript",
+"path": "res://plugins/SpotifyPanel/scripts/godottpd/http_response.gd"
+}, {
+"base": "Node",
+"class": "HttpServer",
+"language": "GDScript",
+"path": "res://plugins/SpotifyPanel/scripts/godottpd/http_server.gd"
 } ]
 _global_script_class_icons={
-"DreamDeckConstants": ""
+"DreamDeckConstants": "",
+"HttpRequest": "",
+"HttpResponse": "",
+"HttpServer": ""
 }
 
 [application]

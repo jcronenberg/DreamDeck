@@ -62,7 +62,6 @@ var device_list := []
 var playback_active := true # This gets set to false when the api doesn't provide playback-state anymore
 
 # Config vars
-var plugin_config
 var config_completed: bool = false # Stop all calls while we setup the config
 var input_stage: int = 0 # At what stage the input is, since we have to ask for 3 user inputs
 var input_scene
@@ -83,9 +82,13 @@ func create_auth_link() -> String:
 		+ "&redirect_uri=" \
 		+ redirect_uri
 func config_stage3_text() -> String:
+	print(create_auth_link())
 	return "Click this [url=" \
 		   + create_auth_link() \
-		   + "]link[/url] and authorize your account\nThen paste the url here:"
+		   + "]link[/url] and authorize your account"
+
+# Http server that extracts auth token from first configuration
+var http_server
 
 # Nodes
 onready var plugin_loader := get_node("/root/PluginLoader")
@@ -163,7 +166,7 @@ func load_plugin_config():
 func load_credentials():
 	# Load plugin config
 	credentials.load_config()
-	plugin_config = credentials.get_config()
+	var plugin_config = credentials.get_config()
 	if not plugin_config["refresh_token"]:
 		create_config()
 	else:
@@ -205,22 +208,30 @@ func _on_text_config(text):
 		client_secret = text
 		encoded_client = Marshalls.utf8_to_base64(client_id + ":" + client_secret)
 		input_scene.create_dialog(config_stage3_text(), \
-								  "Url e.g. like: http://localhost:8888/callback?code=...")
+								  "Press confirm once you gave authorization in the browser")
 		input_stage = 2
+
+		http_server = HttpServer.new()
+		http_server.set("bind_address", "127.0.0.1")
+		http_server.set("port", 8888)
+		http_server.register_router("/callback", self)
+		add_child(http_server)
+		http_server.start()
 	elif input_stage == 2:
 		input_scene.hide()
 		input_scene.disconnect("apply_text", self, "_on_text_config")
 		input_scene.disconnect("cancelled", self, "_on_config_cancel")
-		finalize_config(text)
 
 
-# Extracts the authorization_code from the callback url
-# Then initiates a authorization request and sets config_completed
-# TODO add better checks if user inputs a wrong url
-func finalize_config(url):
-	authorization_code = url.right(url.find("callback?code=") + 14)
-	request_authorization()
-	config_completed = true
+func handle_get(request, response):
+	if request.query.has("code"):
+		authorization_code = request.query["code"]
+		response.send(200, "You can now close this tab and continue in DreamDeck (press confirm)")
+		request_authorization()
+		config_completed = true
+		http_server.queue_free()
+	else:
+		response.send(200, "Something went wrong, failed to extract authorization code from request url")
 
 
 # Custom sort for device_list
@@ -325,11 +336,8 @@ func _on_get_request_completed(_result, response_code, _headers, body):
 		# Set vars
 		refresh_token = json_result["refresh_token"]
 		access_token = json_result["access_token"]
-		# Add to plugin_config
-		plugin_config = {}
-		plugin_config["refresh_token"] = refresh_token
-		plugin_config["encoded_client"] = encoded_client
-		# Save plugin_config
+		# Save new credentials
+		credentials.change_config({"refresh_token": refresh_token, "encoded_client": encoded_client})
 		credentials.save()
 	# POST /api/token refresh_token result
 	elif json_result.has("access_token"):
