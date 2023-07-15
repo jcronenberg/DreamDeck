@@ -4,7 +4,7 @@ A macroboard for a separate touchscreen monitor on linux.
 
 
 ## Description
-This project's main goal is to provide an application that let's you use a touchscreen monitor as a macroboard on Linux. It let's you launch programs, execute shell scripts etc.  
+This projects main goal is to provide an application that lets you use a touchscreen monitor as a macroboard on Linux. It lets you launch programs, execute shell scripts etc.  
 Normally when you use a touchscreen on Linux, it simulates a mouse event, which in turn moves the mouse cursor. This for me was not what I wanted, since I would then have to move the cursor back manually.  
 This project circumvents this by grabbing the touchscreen input via evdev and then forwards the events to the application. This can of course be toggled to give back the original functionality if you need it.  
 
@@ -16,7 +16,7 @@ There is also support for basic buttons, that execute shell scripts or launch pr
 
 ## Installation
 ### Building the project
-You will need rust/cargo and godot 3 (the latest stable).
+You will need rust/cargo and godot 4 (the latest stable is recommended).
 ```bash
 # Download
 ## Clone the project
