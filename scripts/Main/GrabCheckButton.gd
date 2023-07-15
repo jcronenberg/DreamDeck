@@ -1,6 +1,6 @@
 extends CheckButton
 
-onready var handler = get_node("../..")
+@onready var handler = get_node("../..")
 
 
 func _on_GrabCheckButton_toggled(button_pressed):

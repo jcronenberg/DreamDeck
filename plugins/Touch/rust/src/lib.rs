@@ -1,9 +1,8 @@
-use gdnative::prelude::*;
+use godot::prelude::*;
 
 mod grab_touch_device;
 
-fn init(handle: InitHandle) {
-    handle.add_class::<grab_touch_device::GrabTouchDevice>();
-}
+struct GrabTouchDevice;
 
-godot_init!(init);
+#[gdextension]
+unsafe impl ExtensionLibrary for GrabTouchDevice {}

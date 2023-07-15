@@ -1,13 +1,13 @@
-extends Button
+extends CheckButton
 
 
 func init(ini_name, ini_state):
 	text = ini_name
-	pressed = ini_state
+	set_pressed(ini_state)
 
 
 func return_value():
-	return pressed
+	return is_pressed()
 
 
 func return_key():
@@ -15,4 +15,4 @@ func return_key():
 
 
 func _on_ValueBoolButton_pressed():
-	get_node("/root/GlobalSignals").config_changed()
+	get_node("/root/GlobalSignals").emit_config_changed()

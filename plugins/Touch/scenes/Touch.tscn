@@ -1,65 +1,56 @@
-[gd_scene load_steps=6 format=2]
+[gd_scene load_steps=6 format=3 uid="uid://c62nj40j07xei"]
 
-[ext_resource path="res://scripts/Main/ReconnectButton.gd" type="Script" id=1]
-[ext_resource path="res://scripts/Main/GrabCheckButton.gd" type="Script" id=2]
-[ext_resource path="res://themes/MainTheme.tres" type="Theme" id=3]
-[ext_resource path="res://scripts/Main/DeviceOptions.gd" type="Script" id=4]
-[ext_resource path="res://plugins/Touch/scripts/Touch.gd" type="Script" id=5]
+[ext_resource type="Script" path="res://scripts/Main/ReconnectButton.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/Main/GrabCheckButton.gd" id="2"]
+[ext_resource type="Theme" uid="uid://duea6v8sw5cfx" path="res://themes/MainTheme.tres" id="3"]
+[ext_resource type="Script" path="res://scripts/Main/DeviceOptions.gd" id="4"]
+[ext_resource type="Script" path="res://plugins/Touch/scripts/Touch.gd" id="5"]
 
 [node name="Touch" type="Control"]
-margin_left = 110.0
-margin_right = 1730.0
-margin_bottom = 100.0
+layout_mode = 3
+anchors_preset = 0
+offset_left = 110.0
+offset_right = 1730.0
+offset_bottom = 100.0
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 2.0
-script = ExtResource( 5 )
+script = ExtResource("5")
 
 [node name="ControlsSeparator" type="HBoxContainer" parent="."]
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
-custom_constants/separation = 50
+theme_override_constants/separation = 50
 
 [node name="LeftMargin" type="Control" parent="ControlsSeparator"]
-margin_right = 368.0
-margin_bottom = 100.0
+layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="DeviceOptions" type="OptionButton" parent="ControlsSeparator"]
-margin_left = 418.0
-margin_top = 40.0
-margin_right = 818.0
-margin_bottom = 60.0
-rect_min_size = Vector2( 400, 0 )
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 4
-align = 1
-script = ExtResource( 4 )
+alignment = 1
+script = ExtResource("4")
 
 [node name="ReconnectButton" type="Button" parent="ControlsSeparator"]
-margin_left = 868.0
-margin_top = 38.0
-margin_right = 1008.0
-margin_bottom = 62.0
-rect_min_size = Vector2( 140, 0 )
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
 size_flags_vertical = 4
-theme = ExtResource( 3 )
+theme = ExtResource("3")
 text = "Reconnect"
-script = ExtResource( 1 )
+script = ExtResource("1")
 
 [node name="GrabCheckButton" type="CheckButton" parent="ControlsSeparator"]
-margin_left = 1058.0
-margin_right = 1202.0
-margin_bottom = 100.0
-theme = ExtResource( 3 )
-pressed = true
+layout_mode = 2
+theme = ExtResource("3")
+button_pressed = true
 text = "Grabbed"
-align = 2
-script = ExtResource( 2 )
+script = ExtResource("2")
 
 [node name="RightMargin" type="Control" parent="ControlsSeparator"]
-margin_left = 1252.0
-margin_right = 1620.0
-margin_bottom = 100.0
+layout_mode = 2
 size_flags_horizontal = 3
 
 [connection signal="item_selected" from="ControlsSeparator/DeviceOptions" to="ControlsSeparator/DeviceOptions" method="_on_DeviceOptions_item_selected"]

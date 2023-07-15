@@ -3,191 +3,191 @@
 [ext_resource path="res://themes/MainTheme.tres" type="Theme" id=1]
 [ext_resource path="res://plugins/Macroboard/scripts/EditButtonPopup.gd" type="Script" id=2]
 
-[node name="EditButtonPopup" type="WindowDialog"]
+[node name="EditButtonPopup" type="Window"]
 visible = true
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-margin_left = -381.5
-margin_top = -215.0
-margin_right = 381.5
-margin_bottom = 215.0
+offset_left = -381.5
+offset_top = -215.0
+offset_right = 381.5
+offset_bottom = 215.0
 theme = ExtResource( 1 )
 script = ExtResource( 2 )
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 anchor_right = 1.0
 anchor_bottom = 1.0
-custom_constants/margin_right = 50
-custom_constants/margin_top = 50
-custom_constants/margin_left = 50
-custom_constants/margin_bottom = 50
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_bottom = 50
 
 [node name="Rows" type="VBoxContainer" parent="MarginContainer"]
-margin_left = 50.0
-margin_top = 50.0
-margin_right = 713.0
-margin_bottom = 382.0
-custom_constants/separation = 20
+offset_left = 50.0
+offset_top = 50.0
+offset_right = 713.0
+offset_bottom = 382.0
+theme_override_constants/separation = 20
 
 [node name="Header" type="Label" parent="MarginContainer/Rows"]
 unique_name_in_owner = true
-margin_right = 663.0
-margin_bottom = 24.0
+offset_right = 663.0
+offset_bottom = 24.0
 align = 1
 
 [node name="PositionSplit" type="HBoxContainer" parent="MarginContainer/Rows"]
-margin_top = 44.0
-margin_right = 663.0
-margin_bottom = 68.0
-custom_constants/separation = 14
+offset_top = 44.0
+offset_right = 663.0
+offset_bottom = 68.0
+theme_override_constants/separation = 14
 
 [node name="Label" type="Label" parent="MarginContainer/Rows/PositionSplit"]
-margin_right = 200.0
-margin_bottom = 24.0
-rect_min_size = Vector2( 200, 0 )
+offset_right = 200.0
+offset_bottom = 24.0
+custom_minimum_size = Vector2( 200, 0 )
 text = "Position in Row"
 align = 2
 
 [node name="LineEdit" type="LineEdit" parent="MarginContainer/Rows/PositionSplit"]
-margin_left = 214.0
-margin_right = 663.0
-margin_bottom = 24.0
+offset_left = 214.0
+offset_right = 663.0
+offset_bottom = 24.0
 size_flags_horizontal = 3
 max_length = 2
 
 [node name="AppSplit" type="HBoxContainer" parent="MarginContainer/Rows"]
-margin_top = 88.0
-margin_right = 663.0
-margin_bottom = 112.0
-custom_constants/separation = 14
+offset_top = 88.0
+offset_right = 663.0
+offset_bottom = 112.0
+theme_override_constants/separation = 14
 
 [node name="Label" type="Label" parent="MarginContainer/Rows/AppSplit"]
-margin_right = 200.0
-margin_bottom = 24.0
-rect_min_size = Vector2( 200, 0 )
-hint_tooltip = "The path to the executable e.g. 'firefox' or '/home/example/firefox'"
+offset_right = 200.0
+offset_bottom = 24.0
+custom_minimum_size = Vector2( 200, 0 )
+tooltip_text = "The path to the executable e.g. 'firefox' or '/home/example/firefox'"
 mouse_filter = 0
 text = "App"
 align = 2
 
 [node name="LineEdit" type="LineEdit" parent="MarginContainer/Rows/AppSplit"]
-margin_left = 214.0
-margin_right = 663.0
-margin_bottom = 24.0
+offset_left = 214.0
+offset_right = 663.0
+offset_bottom = 24.0
 size_flags_horizontal = 3
 
 [node name="ArgumentsSplit" type="HBoxContainer" parent="MarginContainer/Rows"]
-margin_top = 132.0
-margin_right = 663.0
-margin_bottom = 156.0
-custom_constants/separation = 14
+offset_top = 132.0
+offset_right = 663.0
+offset_bottom = 156.0
+theme_override_constants/separation = 14
 
 [node name="Label" type="Label" parent="MarginContainer/Rows/ArgumentsSplit"]
-margin_right = 200.0
-margin_bottom = 24.0
-rect_min_size = Vector2( 200, 0 )
-hint_tooltip = "Arguments for the executable e.g. '--test example'"
+offset_right = 200.0
+offset_bottom = 24.0
+custom_minimum_size = Vector2( 200, 0 )
+tooltip_text = "Arguments for the executable e.g. '--test example'"
 mouse_filter = 0
 text = "Arguments"
 align = 2
 
 [node name="LineEdit" type="LineEdit" parent="MarginContainer/Rows/ArgumentsSplit"]
-margin_left = 214.0
-margin_right = 663.0
-margin_bottom = 24.0
+offset_left = 214.0
+offset_right = 663.0
+offset_bottom = 24.0
 size_flags_horizontal = 3
 
 [node name="AppNameSplit" type="HBoxContainer" parent="MarginContainer/Rows"]
-margin_top = 176.0
-margin_right = 663.0
-margin_bottom = 200.0
-custom_constants/separation = 14
+offset_top = 176.0
+offset_right = 663.0
+offset_bottom = 200.0
+theme_override_constants/separation = 14
 
 [node name="Label" type="Label" parent="MarginContainer/Rows/AppNameSplit"]
-margin_right = 200.0
-margin_bottom = 24.0
-rect_min_size = Vector2( 200, 0 )
-hint_tooltip = "Name that gets displayed if no icon is set or show_app_name is true"
+offset_right = 200.0
+offset_bottom = 24.0
+custom_minimum_size = Vector2( 200, 0 )
+tooltip_text = "Name that gets displayed if no icon is set or show_app_name is true"
 mouse_filter = 0
 text = "App Name"
 align = 2
 
 [node name="LineEdit" type="LineEdit" parent="MarginContainer/Rows/AppNameSplit"]
-margin_left = 214.0
-margin_right = 663.0
-margin_bottom = 24.0
+offset_left = 214.0
+offset_right = 663.0
+offset_bottom = 24.0
 size_flags_horizontal = 3
 
 [node name="IconPathSplit" type="HBoxContainer" parent="MarginContainer/Rows"]
-margin_top = 220.0
-margin_right = 663.0
-margin_bottom = 244.0
-custom_constants/separation = 14
+offset_top = 220.0
+offset_right = 663.0
+offset_bottom = 244.0
+theme_override_constants/separation = 14
 
 [node name="Label" type="Label" parent="MarginContainer/Rows/IconPathSplit"]
-margin_right = 200.0
-margin_bottom = 24.0
-rect_min_size = Vector2( 200, 0 )
-hint_tooltip = "Relative path to the icon. Icons need to be stored in the config directory in a 'icons' directory."
+offset_right = 200.0
+offset_bottom = 24.0
+custom_minimum_size = Vector2( 200, 0 )
+tooltip_text = "Relative path to the icon. Icons need to be stored in the config directory in a 'icons' directory."
 mouse_filter = 0
-text = "Icon Path"
+text = "Icon Path3D"
 align = 2
 
 [node name="LineEdit" type="LineEdit" parent="MarginContainer/Rows/IconPathSplit"]
-margin_left = 214.0
-margin_right = 663.0
-margin_bottom = 24.0
+offset_left = 214.0
+offset_right = 663.0
+offset_bottom = 24.0
 size_flags_horizontal = 3
 
 [node name="ShowAppNameSplit" type="HBoxContainer" parent="MarginContainer/Rows"]
-margin_top = 264.0
-margin_right = 663.0
-margin_bottom = 288.0
-custom_constants/separation = 8
+offset_top = 264.0
+offset_right = 663.0
+offset_bottom = 288.0
+theme_override_constants/separation = 8
 
 [node name="Label" type="Label" parent="MarginContainer/Rows/ShowAppNameSplit"]
-margin_right = 200.0
-margin_bottom = 24.0
-rect_min_size = Vector2( 200, 0 )
-hint_tooltip = "Displays the app_name in a small text below the icon"
+offset_right = 200.0
+offset_bottom = 24.0
+custom_minimum_size = Vector2( 200, 0 )
+tooltip_text = "Displays the app_name in a small text below the icon"
 mouse_filter = 0
 text = "Show App Name"
 align = 2
 
 [node name="CheckBox" type="CheckBox" parent="MarginContainer/Rows/ShowAppNameSplit"]
-margin_left = 208.0
-margin_right = 224.0
-margin_bottom = 24.0
+offset_left = 208.0
+offset_right = 224.0
+offset_bottom = 24.0
 
 [node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/Rows"]
-margin_top = 308.0
-margin_right = 663.0
-margin_bottom = 332.0
+offset_top = 308.0
+offset_right = 663.0
+offset_bottom = 332.0
 size_flags_vertical = 10
-custom_constants/separation = 40
+theme_override_constants/separation = 40
 
 [node name="ConfirmButton" type="Button" parent="MarginContainer/Rows/HBoxContainer"]
-margin_right = 194.0
-margin_bottom = 24.0
+offset_right = 194.0
+offset_bottom = 24.0
 size_flags_horizontal = 3
 theme = ExtResource( 1 )
 text = "Confirm"
 
 [node name="DeleteButton" type="Button" parent="MarginContainer/Rows/HBoxContainer"]
 unique_name_in_owner = true
-margin_left = 234.0
-margin_right = 428.0
-margin_bottom = 24.0
+offset_left = 234.0
+offset_right = 428.0
+offset_bottom = 24.0
 size_flags_horizontal = 3
 theme = ExtResource( 1 )
 text = "Delete"
 
 [node name="CancelButton" type="Button" parent="MarginContainer/Rows/HBoxContainer"]
-margin_left = 468.0
-margin_right = 663.0
-margin_bottom = 24.0
+offset_left = 468.0
+offset_right = 663.0
+offset_bottom = 24.0
 size_flags_horizontal = 3
 theme = ExtResource( 1 )
 text = "Cancel"

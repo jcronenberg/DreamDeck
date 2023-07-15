@@ -1,47 +1,32 @@
 extends Node
 
 var loaded := false
-var loader
 const TIME_MAX := 10
+const scene := "res://plugins/SpotifyPanel/scenes/SpotifyPanel.tscn"
 
 
-func load():
+func plugin_load():
 	if not loaded:
-		loader = ResourceLoader.load_interactive("res://plugins/SpotifyPanel/scenes/SpotifyPanel.tscn")
+		ResourceLoader.load_threaded_request(scene)
 		set_process(true)
 
 
-func unload():
+func plugin_unload():
 	if loaded:
 		get_node("/root/Main/VSeparator/ElementSeparator/SpotifyMargin").queue_free()
 		loaded = false
 
 
 func _process(_delta):
-	if loader == null:
-		# no need to process anymore
-		set_process(false)
-		return
-
-	var t = OS.get_ticks_msec()
-	# Use "time_max" to control for how long we block this thread.
-	while OS.get_ticks_msec() < t + TIME_MAX:
-		# Poll your loader.
-		var err = loader.poll()
-
-		if err == ERR_FILE_EOF: # Finished loading.
-			var resource = loader.get_resource()
-			loader = null
-			add_scene(resource)
-			break
-		elif err != OK:
-			push_error("Error loading Touch")
-			loader = null
-			break
+	var load_status = ResourceLoader.load_threaded_get_status(scene)
+	if load_status == ResourceLoader.THREAD_LOAD_LOADED:
+		add_scene(ResourceLoader.load_threaded_get(scene))
+	elif load_status == ResourceLoader.THREAD_LOAD_FAILED:
+		push_error("Error loading SpotifyPanel")
 
 
 func add_scene(resource):
 	get_node("/root/Main/VSeparator/ElementSeparator").add_child(
-		resource.instance()
+		resource.instantiate()
 		)
 	loaded = true

@@ -1,4 +1,4 @@
-use gdnative::prelude::*;
+use godot::prelude::*;
 use nix::{
     fcntl::{FcntlArg, OFlag},
     sys::epoll,
@@ -13,39 +13,42 @@ use evdev::{
 use std::fs;
 
 /// Time interval between retrying to reconnect device
-const RETRY_TIMER: f32 = 0.5;
+const RETRY_TIMER: f64 = 0.5;
 /// The input devices path
 const INPUT_DIR_PATH: &str = "/dev/input/";
 
 macro_rules! PARSE_EVENT {
     ($owner:expr,$function:expr,$event:expr) => {
-        $owner.get_parent().unwrap().assume_safe().call($function, &[Variant::new($event.value())])
+        $owner.get_parent().unwrap().call($function, &[$event.value().to_variant()])
     };
 }
 
 /// GrabTouchDevice "class"
 /// Handles all evdev functions and then calls handler functions
-#[derive(NativeClass)]
-#[inherit(Node)]
+#[derive(GodotClass)]
+#[class(base=Node)]
 pub struct GrabTouchDevice {
     /// The current device
     device: Option<Device>,
     /// String is formatted like this: "{id}: {name}"
-    device_list: Option<HashMap<String, usize>>,
+    device_list: Option<HashMap<GodotString, usize>>,
     /// State of device
     grabbed: bool,
     /// Timer for trying to reconnect
-    retry_device: f32,
+    retry_device: f64,
     /// Flag to try and grab the device for set amount of time
     try_grab: bool,
     /// Name of the currently selected device
-    device_name: String,
+    device_name: GodotString,
     /// Current /dev/input dir, used to detect input device changes
-    input_dir: String,
+    input_dir: GodotString,
     /// The maximum absolute x axis value of current device
     device_max_abs_x: i32,
     /// The maximum absolute y axis value of current device
     device_max_abs_y: i32,
+
+    #[base]
+    base: Base<Node>,
 }
 
 /// Read content of INPUT_DIR_PATH
@@ -61,31 +64,16 @@ fn read_input_dir() -> String {
     ret
 }
 
-#[methods]
+#[godot_api]
 impl GrabTouchDevice {
-    fn new(_owner: &Node) -> Self {
-        GrabTouchDevice {
-            device: None,
-            device_list: None,
-            grabbed: false,
-            retry_device: 0.0,
-            try_grab: false,
-            device_name: String::new(),
-            input_dir: String::new(),
-            device_max_abs_x: 0,
-            device_max_abs_y: 0,
-        }
+    #[func]
+    fn get_device_max_abs_x(&mut self) -> i32 {
+        return self.device_max_abs_x;
     }
 
-
-    #[method]
-    fn get_device_max_abs_x(&mut self) -> Variant {
-        return Variant::new(self.device_max_abs_x);
-    }
-
-    #[method]
-    fn get_device_max_abs_y(&mut self) -> Variant {
-        return Variant::new(self.device_max_abs_y);
+    #[func]
+    fn get_device_max_abs_y(&mut self) -> i32 {
+        return self.device_max_abs_y;
     }
 
     /// Internal function to set self.device to matching self.device_name
@@ -95,8 +83,12 @@ impl GrabTouchDevice {
             self.ungrab_device();
         }
 
+        if self.device_list == None {
+            return Err("No devices registered".into());
+        }
+
         // Get id from device_list by matching name
-        let id: usize = *match self.device_list.as_ref().unwrap().get(self.device_name.as_str()) {
+        let id: usize = *match self.device_list.as_ref().unwrap().get(&self.device_name) {
             Some(id) => id,
             None => return Err("Device not found".into()),
         };
@@ -131,23 +123,23 @@ impl GrabTouchDevice {
     }
 
     /// Set self.device by specified name
-    #[method]
-    fn set_device(&mut self, name: String) -> Variant {
+    #[func]
+    fn set_device(&mut self, name: GodotString) -> Variant {
         self._get_devices();
 
-        self.device_name = name;
+        self.device_name = name.into();
 
         match self._set_device() {
-            Err(e) => return Variant::new(e.to_string()),
+            Err(e) => return e.to_string().to_variant(),
             _ => (),
         }
 
-        Variant::new(true)
+        true.to_variant()
     }
 
     /// Reconnect device the current device
     /// This is for a manual call by the handler
-    #[method]
+    #[func]
     fn reconnect_device(&mut self) {
         self.set_device(self.device_name.clone());
     }
@@ -162,52 +154,52 @@ impl GrabTouchDevice {
 
         let mut devices = evdev::enumerate().map(|t| t.1).collect::<Vec<_>>();
         devices.reverse();
-        let mut device_map: HashMap<String, usize> = HashMap::new();
+        let mut device_map: HashMap<GodotString, usize> = HashMap::new();
         for (i, d) in devices.iter().enumerate() {
            if d.supported_absolute_axes().map_or(false, |axes| axes.contains(AbsoluteAxisType::ABS_X) &&
                                                                axes.contains(AbsoluteAxisType::ABS_Y)) {
-               device_map.insert(format!("{}", d.name().unwrap_or("Unnamed device")), i);
+               device_map.insert(format!("{}", d.name().unwrap_or("Unnamed device")).into(), i);
            }
         }
         self.device_list = Some(device_map);
     }
 
     /// Get all devices that support AbsoluteAxisTypes
-    #[method]
-    fn get_devices(&mut self) -> Variant {
+    #[func]
+    fn get_devices(&mut self) -> PackedStringArray {
         self._get_devices();
 
-        let mut device_list_string: Vec<String> = Vec::new();
+        let mut device_list_string: Vec<GodotString> = Vec::new();
         match self.device_list.as_mut() {
             Some(device_list) => {
                 for (n, _i) in device_list {
-                    device_list_string.push(format!("{}", n));
+                    device_list_string.push(format!("{}", n).into());
                 }
             },
             None => (),
         }
         device_list_string.reverse();
-        Variant::new(device_list_string)
+        PackedStringArray::from_iter(device_list_string.into_iter())
     }
 
     /// Grab the current self.device, set self.grabbed accordingly
-    #[method]
+    #[func]
     fn grab_device(&mut self) -> Variant {
         match self.device.as_mut() {
             Some(device) => {
                 match device.grab() {
-                    Err(e) => return Variant::new(e.to_string()),
+                    Err(e) => return e.to_string().to_variant(),
                     _ => (),
                 };
                 self.grabbed = true;
             }
             None => (),
         }
-        Variant::new(true)
+        true.to_variant()
     }
 
     /// Ungrab the current self.device, set self.grabbed accordingly
-    #[method]
+    #[func]
     fn ungrab_device(&mut self) {
         match self.device.as_mut() {
             Some(device) => {
@@ -223,17 +215,35 @@ impl GrabTouchDevice {
         let new_dir = read_input_dir();
 
         // Check if input devices changed
-        if self.input_dir != new_dir {
+        if self.input_dir != new_dir.clone().into() {
             // Store the new input_dir
-            self.input_dir = new_dir;
+            self.input_dir = new_dir.into();
             return true
         }
         return false
     }
+}
 
-    /// Godot _process function
-    #[method]
-    fn _physics_process(&mut self, #[base] owner: &Node, delta: f32) {
+
+#[godot_api]
+impl NodeVirtual for GrabTouchDevice {
+    fn init(base: Base<Self::Base>) -> Self {
+        GrabTouchDevice {
+            device: None,
+            device_list: None,
+            grabbed: false,
+            retry_device: 0.0,
+            try_grab: false,
+            device_name: GodotString::new(),
+            input_dir: GodotString::new(),
+            device_max_abs_x: 0,
+            device_max_abs_y: 0,
+            base,
+        }
+    }
+
+    /// Godot _physics_process function
+    fn physics_process(&mut self, delta: f64) {
         // If not connected, retry to connect
         if !self.grabbed {
             // Store delta
@@ -269,13 +279,13 @@ impl GrabTouchDevice {
                         // Match event
                         for ev in iterator {
                             if ev.kind() == AbsAxis(AbsoluteAxisType::ABS_X) {
-                                unsafe { PARSE_EVENT!(owner, "x_coord_event", ev) };
+                                PARSE_EVENT!(self.base, "x_coord_event".into(), ev);
                             } else if ev.kind() == AbsAxis(AbsoluteAxisType::ABS_Y) {
-                                unsafe { PARSE_EVENT!(owner, "y_coord_event", ev) };
+                                PARSE_EVENT!(self.base, "y_coord_event".into(), ev);
                             } else if ev.kind() == Key(evdev::Key::BTN_TOUCH) {
-                                unsafe { PARSE_EVENT!(owner, "key_event", ev) };
+                                PARSE_EVENT!(self.base, "key_event".into(), ev);
                             } else if ev.kind() == Key(evdev::Key::BTN_LEFT) {
-                                unsafe { PARSE_EVENT!(owner, "key_event", ev) };
+                                PARSE_EVENT!(self.base, "key_event".into(), ev);
                             }
                         }
                     }

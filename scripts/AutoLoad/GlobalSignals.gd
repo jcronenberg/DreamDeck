@@ -32,18 +32,19 @@ func get_edit_state() -> bool:
 	return edit_state
 
 
-func config_changed():
+func emit_config_changed():
 	get_node("/root/Main/MainMenu").construct_config()
 	emit_signal("config_changed")
 
 
-func global_config_changed():
+func emit_global_config_changed():
+	get_node("/root/Main/MainMenu").edit_settings()
 	emit_signal("global_config_changed")
 
 
-func plugin_configs_changed():
+func emit_plugin_configs_changed():
 	emit_signal("plugin_configs_changed")
 
 
-func activated_plugins_changed():
+func emit_activated_plugins_changed():
 	emit_signal("activated_plugins_changed")

@@ -1,9 +1,9 @@
 extends Button
 
 
-func init(name: String, dict: Dictionary):
-	text = name
-	add_submenu(dict)
+func init(init_name: String, init_dict: Dictionary):
+	text = init_name
+	add_submenu(init_dict)
 
 
 func _on_OptionButton_pressed():
@@ -12,18 +12,18 @@ func _on_OptionButton_pressed():
 
 # Takes a dict and recursively adds all keys with corresponding buttons
 func add_submenu(dict):
-	$SubmenuBg.rect_position.x = rect_size.x
+	$SubmenuBg.position.x = size.x
 	for key in dict.keys():
 		var new_button
 		match typeof(dict[key]):
 			TYPE_BOOL:
-				new_button = load("res://scenes/MainMenu/SettingToggle.tscn").instance()
+				new_button = load("res://scenes/MainMenu/SettingToggle.tscn").instantiate()
 				new_button.init(key, dict[key])
-			TYPE_INT,TYPE_REAL,TYPE_STRING:
-				new_button = load("res://scenes/MainMenu/SettingLineEdit.tscn").instance()
+			TYPE_INT,TYPE_FLOAT,TYPE_STRING:
+				new_button = load("res://scenes/MainMenu/SettingLineEdit.tscn").instantiate()
 				new_button.init(key, dict[key])
 			TYPE_DICTIONARY:
-				new_button = load("res://scenes/MainMenu/SubmenuButton.tscn").instance()
+				new_button = load("res://scenes/MainMenu/SubmenuButton.tscn").instantiate()
 				new_button.init(key, dict[key])
 			_:
 				push_warning("Submenu: Type not supported")
@@ -31,10 +31,10 @@ func add_submenu(dict):
 		$SubmenuBg/OptionSeparator.add_child(new_button)
 
 		# Increase SubmenuBg size to account for new button
-		$SubmenuBg.rect_min_size.y = $SubmenuBg.rect_min_size.y + 60
+		$SubmenuBg.custom_minimum_size.y = $SubmenuBg.custom_minimum_size.y + 60
 
 		# If button is larger than default size we need to adjust min size
-		change_submenu_size(new_button.rect_size.x)
+		change_submenu_size(new_button.size.x)
 
 
 # Resets submenu to original state, so that a different submenu can be added
@@ -42,10 +42,10 @@ func clear_submenu():
 	for child in $SubmenuBg/OptionSeparator.get_children():
 		child.queue_free()
 
-	$SubmenuBg.rect_min_size.y = 0
-	$SubmenuBg.rect_min_size.x = 0
-	$SubmenuBg.rect_size.y = 0
-	$SubmenuBg.rect_size.x = 0
+	$SubmenuBg.custom_minimum_size.y = 0
+	$SubmenuBg.custom_minimum_size.x = 0
+	$SubmenuBg.size.y = 0
+	$SubmenuBg.size.x = 0
 
 
 # Shows submenu if button is of type SUBMENU
@@ -55,6 +55,13 @@ func toggle_submenu():
 	if $SubmenuBg.visible:
 		hide_submenu()
 	else:
+		# FIXME workaround
+		# this is because settings get changed when window is resized
+		# however the size then may not be set correctly
+		# so the position in add_submenu() may be incorrect
+		# So we just make sure position really is correct
+		$SubmenuBg.position.x = size.x
+
 		$SubmenuBg.visible = true
 
 
@@ -77,12 +84,12 @@ func hide_other_open_submenu():
 
 
 func change_submenu_size(new_x: int):
-	if $SubmenuBg.rect_min_size.x < new_x:
-		$SubmenuBg.rect_min_size.x = new_x
+	if $SubmenuBg.custom_minimum_size.x < new_x:
+		$SubmenuBg.custom_minimum_size.x = new_x
 
 		for child in $SubmenuBg/OptionSeparator.get_children():
 			if child.has_node("SubmenuBg"):
-				child.get_node("SubmenuBg").rect_position.x = new_x
+				child.get_node("SubmenuBg").position.x = new_x
 
 
 func return_key() -> String:
@@ -109,4 +116,4 @@ func construct_dict() -> Dictionary:
 func _on_rect_changed():
 	var parent_submenu = get_node("../../..")
 	if parent_submenu.has_method("change_submenu_size"):
-		get_node("../../..").change_submenu_size(rect_size.x)
+		get_node("../../..").change_submenu_size(size.x)

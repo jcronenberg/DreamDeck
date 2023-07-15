@@ -1,4 +1,4 @@
-GODOT_EXECUTABLE := $(shell command -v godot3 2>/dev/null || command -v godot 2>/dev/null)
+GODOT_EXECUTABLE := $(shell command -v godot4 2>/dev/null || command -v godot 2>/dev/null)
 ifdef GODOT_EXECUTABLE
 	GODOT_VERSION := $(shell $(GODOT_EXECUTABLE) --version 2>/dev/null | cut -d'.' -f1)
 endif
@@ -11,9 +11,9 @@ DESKTOP_DIR = /usr/local/share/applications/
 BUILD_DIR = bin
 DREAMDECK_LINUX = dreamdeck
 DREAMDECK_WINDOWS = dreamdeck.exe
-LIBDREAMDECK = libdreamdeck.so
-RESOURCE_PATH = resources/general/
-DREAMDECK_ICON = dreamdeck.png
+LIBDREAMDECK = libdreamdeck_touch.so
+RESOURCE_PATH = resources/
+DREAMDECK_ICON = icons/dreamdeck.png
 DESKTOP_FILE = dreamdeck.desktop
 
 .PHONY: all windows linux _check-godot _check-godot-version _build-linux _build-windows rust clean rust-clean install uninstall
@@ -38,15 +38,15 @@ endif
 	@$(MAKE) _check-godot-version
 
 _check-godot-version:
-ifneq "$(GODOT_VERSION)" "3"
-	$(error "Found Godot version: $(GODOT_VERSION), but a version starting with 3 is required.")
+ifneq "$(GODOT_VERSION)" "4"
+	$(error "Found Godot version: $(GODOT_VERSION), but a version starting with 4 is required.")
 endif
 
 _build-linux: _check-godot
-	@$(GODOT_EXECUTABLE) --export --no-window "Linux/X11"
+	@$(GODOT_EXECUTABLE) --headless --export-release "Linux"
 
 _build-windows: _check-godot
-	@$(GODOT_EXECUTABLE) --export --no-window "Windows Desktop"
+	@$(GODOT_EXECUTABLE) --headless --export-release "Windows Desktop"
 
 rust:
 ifndef CARGO

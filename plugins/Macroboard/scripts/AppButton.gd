@@ -1,14 +1,14 @@
 extends Button
 
-export var app: String
-export var arguments: PoolStringArray
-export var app_name: String
-export var icon_path: String
-export var show_app_name: bool = false
+@export var app: String
+@export var arguments: PackedStringArray
+@export var app_name: String
+@export var icon_path: String
+@export var show_app_name: bool = false
 
 # Global nodes
-onready var config_loader = get_node("/root/ConfigLoader")
-onready var global_signals = get_node("/root/GlobalSignals")
+@onready var config_loader = get_node("/root/ConfigLoader")
+@onready var global_signals = get_node("/root/GlobalSignals")
 
 
 func _ready():
@@ -36,31 +36,28 @@ func apply_change():
 		app = "CMD.exe"
 		for arg in arguments:
 			args.append(arg)
-		arguments = args
+			arguments = args
 
 
 func set_image():
 	if icon_path:
 		var complete_icon_path = config_loader.get_conf_dir() + "icons/" + icon_path
-		var image = Image.new()
-		image.load(complete_icon_path)
-		var texture = ImageTexture.new()
-		texture.create_from_image(image)
-		$Icon.texture = texture
+		var image = Image.load_from_file(complete_icon_path)
+		$Icon.texture = ImageTexture.create_from_image(image)
 
 
 func show_only_icon():
-	$Icon.margin_bottom = -20
-	$Icon.margin_left = 20
-	$Icon.margin_right = -20
+	$Icon.offset_bottom = -20
+	$Icon.offset_left = 20
+	$Icon.offset_right = -20
 	$AppName.visible = false
-	$AppName.autowrap = true
+	$AppName.set_autowrap_mode(true)
 
 
 func show_name_with_icon():
-	$Icon.margin_bottom = -50
-	$Icon.margin_left = 35
-	$Icon.margin_right = -35
+	$Icon.offset_bottom = -50
+	$Icon.offset_left = 35
+	$Icon.offset_right = -35
 	$AppName.text = app_name
 	$AppName.visible = true
 
@@ -76,7 +73,7 @@ func _on_AppButton_pressed():
 		macroboard.edit_button(self)
 		return
 
-	OS.execute(app, arguments, false)
+	OS.create_process(app, arguments)
 
 func save():
 	var save_dict = {

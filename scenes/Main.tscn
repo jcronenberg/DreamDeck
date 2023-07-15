@@ -1,80 +1,76 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=4 format=3 uid="uid://boyndkd14akrp"]
 
-[ext_resource path="res://themes/MainTheme.tres" type="Theme" id=2]
-[ext_resource path="res://scripts/Main/QuitButton.gd" type="Script" id=7]
-[ext_resource path="res://scenes/MainMenu/MainMenu.tscn" type="PackedScene" id=11]
+[ext_resource type="Theme" uid="uid://duea6v8sw5cfx" path="res://themes/MainTheme.tres" id="2"]
+[ext_resource type="Script" path="res://scripts/Main/QuitButton.gd" id="7"]
+[ext_resource type="PackedScene" uid="uid://cmqfrusykgypy" path="res://scenes/MainMenu/MainMenu.tscn" id="11"]
 
 [node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-theme = ExtResource( 2 )
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2")
 
 [node name="VSeparator" type="VBoxContainer" parent="."]
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 
 [node name="MarginContainer" type="MarginContainer" parent="VSeparator"]
-margin_right = 1920.0
-margin_bottom = 100.0
-custom_constants/margin_right = 40
-custom_constants/margin_left = 40
+layout_mode = 2
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_right = 40
 
 [node name="ControlsSeparator" type="HBoxContainer" parent="VSeparator/MarginContainer"]
-margin_left = 40.0
-margin_right = 1880.0
-margin_bottom = 100.0
-rect_min_size = Vector2( 0, 100 )
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
 size_flags_horizontal = 5
 size_flags_vertical = 0
-custom_constants/separation = 50
+theme_override_constants/separation = 50
 
 [node name="MenuWhitespace" type="Control" parent="VSeparator/MarginContainer/ControlsSeparator"]
-margin_right = 60.0
-margin_bottom = 100.0
-rect_min_size = Vector2( 60, 0 )
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
 
 [node name="Placeholder" type="Control" parent="VSeparator/MarginContainer/ControlsSeparator"]
-margin_left = 110.0
-margin_right = 1730.0
-margin_bottom = 100.0
+layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="QuitButton" type="Button" parent="VSeparator/MarginContainer/ControlsSeparator"]
-margin_left = 1780.0
-margin_top = 30.0
-margin_right = 1840.0
-margin_bottom = 70.0
-rect_min_size = Vector2( 60, 40 )
+custom_minimum_size = Vector2(60, 40)
+layout_mode = 2
 size_flags_vertical = 4
 text = "Quit"
-script = ExtResource( 7 )
+script = ExtResource("7")
 
 [node name="ElementSeparator" type="HBoxContainer" parent="VSeparator"]
-margin_top = 104.0
-margin_right = 1920.0
-margin_bottom = 1080.0
+layout_mode = 2
 size_flags_vertical = 3
 
 [node name="MacroMargin" type="MarginContainer" parent="VSeparator/ElementSeparator"]
-margin_right = 1920.0
-margin_bottom = 976.0
+layout_mode = 2
 size_flags_horizontal = 3
-custom_constants/margin_right = 50
-custom_constants/margin_top = 30
-custom_constants/margin_left = 50
-custom_constants/margin_bottom = 50
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 30
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 50
 
 [node name="InputCenterContainer" type="CenterContainer" parent="."]
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
 
-[node name="MainMenu" parent="." instance=ExtResource( 11 )]
+[node name="MainMenu" parent="." instance=ExtResource("11")]
+layout_mode = 1
 
 [node name="DebugCursor" type="ColorRect" parent="."]
 visible = false
-margin_right = 5.0
-margin_bottom = 5.0
+layout_mode = 0
+offset_right = 5.0
+offset_bottom = 5.0
 mouse_filter = 2
 
 [connection signal="pressed" from="VSeparator/MarginContainer/ControlsSeparator/QuitButton" to="VSeparator/MarginContainer/ControlsSeparator/QuitButton" method="_on_QuitButton_pressed"]

@@ -18,9 +18,9 @@ func return_value():
 	var ret_val = value_node.text
 	match type:
 		TYPE_INT:
-			if ret_val.is_valid_integer():
+			if ret_val.is_valid_int():
 				return ret_val.to_int()
-		TYPE_REAL:
+		TYPE_FLOAT:
 			if ret_val.is_valid_float():
 				return ret_val.to_float()
 		TYPE_STRING:
@@ -35,4 +35,4 @@ func return_key():
 # Because the resizing happens later than init item_rect_changed signal needs to be monitored
 func _on_rect_changed():
 	# + 16 because of LineEdit theme, that makes it bigger than its actual size
-	get_node("../../..").change_submenu_size(rect_size.x + 16)
+	get_node("../../..").change_submenu_size(size.x + 16)

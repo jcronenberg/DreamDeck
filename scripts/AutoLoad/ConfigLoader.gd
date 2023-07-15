@@ -14,7 +14,7 @@ var conf_dir: String = OS.get_user_data_dir() + "/"
 const conf_lib := preload("res://scripts/libraries/ConfLib.gd")
 var config
 
-onready var ArgumentParser := get_node("/root/ArgumentParser")
+@onready var ArgumentParser := get_node("/root/ArgumentParser")
 
 
 func _ready():
@@ -46,11 +46,11 @@ func change_config(new_data):
 		return
 	config.change_config(new_data)
 	save_config()
-	get_node("/root/GlobalSignals").global_config_changed()
 
 
 func save_config():
 	config.save()
+	get_node("/root/GlobalSignals").emit_global_config_changed()
 
 
 # Returns the directory of all configs, since this can be modified with arguments

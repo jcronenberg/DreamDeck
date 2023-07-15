@@ -2,7 +2,7 @@ extends OptionButton
 
 var device_list: Array
 
-onready var handler = get_node("../..")
+@onready var handler = get_node("../..")
 
 
 func get_items():
@@ -34,4 +34,4 @@ func set_default_device(default_device):
 
 func _on_DeviceOptions_item_selected(index):
 	handler.call_deferred("set_device", device_list[index - 2])
-	$"../GrabCheckButton".pressed = true
+	$"../GrabCheckButton".button_pressed = true

@@ -29,9 +29,9 @@ const repeat_modes = [
 	]
 # Texture resources
 var repeat_textures := [
-	load("res://resources/SpotifyPanel/repeat.tres"),
-	load("res://resources/SpotifyPanel/repeat_selected.tres"),
-	load("res://resources/SpotifyPanel/repeat_1_selected.tres")
+	load("res://plugins/SpotifyPanel/resources/repeat.tres"),
+	load("res://plugins/SpotifyPanel/resources/repeat_selected.tres"),
+	load("res://plugins/SpotifyPanel/resources/repeat_1_selected.tres")
 ]
 
 # Spotify API variables
@@ -91,17 +91,17 @@ func config_stage3_text() -> String:
 var http_server
 
 # Nodes
-onready var plugin_loader := get_node("/root/PluginLoader")
-onready var http_get := get_node("HTTPGet")
-onready var http_post := get_node("HTTPPost")
-onready var http_get_devices := get_node("HTTPGetDevices")
+@onready var plugin_loader := get_node("/root/PluginLoader")
+@onready var http_get := get_node("HTTPGet")
+@onready var http_post := get_node("HTTPPost")
+@onready var http_get_devices := get_node("HTTPGetDevices")
 
 # Download cache
-onready var cache_dir_path: String = plugin_loader.get_cache_dir(PLUGIN_NAME)
+@onready var cache_dir_path: String = plugin_loader.get_cache_dir(PLUGIN_NAME)
 
 # Configs
-onready var conf_dir = plugin_loader.get_conf_dir(PLUGIN_NAME)
-onready var credentials = load("res://scripts/global/Config.gd").new({"refresh_token": "", "encoded_client": ""}, conf_dir + "credentials.json")
+@onready var conf_dir = plugin_loader.get_conf_dir(PLUGIN_NAME)
+@onready var credentials = load("res://scripts/global/Config.gd").new({"refresh_token": "", "encoded_client": ""}, conf_dir + "credentials.json")
 
 const DEFAULT_CONFIG = {
 	"Refresh Interval": 5.0
@@ -116,16 +116,16 @@ func _ready():
 	load_plugin_config()
 	load_credentials()
 	# Handle for settings changed event
-	get_node("/root/GlobalSignals").connect("plugin_configs_changed", self, "_on_plugin_configs_changed")
+	get_node("/root/GlobalSignals").connect("plugin_configs_changed", Callable(self, "_on_plugin_configs_changed"))
 
 	# Clear cache dir to not fill the user dir with endless albumarts
 	clear_cache()
 
 	# Setup for requests
 # warning-ignore:return_value_discarded
-	http_get.connect("request_completed", self, "_on_get_request_completed")
+	http_get.connect("request_completed", Callable(self, "_on_get_request_completed"))
 # warning-ignore:return_value_discarded
-	http_get_devices.connect("request_completed", self, "_on_get_request_completed")
+	http_get_devices.connect("request_completed", Callable(self, "_on_get_request_completed"))
 
 	# Initial state request, because otherwise it would take a pretty long time on first load
 	# This will likely first just establish access_token, but makes startup still a lot faster
@@ -143,7 +143,7 @@ func _physics_process(delta):
 	devices_delta += delta
 	if devices_delta >= devices_refresh and access_token:
 		var headers = ["Authorization: Bearer " + access_token, "Content-Type: application/json"]
-		http_get_devices.request(base_api_url + "/me/player/devices", headers, true, 0, "")
+		http_get_devices.request(base_api_url + "/me/player/devices", headers, 0, "")
 		devices_delta = 0.0
 
 
@@ -177,11 +177,11 @@ func load_credentials():
 
 # Creates the first dialog and connects the functions
 func create_config():
-	input_scene = load("res://scenes/UserInputPopup.tscn").instance()
+	input_scene = load("res://scenes/UserInputPopup.tscn").instantiate()
 	get_node("/root/Main/InputCenterContainer").add_child(input_scene)
 	input_scene.create_dialog(config_stage1_text, "Client ID")
-	input_scene.connect("apply_text", self, "_on_text_config")
-	input_scene.connect("cancelled", self, "_on_config_cancel")
+	input_scene.connect("apply_text", Callable(self, "_on_text_config"))
+	input_scene.connect("canceled", Callable(self, "_on_config_cancel"))
 
 
 # If the user prematurely cancels we delete the object
@@ -218,9 +218,9 @@ func _on_text_config(text):
 		add_child(http_server)
 		http_server.start()
 	elif input_stage == 2:
-		input_scene.hide()
-		input_scene.disconnect("apply_text", self, "_on_text_config")
-		input_scene.disconnect("cancelled", self, "_on_config_cancel")
+		input_scene.hide_popup()
+		input_scene.disconnect("apply_text", Callable(self, "_on_text_config"))
+		input_scene.disconnect("canceled", Callable(self, "_on_config_cancel"))
 
 
 func handle_get(request, response):
@@ -262,7 +262,7 @@ func generate_device_list(data):
 		device_list.append(d)
 
 	# Sort device_list as otherwise the order changes constantly
-	device_list.sort_custom(DeviceSorter, "sort_by_name")
+	device_list.sort_custom(Callable(DeviceSorter, "sort_by_name"))
 
 	# Set DeviceOptions properties
 	# Clear
@@ -274,8 +274,8 @@ func generate_device_list(data):
 	$Background/Controls/DeviceOptions.select(device_list.find(active_device))
 
 
-func set_device(device, play=true):
-	send_command("/me/player", 3, true, JSON.print({"device_ids":[device.id],"play":play}))
+func set_output_device(device, play=true):
+	send_command("/me/player", 3, true, JSON.stringify({"device_ids":[device.id],"play":play}))
 
 
 func request_authorization():
@@ -322,7 +322,12 @@ func _on_get_request_completed(_result, response_code, _headers, body):
 		return
 
 	# body handling
-	var json_result = JSON.parse(body.get_string_from_utf8()).result
+	var json = JSON.new()
+	var error = json.parse(body.get_string_from_utf8())
+	if error != OK:
+		print("JSON Parse Error: ", json.get_error_message())
+		return
+	var json_result = json.data
 	# GET /me/player result
 	if json_result.has("device"):
 		playback_active = true
@@ -363,7 +368,7 @@ func set_state(data):
 
 	# Shuffle
 	shuffle_state = data["shuffle_state"]
-	$Background/Controls/ShuffleButton.pressed = shuffle_state
+	$Background/Controls/ShuffleButton.button_pressed = shuffle_state
 
 	# Repeat
 	repeat_state = repeat_modes.find(data["repeat_state"])
@@ -371,7 +376,7 @@ func set_state(data):
 
 	# Play/Pause
 	play_state = data["is_playing"]
-	$Background/Controls/PlayPauseButton.pressed = play_state
+	$Background/Controls/PlayPauseButton.button_pressed = play_state
 
 	# I don't know why but sometimes item(song) is null, exit early if it is
 	if not data["item"]:
@@ -414,7 +419,7 @@ func send_get_command(url, headers, method=0, body=""):
 		if OS.has_feature("editor"):
 			push_warning("You're sending signals faster than we can handle")
 		return
-	http_get.request(url, headers, true, method, body)
+	http_get.request(url, headers, method, body)
 
 
 # Sends a http post/put request (isn't enforced to be only post/put)
@@ -433,29 +438,26 @@ func send_command(endpoint, method, no_update=true, body=""):
 		headers = ["Content-Length: 0", "Authorization: Bearer " + access_token]
 	else:
 		headers = ["Authorization: Bearer " + access_token]
-	http_post.request(base_api_url + endpoint, headers, true, method, body)
+	http_post.request(base_api_url + endpoint, headers, method, body)
 
 
 func download_cover():
-	var filename = art_url.right(art_url.find_last("/") + 1) + ".jpeg"
+	var filename = art_url.right(art_url.rfind("/") + 1) + ".jpeg"
 
 	# Set up downloader
 	downloader = DOWNLOADER.new()
 
 	# Download and wait for completion
 	downloader.download(art_url, cache_dir_path + filename)
-	yield(downloader, "download_completed")
+	await downloader.download_completed
 
 	change_cover(filename)
 
 
 # Create the texture from the downloaded cover art png
 func create_texture_from_image(image_path):
-	var image = Image.new()
-	image.load(image_path)
-	var texture = ImageTexture.new()
-	texture.create_from_image(image)
-	return texture
+	var image = Image.load_from_file(image_path)
+	return ImageTexture.create_from_image(image)
 
 
 func change_cover(filename):
@@ -464,17 +466,18 @@ func change_cover(filename):
 
 
 func ensure_dir_exists(path):
-	var dir = Directory.new()
-	if dir.open(path) != OK:
-		if dir.make_dir(path) != OK:
+	var dir: DirAccess
+	dir = DirAccess.open(path)
+	if not dir:
+		if dir.make_dir_recursive(path) != OK:
 			push_warning("Couldn't create " + path + " dir")
 
 
 # Deletes all files in cache_dir_path
 # since we don't want to slowly fill the users .local dir
 func clear_cache():
-	var dir = Directory.new()
-	if dir.open(cache_dir_path) == OK:
+	var dir = DirAccess.open(cache_dir_path)
+	if dir:
 		dir.list_dir_begin()
 		var file_name = dir.get_next()
 		while file_name != "":
@@ -489,7 +492,7 @@ func clear_cache():
 func _on_PlayPauseButton_pressed():
 	if not playback_active:
 		play_state = true
-		set_device(device_list[$Background/Controls/DeviceOptions.selected], play_state)
+		set_output_device(device_list[$Background/Controls/DeviceOptions.selected], play_state)
 		playback_active = true
 	elif play_state:
 		send_command("/me/player/pause", 3)
@@ -504,7 +507,7 @@ func _on_SkipBackButton_pressed():
 
 
 func _on_DeviceOptions_item_selected(index:int):
-	set_device(device_list[index], play_state)
+	set_output_device(device_list[index], play_state)
 
 
 func _on_SkipForwardButton_pressed():

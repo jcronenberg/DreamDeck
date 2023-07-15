@@ -2,99 +2,94 @@
 # All credit to him
 # https://github.com/Nolkaloid/godot-yt-dlp
 
-# warning-ignore-all:return_value_discarded
-extends Reference
+extends RefCounted
 
 signal download_completed
 signal download_failed
-signal download_progress(percentage)
+signal download_progressed(percentage)
 
-const _headers: Array = [
-	"User-Agent: Mozilla/5.0",
-	"Accept: */*",
-]
+var _is_downloading: bool = false
+var _headers = PackedStringArray([
+	"User-Agent: Pirulo/1.0 (Godot)",
+	"Accept: */*"
+])
 
-func download(url: String, file_path: String = "user://"):
-	# RegEx for parsing the URL
+func download(url: String, file_path: String) -> void:
+	if _is_downloading:
+		push_error(self, "A download is already in progress.")
+
+	_is_downloading = true
+
 	var url_regex = RegEx.new()
-	url_regex.compile("^https?:\\/\\/(?<host>[^\\/]+\\.[a-z]{2,})(?<path>(?>\\/.*)*)$")
+	url_regex.compile("^(?<host>((?<protocol>https?):\\/\\/)?[^\\/]+\\.[a-z]{2,})(?<path>(?>\\/.*)*)$")
 
 	var host: String
 	var path: String
+	var protocol: String
 
 	# Validate the URL
 	match url_regex.search(url) as RegExMatch:
 		null:
-			push_error("[downloader] Invalid URL")
-			emit_signal("download_failed")
+			download_failed.emit()
 			return
 
 		var result:
+			protocol = result.get_string("protocol")
 			host = result.get_string("host")
 			path = result.get_string("path")
 
 	var http_client := HTTPClient.new()
+	http_client.connect_to_host(host, 80 if protocol == "http" else 443)
 
-	if OS.has_feature("editor"):
-		print("[downloader] Connecting to %s" % host)
-	http_client.connect_to_host(host, -1, true)
-
-	# Connection to the host
 	while http_client.get_status() in [HTTPClient.STATUS_CONNECTING, HTTPClient.STATUS_RESOLVING]:
 		http_client.poll()
-		yield(Engine.get_main_loop(), "idle_frame")
+		await (Engine.get_main_loop() as SceneTree).process_frame
 
 	# Handle connection failure
 	if http_client.get_status() != HTTPClient.STATUS_CONNECTED:
-		push_error("[downloader] Connection failed: status=%d" % http_client.get_status())
-		emit_signal("download_failed")
+		download_failed.emit()
 		return
 
-	if OS.has_feature("editor"):
-		print("[downloader] Requesting resource at %s" % path)
 	http_client.request(HTTPClient.METHOD_GET, path, _headers)
 
-	# Request the resource
-	while http_client.get_status() == HTTPClient.STATUS_REQUESTING:
+	while not http_client.has_response():
 		http_client.poll()
-		yield(Engine.get_main_loop(), "idle_frame")
+		await (Engine.get_main_loop() as SceneTree).process_frame
 
 	# Handle the response
 	match http_client.get_response_code():
 		HTTPClient.RESPONSE_FOUND, HTTPClient.RESPONSE_MOVED_PERMANENTLY:
 			var response_headers := http_client.get_response_headers_as_dictionary()
+			_is_downloading = false
 			download(response_headers["Location"], file_path)
 			return
 
 		HTTPClient.RESPONSE_OK:
-			if OS.has_feature("editor"):
-				print("[downloader] Storing response body into %s" % file_path)
-			yield(_store_body_to_file(http_client, file_path), "completed")
+			await _store_body_to_file(http_client, file_path)
 
 		_:
-			push_error("[downloader] Request failed with code %d" % http_client.get_response_code())
-			emit_signal("download_failed")
+			download_failed.emit()
 			return
 
-	emit_signal("download_completed")
+	_is_downloading = false
+	download_completed.emit()
 
 
-func _store_body_to_file(http_client: HTTPClient, file_path: String):
-	var file: File = File.new()
-	file.open(file_path, File.WRITE)
-
+func _store_body_to_file(http_client: HTTPClient, file_path: String) -> void:
+	var file: FileAccess = FileAccess.open(file_path, FileAccess.WRITE)
 	var percentage_loaded: float = 0.0
 
 	while http_client.get_status() == HTTPClient.STATUS_BODY:
 		http_client.poll()
 		file.store_buffer(http_client.read_response_body_chunk())
 
-		var new_percentage := file.get_len() / float(http_client.get_response_body_length())
+		@warning_ignore("integer_division")
+		var new_percentage = file.get_length() * 100 / http_client.get_response_body_length()
 
 		if percentage_loaded < new_percentage:
 			percentage_loaded = new_percentage
-			emit_signal("download_progress", percentage_loaded)
+			download_progressed.emit(percentage_loaded)
 
-		yield(Engine.get_main_loop(), "idle_frame")
+		await (Engine.get_main_loop() as SceneTree).process_frame
 
 	file.close()

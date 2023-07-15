@@ -1,21 +1,22 @@
-extends Reference
+extends RefCounted
 
 
 # Load config at path. If it doesn't exist this create's it
 static func load_config(path) -> Dictionary:
-	var config_file = File.new()
+	var config_file: FileAccess
 	var config_data := {}
 
-	if config_file.file_exists(path):
-		if config_file.open(path, File.READ) != OK:
-			push_error("Couldn't open file at " + path)
+	if FileAccess.file_exists(path):
+		config_file = FileAccess.open(path, FileAccess.READ)
+		if not config_file:
+			push_error(FileAccess.get_open_error())
 			return {}
-		var config_json = JSON.parse(config_file.get_as_text())
-		if config_json.error == OK:
-			config_data = config_json.result
-		else:
-			push_error("Couldn't parse config")
+		var json = JSON.new()
+		var error = json.parse(config_file.get_as_text())
+		if error != OK:
+			print("JSON Parse Error: ", json.get_error_message())
 			return {}
+		config_data = json.data
 	else:
 		config_data = {}
 		if not save_config(path, config_data):
@@ -28,21 +29,22 @@ static func load_config(path) -> Dictionary:
 # Save new_data as json at path
 # returns true if successful and false if not
 static func save_config(path: String, new_data) -> bool:
-	var config_file = File.new()
+	var config_file: FileAccess
 
 	# Save new_data
-	if config_file.open(path, File.WRITE) != OK:
-		push_error("Couldn't save config file at: " + path)
+	config_file = FileAccess.open(path, FileAccess.WRITE)
+	if not config_file:
+		push_error(FileAccess.get_open_error())
 		return false
-	config_file.store_string(JSON.print(new_data, "\t"))
+	config_file.store_string(JSON.stringify(new_data, "\t"))
 
 	return true
 
 
 # Checks if a directory exists, if not it creates it recursively
 static func ensure_dir_exists(path):
-	var dir = Directory.new()
-	if dir.open(path) != OK:
+	var dir := DirAccess.open(path)
+	if not dir:
 		if dir.make_dir_recursive(path) != OK:
 			push_warning("Couldn't create " + path + " dir")
 

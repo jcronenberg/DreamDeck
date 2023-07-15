@@ -1,13 +1,13 @@
-[gd_scene load_steps=3 format=2]
+[gd_scene load_steps=3 format=3 uid="uid://dw21nhio2f6gh"]
 
-[ext_resource path="res://themes/MainTheme.tres" type="Theme" id=1]
-[ext_resource path="res://scripts/MainMenu/SettingToggle.gd" type="Script" id=2]
+[ext_resource type="Theme" uid="uid://duea6v8sw5cfx" path="res://themes/MainTheme.tres" id="1"]
+[ext_resource type="Script" path="res://scripts/MainMenu/SettingToggle.gd" id="2"]
 
 [node name="SettingToggle" type="CheckButton"]
-margin_right = 300.0
-margin_bottom = 60.0
-rect_min_size = Vector2( 0, 60 )
-theme = ExtResource( 1 )
-script = ExtResource( 2 )
+custom_minimum_size = Vector2(0, 60)
+offset_right = 300.0
+offset_bottom = 60.0
+theme = ExtResource("1")
+script = ExtResource("2")
 
 [connection signal="pressed" from="." to="." method="_on_ValueBoolButton_pressed"]

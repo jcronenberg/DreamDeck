@@ -13,7 +13,7 @@ var server_identifier: String = "GodotTPD"
 
 
 # The TCP server instance used
-var _server: TCP_Server
+var _server: TCPServer
 
 # An array of StraemPeerTCP objects who are currently talking to the server
 var _clients: Array
@@ -26,9 +26,6 @@ var _method_regex: RegEx = RegEx.new()
 
 # A regex for header lines
 var _header_regex: RegEx = RegEx.new()
-
-# The base path used in a project to serve files
-var _local_base_path: String = "res://src"
 
 # Compile the required regex
 func _init() -> void:
@@ -43,7 +40,7 @@ func _init() -> void:
 func _print_debug(message: String) -> void:
 	if not OS.has_feature("editor"):
 		return
-	var time = OS.get_datetime()
+	var time = Time.get_datetime_dict_from_system()
 	var time_return = "%02d-%02d-%02d %02d:%02d:%02d" % [time.year, time.month, time.day, time.hour, time.minute, time.second]
 	print_debug("[SERVER] ",time_return," >> ", message)
 
@@ -86,7 +83,7 @@ func _process(_delta: float) -> void:
 # Start the server
 func start():
 	set_process(true)
-	self._server = TCP_Server.new()
+	self._server = TCPServer.new()
 	var err: int = self._server.listen(self.port, self.bind_address)
 	match err:
 		22:
@@ -123,7 +120,7 @@ func _handle_request(client: StreamPeer, request_string: String):
 			if not "?" in request_path:
 				request.path = request_path
 			else:
-				var path_query: PoolStringArray = request_path.split("?")
+				var path_query: PackedStringArray = request_path.split("?")
 				request.path = path_query[0]
 				request.query = _extract_query_params(path_query[1])
 			request.headers = {}
@@ -214,7 +211,7 @@ func _extract_query_params(query_string: String) -> Dictionary:
 			continue
 		var kv : Array = param.split("=")
 		var value: String = kv[1]
-		if value.is_valid_integer():
+		if value.is_valid_int():
 			query[kv[0]] = int(value)
 		elif value.is_valid_float():
 			query[kv[0]] = float(value)

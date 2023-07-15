@@ -1,4 +1,4 @@
-extends WindowDialog
+extends Window
 
 var cur_row: int
 var cur_pos: int
@@ -67,7 +67,7 @@ func fill_from_button_dict(button_dict):
 	$MarginContainer/Rows/ArgumentsSplit/LineEdit.text = args_to_text(button_dict["arguments"])
 	$MarginContainer/Rows/AppNameSplit/LineEdit.text = button_dict["app_name"]
 	$MarginContainer/Rows/IconPathSplit/LineEdit.text = button_dict["icon_path"]
-	$MarginContainer/Rows/ShowAppNameSplit/CheckBox.pressed = button_dict["show_app_name"]
+	$MarginContainer/Rows/ShowAppNameSplit/CheckBox.button_pressed = button_dict["show_app_name"]
 
 
 # Resets all LineEdit's to default state
@@ -76,7 +76,7 @@ func reset_prompt():
 	$MarginContainer/Rows/ArgumentsSplit/LineEdit.text = ""
 	$MarginContainer/Rows/AppNameSplit/LineEdit.text = ""
 	$MarginContainer/Rows/IconPathSplit/LineEdit.text = ""
-	$MarginContainer/Rows/ShowAppNameSplit/CheckBox.pressed = false
+	$MarginContainer/Rows/ShowAppNameSplit/CheckBox.button_pressed = false
 
 
 func args_to_text(args) -> String:

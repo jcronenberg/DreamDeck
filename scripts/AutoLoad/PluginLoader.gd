@@ -50,7 +50,7 @@ func change_activated_plugins(new_data):
 	activated_plugins.save()
 
 	handle_activated_plugins()
-	get_node("/root/GlobalSignals").activated_plugins_changed()
+	get_node("/root/GlobalSignals").emit_activated_plugins_changed()
 
 
 func handle_activated_plugins():
@@ -61,10 +61,10 @@ func handle_activated_plugins():
 			# TODO maybe catch the case where Loader.gd doesn't exist
 			plugin_loaders[plugin] = load("res://plugins/" + plugin + "/Loader.gd").new()
 			add_child(plugin_loaders[plugin])
-			plugin_loaders[plugin].load()
+			plugin_loaders[plugin].plugin_load()
 		# Plugin isn't activated but was previously
 		elif not activated_plugins_data[plugin] and plugin in plugin_loaders.keys():
-			plugin_loaders[plugin].unload()
+			plugin_loaders[plugin].plugin_unload()
 			plugin_loaders[plugin].free()
 			plugin_loaders.erase(plugin)
 
@@ -74,24 +74,24 @@ func handle_activated_plugins():
 				get_node("/root/Main/MainMenu").edit_plugin_settings()
 
 
-func get_plugin_config(name: String, plugin_default_config):
-	conf_lib.ensure_dir_exists(plugin_path(name))
+func get_plugin_config(plugin_name: String, plugin_default_config):
+	conf_lib.ensure_dir_exists(plugin_path(plugin_name))
 
-	# We check that name has a plugin_loader because otherwise
+	# We check that plugin_name has a plugin_loader because otherwise
 	# there can be race conditions when freeing a plugin.
 	# Because the plugin loader will likely call queue_free when unloading
 	# but because there may still be nodes connected to the plugin_configs_changed signal,
 	# they may attempt to try loading their config, which was already freed
 	# then this gets triggered and would allocate a new config for a plugin that is exiting
-	if not name in plugin_loaders.keys():
+	if not plugin_name in plugin_loaders.keys():
 		return
 
-	if not name in plugin_configs.keys():
-		plugin_configs[name] = load("res://scripts/global/Config.gd").new(plugin_default_config, plugin_path(name) + "config.json")
+	if not plugin_name in plugin_configs.keys():
+		plugin_configs[plugin_name] = load("res://scripts/global/Config.gd").new(plugin_default_config, plugin_path(plugin_name) + "config.json")
 
-	plugin_configs[name].load_config()
+	plugin_configs[plugin_name].load_config()
 	get_node("/root/Main/MainMenu").edit_plugin_settings()
-	return plugin_configs[name].get_config()
+	return plugin_configs[plugin_name].get_config()
 
 
 func get_all_plugin_configs() -> Dictionary:
@@ -109,29 +109,28 @@ func change_all_plugin_configs(new_data: Dictionary):
 		plugin_configs[plugin].change_config(new_data[plugin])
 		plugin_configs[plugin].save()
 
-	get_node("/root/GlobalSignals").plugin_configs_changed()
+	get_node("/root/GlobalSignals").emit_plugin_configs_changed()
 
 
-func save_plugin_config(name: String, new_data) -> bool:
-	conf_lib.ensure_dir_exists(plugin_path(name))
-	plugin_configs[name].change_config(new_data)
-	return plugin_configs[name].save()
+func save_plugin_config(plugin_name: String, new_data) -> bool:
+	conf_lib.ensure_dir_exists(plugin_path(plugin_name))
+	plugin_configs[plugin_name].change_config(new_data)
+	return plugin_configs[plugin_name].save()
 
 
-func get_conf_dir(name: String):
-	conf_lib.ensure_dir_exists(plugin_path(name))
-	return plugin_path(name)
+func get_conf_dir(plugin_name: String):
+	conf_lib.ensure_dir_exists(plugin_path(plugin_name))
+	return plugin_path(plugin_name)
 
 
-func get_cache_dir(name: String):
-	conf_lib.ensure_dir_exists(conf_dir + "cache/" + name + "/")
-	return conf_dir + "cache/" + name + "/"
+func get_cache_dir(plugin_name: String):
+	conf_lib.ensure_dir_exists(conf_dir + "cache/" + plugin_name + "/")
+	return conf_dir + "cache/" + plugin_name + "/"
 
 
 func list_plugins() -> Array:
 	var files := []
-	var dir := Directory.new()
-	dir.open("res://plugins")
+	var dir = DirAccess.open("res://plugins")
 	dir.list_dir_begin()
 
 	while true:
@@ -147,5 +146,5 @@ func list_plugins() -> Array:
 
 
 # Has trailing slash
-func plugin_path(name) -> String:
-	return conf_dir + "plugins/" + name + "/"
+func plugin_path(plugin_name) -> String:
+	return conf_dir + "plugins/" + plugin_name + "/"

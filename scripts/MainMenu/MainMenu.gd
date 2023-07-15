@@ -1,8 +1,8 @@
 extends Control
 
 # Nodes
-onready var config_loader = get_node("/root/ConfigLoader")
-onready var plugin_loader = get_node("/root/PluginLoader")
+@onready var config_loader = get_node("/root/ConfigLoader")
+@onready var plugin_loader = get_node("/root/PluginLoader")
 
 # Submenus
 var settings_submenu
@@ -28,27 +28,27 @@ func construct_main_menu():
 	var new_button
 
 	# Settings
-	new_button = submenu_button.instance()
-	new_button.rect_size.x = 400
+	new_button = submenu_button.instantiate()
+	new_button.size.x = 400
 	new_button.init("Settings", config_loader.get_config())
 	settings_submenu = new_button
 	$Menu/SettingSeparator.add_child(new_button)
 	# Plugins
-	new_button = submenu_button.instance()
-	new_button.rect_size.x = 400
+	new_button = submenu_button.instantiate()
+	new_button.size.x = 400
 	new_button.init("Plugins", plugin_loader.get_activated_plugins())
 	plugins_submenu = new_button
 	$Menu/SettingSeparator.add_child(new_button)
 	# Plugin settings
-	new_button = submenu_button.instance()
-	new_button.rect_size.x = 400
+	new_button = submenu_button.instantiate()
+	new_button.size.x = 400
 	new_button.init("Plugin settings", plugin_loader.get_all_plugin_configs())
 	plugin_settings_submenu = new_button
 	$Menu/SettingSeparator.add_child(new_button)
 	# Edit Mode
-	new_button = execute_function_button.instance()
+	new_button = execute_function_button.instantiate()
 	new_button.init("Edit Mode", "/root/GlobalSignals", "toggle_edit_mode")
-	new_button.rect_size.x = 400
+	new_button.size.x = 400
 	edit_mode_button = new_button
 	$Menu/SettingSeparator.add_child(new_button)
 
@@ -62,6 +62,15 @@ func edit_plugin_settings():
 
 	plugin_settings_submenu.clear_submenu()
 	plugin_settings_submenu.add_submenu(plugin_loader.get_all_plugin_configs())
+
+
+func edit_settings():
+	# Because this may be called before _ready
+	if not main_menu_constructed:
+		_ready()
+
+	settings_submenu.clear_submenu()
+	settings_submenu.add_submenu(config_loader.get_config())
 
 
 func construct_config():

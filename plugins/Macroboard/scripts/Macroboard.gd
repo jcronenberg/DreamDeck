@@ -5,7 +5,7 @@ const PLUGIN_NAME = "Macroboard"
 const BUTTON_GAP = 10
 
 # Global nodes
-onready var global_signals = get_node("/root/GlobalSignals")
+@onready var global_signals = get_node("/root/GlobalSignals")
 
 # Global vars
 var button_min_size: Vector2 = Vector2(150, 150) # default size
@@ -17,10 +17,10 @@ var no_button = load("res://plugins/Macroboard/scenes/NoButton.tscn")
 var max_buttons := Vector2(0, 0)
 
 # Configs
-onready var plugin_loader := get_node("/root/PluginLoader")
-onready var conf_dir = plugin_loader.get_conf_dir(PLUGIN_NAME)
+@onready var plugin_loader := get_node("/root/PluginLoader")
+@onready var conf_dir = plugin_loader.get_conf_dir(PLUGIN_NAME)
 # Page0 hardcoded for now, because we don't support multiple pages yet
-onready var layout_config = load("res://scripts/global/Config.gd").new({"Page0": []}, conf_dir + "layout.json")
+@onready var layout_config = load("res://scripts/global/Config.gd").new({"Page0": []}, conf_dir + "layout.json")
 const DEFAULT_CONFIG := {
 	"Button Settings": {
 		"Height": 150,
@@ -33,9 +33,9 @@ var initializing = true
 
 
 func _ready():
-	global_signals.connect("entered_edit_mode", self, "_on_entered_edit_mode")
-	global_signals.connect("exited_edit_mode", self, "_on_exited_edit_mode")
-	global_signals.connect("plugin_configs_changed", self, "_on_plugin_configs_changed")
+	global_signals.connect("entered_edit_mode", Callable(self, "_on_entered_edit_mode"))
+	global_signals.connect("exited_edit_mode", Callable(self, "_on_exited_edit_mode"))
+	global_signals.connect("plugin_configs_changed", Callable(self, "_on_plugin_configs_changed"))
 
 
 func _on_plugin_configs_changed():
@@ -91,17 +91,17 @@ func load_buttons():
 	var layout = layout_config.get_config()
 
 	for row in max_buttons.y:
-		var cur_row = macro_row.instance()
+		var cur_row = macro_row.instantiate()
 
 		for button in max_buttons.x:
 			var new_button
 
 			# Only if an entry exists at this position we add it
 			if layout["Page0"].size() > row and layout["Page0"][row].size() > button and layout["Page0"][row][button]:
-				new_button = app_button.instance()
+				new_button = app_button.instantiate()
 				edit_button_keys(new_button, layout["Page0"][row][button])
 			else:
-				new_button = no_button.instance()
+				new_button = no_button.instantiate()
 				new_button.init(row, button)
 
 			new_button.set_custom_minimum_size(button_min_size)
@@ -165,7 +165,7 @@ func swap_buttons(button1, button2):
 
 # "Deletes" a button by replacing it with a no_button instance
 func delete_button(button):
-	var new_no_button = no_button.instance()
+	var new_no_button = no_button.instantiate()
 	var button_pos = calculate_pos(button)
 	new_no_button.init(button_pos[0], button_pos[1])
 	new_no_button.set_custom_minimum_size(button_min_size)
@@ -281,7 +281,7 @@ func add_or_edit_button(row, pos, button_dict, button):
 	var row_node := $RowSeparator.get_child(row)
 
 	if not button.has_method("save"):
-		var new_button = app_button.instance()
+		var new_button = app_button.instantiate()
 		# Apply button settings
 		new_button.set_custom_minimum_size(button_min_size)
 		replace_button(button, new_button)
@@ -330,8 +330,9 @@ func calculate_pos(button) -> Array:
 # This calculates how many rows and buttons per row are possible
 # based on current size
 func calculate_size() -> Vector2:
-	var size = get_size()
-	return Vector2(floor((size.x + BUTTON_GAP) / (button_min_size.x + BUTTON_GAP)), floor((size.y + BUTTON_GAP) / (button_min_size.y + BUTTON_GAP)))
+	var macroboard_size = get_size()
+	return Vector2(floor((macroboard_size.x + BUTTON_GAP) / (button_min_size.x + BUTTON_GAP)),
+		floor((macroboard_size.y + BUTTON_GAP) / (button_min_size.y + BUTTON_GAP)))
 
 
 func _on_size_changed():

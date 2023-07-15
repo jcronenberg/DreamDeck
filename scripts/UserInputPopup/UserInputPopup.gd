@@ -1,20 +1,20 @@
-extends WindowDialog
+extends Window
 
 signal apply_text(text)
-signal cancelled
+signal canceled
 
-func show():
+func show_popup():
 	self.visible = true
 
-func hide():
+func hide_popup():
 	$MarginContainer/VBoxContainer/LineEdit.text = ""
 	self.visible = false
 
 func create_dialog(description, placeholder):
-	$MarginContainer/VBoxContainer/VBoxContainer/AboveText.bbcode_text = "[center]" + description + "[/center]"
+	$MarginContainer/VBoxContainer/VBoxContainer/AboveText.text = "[center]" + description + "[/center]"
 	$MarginContainer/VBoxContainer/LineEdit.text = ""
 	$MarginContainer/VBoxContainer/LineEdit.placeholder_text = placeholder
-	show()
+	show_popup()
 
 func show_warning(warning):
 	$MarginContainer/VBoxContainer/WarningText.text = warning
@@ -27,8 +27,8 @@ func _on_ConfirmButton_pressed():
 
 
 func _on_CancelButton_pressed():
-	emit_signal("cancelled")
-	hide()
+	emit_signal("canceled")
+	hide_popup()
 
 
 func _on_LineEdit_text_entered(new_text):

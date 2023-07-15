@@ -15,26 +15,26 @@ var divide_y_by: float = 0.0
 
 # Nodes
 var grab_touch_devices_script
-onready var device_options = get_node("ControlsSeparator/DeviceOptions")
-onready var reconnect_button = get_node("ControlsSeparator/ReconnectButton")
-onready var grab_check_button = get_node("ControlsSeparator/GrabCheckButton")
+@onready var device_options = get_node("ControlsSeparator/DeviceOptions")
+@onready var reconnect_button = get_node("ControlsSeparator/ReconnectButton")
+@onready var grab_check_button = get_node("ControlsSeparator/GrabCheckButton")
 
 # Non fullscreen functions
 var window_area_min: Vector2 = Vector2(0, 0)
 var window_area_max: Vector2 = Vector2(0, 0)
 
 # Config
-onready var plugin_loader := get_node("/root/PluginLoader")
+@onready var plugin_loader := get_node("/root/PluginLoader")
 const DEFAULT_CONFIG = {
 	"Default Device": ""
 }
 
 
 func _ready():
-	grab_touch_devices_script = load("res://plugins/Touch/rust/GrabTouchDevice.gdns").new()
+	grab_touch_devices_script = GrabTouchDevice.new()
 	add_child(grab_touch_devices_script)
 
-	get_tree().get_root().connect("size_changed", self, "_on_main_window_resized")
+	get_tree().get_root().connect("size_changed", Callable(self, "_on_main_window_resized"))
 	# Need to trigger it once on ready to populate values on startup
 	_on_main_window_resized()
 
@@ -49,9 +49,9 @@ func _ready():
 
 
 func _on_main_window_resized():
-	current_screen_size = OS.get_screen_size()
+	current_screen_size = DisplayServer.screen_get_size()
 	calculate_divide_by()
-	if not OS.is_window_fullscreen():
+	if not ((get_window().mode == Window.MODE_EXCLUSIVE_FULLSCREEN) or (get_window().mode == Window.MODE_FULLSCREEN)):
 		calculate_window_area()
 
 
@@ -60,8 +60,8 @@ func load_config():
 
 
 func calculate_window_area():
-	window_area_min = OS.get_window_position() - OS.get_screen_position()
-	window_area_max = OS.get_window_position() + OS.get_window_size() - OS.get_screen_position()
+	window_area_min = get_window().get_position() - DisplayServer.screen_get_position()
+	window_area_max = get_window().get_position() + get_window().get_size() - DisplayServer.screen_get_position()
 
 
 func reconnect_device():
@@ -122,7 +122,7 @@ func handle_event():
 	if !event_lmb.pressed or (x_changed and y_changed):
 		# If window is not fullscreen we have to calculate if the touch was within the area of the window
 		# If it wasn't we skip the event
-		if (not OS.is_window_fullscreen()) and \
+		if (not ((get_window().mode == Window.MODE_EXCLUSIVE_FULLSCREEN) or (get_window().mode == Window.MODE_FULLSCREEN))) and \
 			((event_lmb.position.x > window_area_max.x or event_lmb.position.x < window_area_min.x) or \
 			 (event_lmb.position.y > window_area_max.y or event_lmb.position.y < window_area_min.y)):
 			return
@@ -132,4 +132,4 @@ func handle_event():
 		mod_event.position -= window_area_min
 		Input.parse_input_event(mod_event)
 		if OS.has_feature("editor"):
-			 get_node("/root/Main/DebugCursor").rect_position = mod_event.position
+			get_node("/root/Main/DebugCursor").position = mod_event.position

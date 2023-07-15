@@ -1,5 +1,5 @@
 [package]
-name = "dreamdeck"
+name = "dreamdeck_touch"
 version = "0.1.0"
 edition = "2021"
 
@@ -10,5 +10,5 @@ crate-type = ["cdylib"]
 
 [dependencies]
 evdev = "0.12.1"
-gdnative = "0.11"
+godot = { git = "https://github.com/godot-rust/gdext", branch = "master" }
 nix = "0.23.1"
