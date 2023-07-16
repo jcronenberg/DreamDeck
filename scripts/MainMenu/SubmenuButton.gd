@@ -31,7 +31,7 @@ func add_submenu(dict):
 		$SubmenuBg/OptionSeparator.add_child(new_button)
 
 		# Increase SubmenuBg size to account for new button
-		$SubmenuBg.custom_minimum_size.y = $SubmenuBg.custom_minimum_size.y + 60
+		$SubmenuBg.size.y = $SubmenuBg.size.y + 60
 
 		# If button is larger than default size we need to adjust min size
 		change_submenu_size(new_button.size.x)
@@ -42,10 +42,7 @@ func clear_submenu():
 	for child in $SubmenuBg/OptionSeparator.get_children():
 		child.queue_free()
 
-	$SubmenuBg.custom_minimum_size.y = 0
-	$SubmenuBg.custom_minimum_size.x = 0
 	$SubmenuBg.size.y = 0
-	$SubmenuBg.size.x = 0
 
 
 # Shows submenu if button is of type SUBMENU
@@ -84,8 +81,8 @@ func hide_other_open_submenu():
 
 
 func change_submenu_size(new_x: int):
-	if $SubmenuBg.custom_minimum_size.x < new_x:
-		$SubmenuBg.custom_minimum_size.x = new_x
+	if $SubmenuBg.size.x < new_x:
+		$SubmenuBg.size.x = new_x
 
 		for child in $SubmenuBg/OptionSeparator.get_children():
 			if child.has_node("SubmenuBg"):
