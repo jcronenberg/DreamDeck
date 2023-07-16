@@ -27,3 +27,4 @@ caret_blink = true
 caret_blink_interval = 0.5
 
 [connection signal="item_rect_changed" from="." to="." method="_on_rect_changed"]
+[connection signal="resized" from="." to="." method="_on_resized"]

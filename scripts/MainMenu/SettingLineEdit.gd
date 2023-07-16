@@ -36,3 +36,7 @@ func return_key():
 func _on_rect_changed():
 	# + 16 because of LineEdit theme, that makes it bigger than its actual size
 	get_node("../../..").change_submenu_size(size.x + 16)
+
+
+func _on_resized():
+	get_node("../..").size.x = size.x

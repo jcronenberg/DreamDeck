@@ -16,3 +16,7 @@ func return_key():
 
 func _on_ValueBoolButton_pressed():
 	get_node("/root/GlobalSignals").emit_config_changed()
+
+
+func _on_resized():
+	get_node("../..").size.x = size.x

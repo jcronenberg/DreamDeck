@@ -11,3 +11,4 @@ theme = ExtResource("1")
 script = ExtResource("2")
 
 [connection signal="pressed" from="." to="." method="_on_ValueBoolButton_pressed"]
+[connection signal="resized" from="." to="." method="_on_resized"]
