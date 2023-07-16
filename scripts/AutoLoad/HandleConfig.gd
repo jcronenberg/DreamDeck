@@ -39,3 +39,6 @@ func apply_settings(config_data):
 	# Background Settings
 	get_window().transparent = true
 	get_window().set_transparent_background(config_data["Transparent Background"])
+
+	# Mouse cursor
+	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN if config_data["Hide Mouse Cursor"] else Input.MOUSE_MODE_VISIBLE

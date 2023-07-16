@@ -3,6 +3,7 @@ extends Node
 const DEFAULT_CONFIG := {
 	"Transparent Background": false,
 	"Fullscreen": false,
+	"Hide Mouse Cursor": false,
 	"Window Size": {
 		"Width": 1280,
 		"Height": 800
