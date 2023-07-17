@@ -27,6 +27,6 @@ offset_right = -30.0
 offset_bottom = -30.0
 texture = ExtResource("2")
 expand_mode = 1
-stretch_mode = 6
+stretch_mode = 5
 
 [connection signal="pressed" from="AddButton" to="." method="_on_AddButton_pressed"]
