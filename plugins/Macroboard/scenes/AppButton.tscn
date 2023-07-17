@@ -17,7 +17,7 @@ offset_top = 20.0
 offset_right = -35.0
 offset_bottom = -50.0
 expand_mode = 1
-stretch_mode = 6
+stretch_mode = 5
 
 [node name="AppName" type="Label" parent="."]
 layout_mode = 0
