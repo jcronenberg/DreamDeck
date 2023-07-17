@@ -3,5 +3,4 @@ entry_symbol = "gdext_rust_init"
 compatibility_minimum = 4.1
 
 [libraries]
-linux.debug.x86_64 = "res://plugins/Touch/rust/target/debug/libdreamdeck_touch.so"
-linux.release.x86_64 = "res://plugins/Touch/rust/target/release/libdreamdeck_touch.so"
+linux.x86_64 = "res://plugins/Touch/rust/target/release/libdreamdeck_touch.so"
