@@ -3,6 +3,8 @@ extends Control
 # Plugin
 const PLUGIN_NAME = "SpotifyPanel"
 
+const conf_lib := preload("res://scripts/libraries/ConfLib.gd")
+
 # Downloader
 const DOWNLOADER = preload("res://scripts/helper/Downloader.gd")
 # DOWNLOADER instance
@@ -110,7 +112,7 @@ const DEFAULT_CONFIG = {
 
 func _ready():
 	# Ensure prerequisites exist
-	ensure_dir_exists(cache_dir_path)
+	conf_lib.ensure_dir_exists(cache_dir_path)
 
 	# Load configs
 	load_plugin_config()
@@ -463,14 +465,6 @@ func create_texture_from_image(image_path):
 func change_cover(filename):
 	var complete_cover_path = cache_dir_path + filename
 	$Background/AlbumArt.texture = create_texture_from_image(complete_cover_path)
-
-
-func ensure_dir_exists(path):
-	var dir: DirAccess
-	dir = DirAccess.open(path)
-	if not dir:
-		if dir.make_dir_recursive(path) != OK:
-			push_warning("Couldn't create " + path + " dir")
 
 
 # Deletes all files in cache_dir_path

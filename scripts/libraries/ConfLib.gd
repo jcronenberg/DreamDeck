@@ -45,7 +45,7 @@ static func save_config(path: String, new_data) -> bool:
 static func ensure_dir_exists(path):
 	var dir := DirAccess.open(path)
 	if not dir:
-		if dir.make_dir_recursive(path) != OK:
+		if DirAccess.make_dir_recursive_absolute(path) != OK:
 			push_warning("Couldn't create " + path + " dir")
 
 
