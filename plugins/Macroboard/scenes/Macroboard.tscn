@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://54qwg5cx6hw3"]
 
-[ext_resource type="PackedScene" path="res://plugins/Macroboard/scenes/EditButtonPopup.tscn" id="1"]
+[ext_resource type="PackedScene" uid="uid://cf4w2hhtf73dt" path="res://plugins/Macroboard/scenes/EditButtonPopup.tscn" id="1"]
 [ext_resource type="Script" path="res://plugins/Macroboard/scripts/Macroboard.gd" id="3"]
 
 [node name="Macroboard" type="Control"]
