@@ -10,12 +10,14 @@ var button_to_edit: Node
 #         otherwise if an existing button is supposed to be edited
 #         this should be the instance of said button
 func show_popup(button):
+	reset_prompt()
 	button_to_edit = button
-	$"%Header".text = "Edit Button. (Hover for a tooltip)"
 	if button.has_method("save"):
+		title = "Edit Button. (Hover for a tooltip)"
 		fill_from_button_dict(button.save())
 		$"%DeleteButton".visible = true
 	else:
+		title = "Create Button. (Hover for a tooltip)"
 		$"%DeleteButton".visible = false
 	visible = true
 
