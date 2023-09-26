@@ -1,14 +1,13 @@
-extends Window
+extends PopupPanel
+## Popup for creating or editing buttons in [Macroboard].
+class_name EditButtonPopup
 
+## [b]Instance[/b] of the button that is supposed to be edited.
 var button_to_edit: Node
 
 
-# Function to be called when a button is supposed to be created/edited
-# row: row in which the button is supposed to be/ currently is
-# pos: position in the row in which the button currently is
-# button: if a new button is supposed to be created this has to be null
-#         otherwise if an existing button is supposed to be edited
-#         this should be the instance of said button
+## Shows the popup to create or edit a button.[br]
+## [param button]: [b]Instance[/b] of the button to add/edit
 func show_popup(button):
 	reset_prompt()
 	button_to_edit = button
@@ -36,14 +35,12 @@ func _on_CancelButton_pressed():
 func _on_DeleteButton_pressed():
 	reset_prompt()
 	if button_to_edit:
-		# Can't queue_free here as we need it gone to properly delete the row
-		# because remove_add_buttons only delete's the row when no button is present
 		get_parent().delete_button(button_to_edit)
 
 	visible = false
 
 
-# Creates and returns a dictionary from all input fields
+## Creates and returns a dictionary from all input fields.
 func create_button_dict() -> Dictionary:
 	var button_dict = {}
 	button_dict["app"] = $MarginContainer/Rows/AppSplit/LineEdit.text
@@ -55,8 +52,8 @@ func create_button_dict() -> Dictionary:
 	return button_dict
 
 
-# Takes a dict with a button's keys and fills all LineEdits with the values
-func fill_from_button_dict(button_dict):
+## Takes a [Dictionary] with a button's keys and fills all LineEdits with the values.
+func fill_from_button_dict(button_dict: Dictionary):
 	$MarginContainer/Rows/AppSplit/LineEdit.text = button_dict["app"]
 	$MarginContainer/Rows/ArgumentsSplit/LineEdit.text = args_to_text(button_dict["arguments"])
 	$MarginContainer/Rows/AppNameSplit/LineEdit.text = button_dict["app_name"]
@@ -64,7 +61,7 @@ func fill_from_button_dict(button_dict):
 	$MarginContainer/Rows/ShowAppNameSplit/CheckBox.button_pressed = button_dict["show_app_name"]
 
 
-# Resets all LineEdit's to default state
+## Resets all inputs to default state.
 func reset_prompt():
 	$MarginContainer/Rows/AppSplit/LineEdit.text = ""
 	$MarginContainer/Rows/ArgumentsSplit/LineEdit.text = ""
@@ -73,6 +70,7 @@ func reset_prompt():
 	$MarginContainer/Rows/ShowAppNameSplit/CheckBox.button_pressed = false
 
 
+## Creates a single [String] from an [Array] of [String]s.
 func args_to_text(args) -> String:
 	var ret = ""
 	for arg in args:
@@ -82,6 +80,6 @@ func args_to_text(args) -> String:
 	return ret
 
 
+## Creates an [Array] of [String]s from a single [String].
 func text_to_args(args) -> Array:
 	return args.split(" ")
-
