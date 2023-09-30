@@ -283,9 +283,7 @@ func add_or_edit_button(button, button_dict: Dictionary):
 func edit_button_keys(button, button_dict: Dictionary):
 	# Iterate through all values that need to be set in button
 	for key in button_dict.keys():
-		# Only set attribute if value is set (may be unnecessary)
-		if button_dict[key]:
-			button.set(key, button_dict[key])
+		button.set(key, button_dict[key])
 
 
 ## Function to be called when an existing button is pressed in edit mode.[br]

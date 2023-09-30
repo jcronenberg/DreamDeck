@@ -47,7 +47,7 @@ func create_button_dict() -> Dictionary:
 	button_dict["arguments"] = text_to_args($MarginContainer/Rows/ArgumentsSplit/LineEdit.text)
 	button_dict["app_name"] = $MarginContainer/Rows/AppNameSplit/LineEdit.text
 	button_dict["icon_path"] = $MarginContainer/Rows/IconPathSplit/LineEdit.text
-	button_dict["show_app_name"] = $MarginContainer/Rows/ShowAppNameSplit/CheckBox.pressed
+	button_dict["show_app_name"] = $MarginContainer/Rows/ShowAppNameSplit/CheckBox.button_pressed
 
 	return button_dict
 
