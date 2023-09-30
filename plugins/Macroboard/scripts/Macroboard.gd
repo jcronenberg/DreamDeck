@@ -112,7 +112,6 @@ func merge_layout_array(original_array: Array, new_array: Array) -> Array:
 	if new_array.size() >= original_array.size():
 		return new_array
 	var ret_array := original_array.duplicate()
-	ret_array.resize(new_array.size())
 	var i := 0
 	for value in new_array:
 		ret_array[i] = value
