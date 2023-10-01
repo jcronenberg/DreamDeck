@@ -1,16 +1,15 @@
+use evdev::{
+    AbsoluteAxisType, Device,
+    InputEventKind::{AbsAxis, Key},
+};
 use godot::prelude::*;
 use nix::{
     fcntl::{FcntlArg, OFlag},
     sys::epoll,
 };
-use std::os::fd::{AsRawFd, FromRawFd, OwnedFd};
 use std::collections::HashMap;
-use evdev::{
-    Device,
-    InputEventKind::{AbsAxis, Key},
-    AbsoluteAxisType,
-};
 use std::fs;
+use std::os::fd::{AsRawFd, FromRawFd, OwnedFd};
 
 /// Time interval between retrying to reconnect device
 const RETRY_TIMER: f64 = 0.5;
@@ -19,7 +18,10 @@ const INPUT_DIR_PATH: &str = "/dev/input/";
 
 macro_rules! PARSE_EVENT {
     ($owner:expr,$function:expr,$event:expr) => {
-        $owner.get_parent().unwrap().call($function, &[$event.value().to_variant()])
+        $owner
+            .get_parent()
+            .unwrap()
+            .call($function, &[$event.value().to_variant()])
     };
 }
 
@@ -68,12 +70,12 @@ fn read_input_dir() -> String {
 impl GrabTouchDevice {
     #[func]
     fn get_device_max_abs_x(&mut self) -> i32 {
-        return self.device_max_abs_x;
+        self.device_max_abs_x
     }
 
     #[func]
     fn get_device_max_abs_y(&mut self) -> i32 {
-        return self.device_max_abs_y;
+        self.device_max_abs_y
     }
 
     /// Internal function to set self.device to matching self.device_name
@@ -83,7 +85,7 @@ impl GrabTouchDevice {
             self.ungrab_device();
         }
 
-        if self.device_list == None {
+        if self.device_list.is_none() {
             return Err("No devices registered".into());
         }
 
@@ -127,11 +129,10 @@ impl GrabTouchDevice {
     fn set_device(&mut self, name: GodotString) -> Variant {
         self._get_devices();
 
-        self.device_name = name.into();
+        self.device_name = name;
 
-        match self._set_device() {
-            Err(e) => return e.to_string().to_variant(),
-            _ => (),
+        if let Err(e) = self._set_device() {
+            return e.to_string().to_variant();
         }
 
         true.to_variant()
@@ -148,18 +149,19 @@ impl GrabTouchDevice {
     /// Only devices that support AbsoluteAxisTypes are listed
     fn _get_devices(&mut self) {
         // Only refresh self.device_list if change in input_dir occurred
-        if ! self._compare_input_dir() {
-            return
+        if !self._compare_input_dir() {
+            return;
         }
 
         let mut devices = evdev::enumerate().map(|t| t.1).collect::<Vec<_>>();
         devices.reverse();
         let mut device_map: HashMap<GodotString, usize> = HashMap::new();
         for (i, d) in devices.iter().enumerate() {
-           if d.supported_absolute_axes().map_or(false, |axes| axes.contains(AbsoluteAxisType::ABS_X) &&
-                                                               axes.contains(AbsoluteAxisType::ABS_Y)) {
-               device_map.insert(format!("{}", d.name().unwrap_or("Unnamed device")).into(), i);
-           }
+            if d.supported_absolute_axes().map_or(false, |axes| {
+                axes.contains(AbsoluteAxisType::ABS_X) && axes.contains(AbsoluteAxisType::ABS_Y)
+            }) {
+                device_map.insert(d.name().unwrap_or("Unnamed device").to_string().into(), i);
+            }
         }
         self.device_list = Some(device_map);
     }
@@ -170,13 +172,10 @@ impl GrabTouchDevice {
         self._get_devices();
 
         let mut device_list_string: Vec<GodotString> = Vec::new();
-        match self.device_list.as_mut() {
-            Some(device_list) => {
-                for (n, _i) in device_list {
-                    device_list_string.push(format!("{}", n).into());
-                }
-            },
-            None => (),
+        if let Some(device_list) = self.device_list.as_mut() {
+            for n in device_list.keys() {
+                device_list_string.push(format!("{}", n).into());
+            }
         }
         device_list_string.reverse();
         PackedStringArray::from_iter(device_list_string.into_iter())
@@ -185,15 +184,11 @@ impl GrabTouchDevice {
     /// Grab the current self.device, set self.grabbed accordingly
     #[func]
     fn grab_device(&mut self) -> Variant {
-        match self.device.as_mut() {
-            Some(device) => {
-                match device.grab() {
-                    Err(e) => return e.to_string().to_variant(),
-                    _ => (),
-                };
-                self.grabbed = true;
+        if let Some(device) = self.device.as_mut() {
+            if let Err(e) = device.grab() {
+                return e.to_string().to_variant();
             }
-            None => (),
+            self.grabbed = true;
         }
         true.to_variant()
     }
@@ -201,12 +196,9 @@ impl GrabTouchDevice {
     /// Ungrab the current self.device, set self.grabbed accordingly
     #[func]
     fn ungrab_device(&mut self) {
-        match self.device.as_mut() {
-            Some(device) => {
-                device.ungrab().unwrap();
-                self.grabbed = false;
-            }
-            None => return,
+        if let Some(device) = self.device.as_mut() {
+            device.ungrab().unwrap();
+            self.grabbed = false;
         }
     }
 
@@ -218,12 +210,11 @@ impl GrabTouchDevice {
         if self.input_dir != new_dir.clone().into() {
             // Store the new input_dir
             self.input_dir = new_dir.into();
-            return true
+            return true;
         }
-        return false
+        false
     }
 }
-
 
 #[godot_api]
 impl NodeVirtual for GrabTouchDevice {
@@ -272,35 +263,30 @@ impl NodeVirtual for GrabTouchDevice {
         }
 
         // Main loop when device is grabbed
-        match self.device.as_mut() {
-            Some(device) => {
-                match device.fetch_events() {
-                    Ok(iterator) => {
-                        // Match event
-                        for ev in iterator {
-                            if ev.kind() == AbsAxis(AbsoluteAxisType::ABS_X) {
-                                PARSE_EVENT!(self.base, "x_coord_event".into(), ev);
-                            } else if ev.kind() == AbsAxis(AbsoluteAxisType::ABS_Y) {
-                                PARSE_EVENT!(self.base, "y_coord_event".into(), ev);
-                            } else if ev.kind() == Key(evdev::Key::BTN_TOUCH) {
-                                PARSE_EVENT!(self.base, "key_event".into(), ev);
-                            } else if ev.kind() == Key(evdev::Key::BTN_LEFT) {
-                                PARSE_EVENT!(self.base, "key_event".into(), ev);
-                            }
+        if let Some(device) = self.device.as_mut() {
+            match device.fetch_events() {
+                Ok(iterator) => {
+                    // Match event
+                    for ev in iterator {
+                        if ev.kind() == AbsAxis(AbsoluteAxisType::ABS_X) {
+                            PARSE_EVENT!(self.base, "x_coord_event".into(), ev);
+                        } else if ev.kind() == AbsAxis(AbsoluteAxisType::ABS_Y) {
+                            PARSE_EVENT!(self.base, "y_coord_event".into(), ev);
+                        } else if ev.kind() == Key(evdev::Key::BTN_TOUCH)
+                            || ev.kind() == Key(evdev::Key::BTN_LEFT)
+                        {
+                            PARSE_EVENT!(self.base, "key_event".into(), ev);
                         }
                     }
-                    Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
-                        return;
-                    }
-                    Err(e) => {
-                        // When we lose the device set grabbed to start trying to reconnect
-                        self.grabbed = false;
-                        self.try_grab = true;
-                        godot_print!("{}", e);
-                    }
+                }
+                Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {}
+                Err(e) => {
+                    // When we lose the device set grabbed to start trying to reconnect
+                    self.grabbed = false;
+                    self.try_grab = true;
+                    godot_print!("{}", e);
                 }
             }
-            None => return,
         }
     }
 }
