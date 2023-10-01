@@ -1,7 +1,5 @@
 extends Window
 
-var cur_row: int
-var cur_pos: int
 var button_to_edit: Node
 
 
@@ -11,13 +9,9 @@ var button_to_edit: Node
 # button: if a new button is supposed to be created this has to be null
 #         otherwise if an existing button is supposed to be edited
 #         this should be the instance of said button
-func show_popup(row, pos, button):
-	cur_row = row
-	cur_pos = pos
+func show_popup(button):
 	button_to_edit = button
-	$"%Header".text = "Editing Button on Row: " + str(cur_row + 1) + " Pos: " + str(cur_pos + 1) + \
-		". Hover for a tooltip"
-	$MarginContainer/Rows/PositionSplit/LineEdit.text = str(cur_pos + 1)
+	$"%Header".text = "Edit Button. (Hover for a tooltip)"
 	if button.has_method("save"):
 		fill_from_button_dict(button.save())
 		$"%DeleteButton".visible = true
@@ -28,9 +22,7 @@ func show_popup(row, pos, button):
 
 func _on_ConfirmButton_pressed():
 	visible = false
-	# TODO error handling
-	cur_pos = int($MarginContainer/Rows/PositionSplit/LineEdit.text) - 1
-	get_parent().add_or_edit_button(cur_row, cur_pos, create_button_dict(), button_to_edit)
+	get_parent().add_or_edit_button(button_to_edit, create_button_dict())
 	reset_prompt()
 
 

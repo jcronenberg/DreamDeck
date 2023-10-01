@@ -1,16 +1,12 @@
 extends Control
-
-var row
-var column
-
-
-func init(init_row, init_column):
-	row = init_row
-	column = init_column
-
+class_name NoButton
 
 func toggle_add_button():
 	$AddButton.visible = not $AddButton.visible
+
+
+func set_add_button(value: bool):
+	$AddButton.visible = value
 
 
 func _ready():
@@ -23,4 +19,4 @@ func _on_AddButton_pressed():
 	while macroboard.name != "Macroboard":
 		macroboard = macroboard.get_parent()
 
-	macroboard.AddButton_pressed(row, column, self)
+	macroboard.edit_button(self)

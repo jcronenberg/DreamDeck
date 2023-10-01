@@ -1,4 +1,5 @@
 extends Resource
+class_name Config
 
 var config: Dictionary
 var path: String
