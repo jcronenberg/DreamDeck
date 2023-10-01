@@ -1,9 +1,9 @@
 [gd_scene load_steps=6 format=3 uid="uid://c62nj40j07xei"]
 
-[ext_resource type="Script" path="res://scripts/Main/ReconnectButton.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/Main/GrabCheckButton.gd" id="2"]
+[ext_resource type="Script" path="res://plugins/Touch/scripts/ReconnectButton.gd" id="1"]
+[ext_resource type="Script" path="res://plugins/Touch/scripts/GrabCheckButton.gd" id="2"]
 [ext_resource type="Theme" uid="uid://duea6v8sw5cfx" path="res://themes/MainTheme.tres" id="3"]
-[ext_resource type="Script" path="res://scripts/Main/DeviceOptions.gd" id="4"]
+[ext_resource type="Script" path="res://plugins/Touch/scripts/DeviceOptions.gd" id="4"]
 [ext_resource type="Script" path="res://plugins/Touch/scripts/Touch.gd" id="5"]
 
 [node name="Touch" type="Control"]
