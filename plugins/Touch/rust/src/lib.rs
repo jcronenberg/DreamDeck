@@ -2,7 +2,7 @@ use godot::prelude::*;
 
 mod grab_touch_device;
 
-struct GrabTouchDevice;
+struct DreamDeckTouch;
 
 #[gdextension]
-unsafe impl ExtensionLibrary for GrabTouchDevice {}
+unsafe impl ExtensionLibrary for DreamDeckTouch {}
