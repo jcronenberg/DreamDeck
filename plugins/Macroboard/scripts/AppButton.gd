@@ -109,7 +109,52 @@ func _on_AppButton_pressed():
 		macroboard.edit_button(self)
 		return
 
-	OS.create_process(app, arguments)
+	if config_loader.get_config()["Debug"]:
+		var process = ProcessNode.new()
+		process.connect("stdout", Callable(self, "_on_process_stdout"))
+		process.connect("stderr", Callable(self, "_on_process_stderr"))
+		process.connect("finished", Callable(self, "_on_process_finished"))
+		process.set("cmd", app)
+		process.set("args", arguments as PackedStringArray)
+		self.add_child(process)
+		var ret = process.start()
+		# Error happened
+		if ret:
+			print_debug_msg(app, arguments, "error occurred: " + ret, "red")
+	else:
+		OS.create_process(app, arguments)
+
+
+func _on_process_stdout(stdout: PackedByteArray, cmd: String, args: PackedStringArray):
+	print_debug_msg(cmd, args, stdout.get_string_from_utf8())
+
+func _on_process_stderr(stderr: PackedByteArray, cmd: String, args: PackedStringArray):
+	print_debug_msg(cmd, args, stderr.get_string_from_utf8(), "yellow")
+
+func _on_process_finished(err_code: int, cmd: String, args: PackedStringArray):
+	if err_code:
+		print_debug_msg(cmd, args, "exited with code: " + str(err_code), "red")
+	else:
+		print_debug_msg(cmd, args, "exited with code: success", "green")
+
+
+## Prints a formatted error msg
+## TODO will probably be replaced in the future by some sort of custom logger
+func print_debug_msg(cmd: String, args: PackedStringArray, msg: String, color_code: String = "white"):
+	# The second color code is there because when msg contains newlines the color delimiter seems to break
+	# and be written as plain text into the output.
+	# To circumvent this we just print a white color again before the delimiter
+	print_rich("[color=" + color_code + "]" + Time.get_datetime_string_from_system() + " \"" + cmd + ("" if args.size() == 0 or args.size() == 1 and args[0] == "" else " " + array_to_string(args)) + "\": " + msg + "[color=white][/color]")
+
+
+## Creates a single [String] from an [Array] of [String]s.
+func array_to_string(array) -> String:
+	var ret = ""
+	for arg in array:
+		ret += arg + " "
+
+	ret = ret.erase(ret.length() - 1, 1)
+	return ret
 
 func save():
 	var save_dict = {

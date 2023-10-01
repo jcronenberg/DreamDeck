@@ -3,7 +3,7 @@ ifdef GODOT_EXECUTABLE
 	GODOT_VERSION := $(shell $(GODOT_EXECUTABLE) --version 2>/dev/null | cut -d'.' -f1)
 endif
 CARGO := $(shell command -v cargo 2> /dev/null)
-RUST_DIR = plugins/Touch/rust
+RUST_DIRS = rust/ plugins/Touch/rust/
 INSTALL_BIN = /usr/local/bin/
 INSTALL_LIB = /usr/local/lib/
 ICON_DIR = /usr/local/share/icons/hicolor/256x256/apps/
@@ -11,7 +11,8 @@ DESKTOP_DIR = /usr/local/share/applications/
 BUILD_DIR = bin
 DREAMDECK_LINUX = dreamdeck
 DREAMDECK_WINDOWS = dreamdeck.exe
-LIBDREAMDECK = libdreamdeck_touch.so
+LIBDREAMDECKTOUCH = libdreamdeck_touch.so
+LIBDREAMDECK = libdreamdeck.so
 RESOURCE_PATH = resources/
 DREAMDECK_ICON = icons/dreamdeck.png
 DESKTOP_FILE = dreamdeck.desktop
@@ -52,26 +53,29 @@ rust:
 ifndef CARGO
 	$(error "Cargo not installed, rust is required")
 endif
-	cd $(RUST_DIR) && cargo build --release
+	for dir in $(RUST_DIRS); do cargo build --manifest-path $${dir}/Cargo.toml --release; done
 
 clean: rust-clean
 	rm -f $(BUILD_DIR)/$(DREAMDECK_LINUX)
 	rm -f $(BUILD_DIR)/$(DREAMDECK_WINDOWS)
 	rm -f $(BUILD_DIR)/$(LIBDREAMDECK)
+	rm -f $(BUILD_DIR)/$(LIBDREAMDECKTOUCH)
 
 rust-clean:
 ifdef CARGO
-	cd $(RUST_DIR) && cargo clean
+	for dir in $(RUST_DIRS); do cargo clean --manifest-path $${dir}/Cargo.toml; done
 endif
 
 install:
 	install -D bin/$(DREAMDECK_LINUX) $(INSTALL_BIN)$(DREAMDECK_LINUX)
 	install -D bin/$(LIBDREAMDECK) $(INSTALL_LIB)$(LIBDREAMDECK)
+	install -D bin/$(LIBDREAMDECKTOUCH) $(INSTALL_LIB)$(LIBDREAMDECKTOUCH)
 	install -D $(RESOURCE_PATH)$(DREAMDECK_ICON) $(ICON_DIR)$(DREAMDECK_ICON)
 	install -D $(RESOURCE_PATH)$(DESKTOP_FILE) $(DESKTOP_DIR)$(DESKTOP_FILE)
 
 uninstall:
 	rm -f $(INSTALL_BIN)$(DREAMDECK_LINUX)
 	rm -f $(INSTALL_LIB)$(LIBDREAMDECK)
+	rm -f $(INSTALL_LIB)$(LIBDREAMDECKTOUCH)
 	rm -f $(ICON_DIR)$(DREAMDECK_ICON)
 	rm -f $(DESKTOP_DIR)$(DESKTOP_FILE)
