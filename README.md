@@ -52,3 +52,4 @@ Note: icons need to be stored in the config directory in a `icons/` folder and t
 DreamDeck uses code from some Addons that awesome people made. Huge thanks to these projects:
 * [GodotTPD](https://github.com/deep-entertainment/godottpd)
 * [GODOT YT-DLP](https://github.com/Nolkaloid/godot-yt-dlp)
+* [Better Processes](https://gitlab.com/greenfox/better-processes)

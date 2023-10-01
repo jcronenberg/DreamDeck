@@ -13,6 +13,7 @@ config_version=5
 config/name="DreamDeck"
 run/main_scene="res://scenes/Main.tscn"
 config/features=PackedStringArray("4.1")
+run/flush_stdout_on_print=true
 run/low_processor_mode=true
 run/low_processor_mode_sleep_usec=20700
 boot_splash/bg_color=Color(0.141176, 0.141176, 0.141176, 1)

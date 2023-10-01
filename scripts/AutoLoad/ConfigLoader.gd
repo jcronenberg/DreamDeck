@@ -4,11 +4,12 @@ const DEFAULT_CONFIG := {
 	"Transparent Background": false,
 	"Fullscreen": false,
 	"Hide Mouse Cursor": false,
+	"Debug": false,
 	"Window Size": {
 		"Width": 1280,
 		"Height": 800
+		},
 	}
-}
 
 var conf_dir: String = OS.get_user_data_dir() + "/"
 
