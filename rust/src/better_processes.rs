@@ -80,7 +80,7 @@ pub impl NodeVirtual for ProcessNode {
                         self.args.to_variant(),
                     ],
                 );
-                self.queue_free();
+                self.base.queue_free();
                 None
             };
         }
