@@ -8,7 +8,6 @@
 transparent_bg = true
 initial_position = 1
 size = Vector2i(800, 540)
-visible = true
 unresizable = false
 borderless = false
 transparent = true

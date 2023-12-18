@@ -1,4 +1,4 @@
-extends Label
+extends Panel
 
 const TWEEN_SPEED := 0.5
 const MAX_MENU_MARGIN := 400
