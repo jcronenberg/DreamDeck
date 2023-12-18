@@ -148,3 +148,11 @@ func list_plugins() -> Array:
 # Has trailing slash
 func plugin_path(plugin_name) -> String:
 	return conf_dir + "plugins/" + plugin_name + "/"
+
+
+func get_plugin_loader(plugin_name: String):
+	var activated_plugins_data: Dictionary = activated_plugins.get_config()
+	if not plugin_name in activated_plugins_data or not activated_plugins_data[plugin_name]:
+		return null
+
+	return plugin_loaders[plugin_name]

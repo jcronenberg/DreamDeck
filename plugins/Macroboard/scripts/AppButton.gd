@@ -6,6 +6,7 @@ class_name AppButton
 @export var app_name: String
 @export var icon_path: String
 @export var show_app_name: bool = false
+@export var ssh_client: String = ""
 
 # Variables that are used for dragging in edit mode
 const lifted_cooldown := 0.4 # Time in seconds before button gets lifted
@@ -15,11 +16,13 @@ var lift_timer := 0.0
 # Global nodes
 @onready var config_loader = get_node("/root/ConfigLoader")
 @onready var global_signals = get_node("/root/GlobalSignals")
-
+@onready var plugin_loader := get_node("/root/PluginLoader")
+@onready var ssh_controller
 
 func _ready():
 	set_process_input(false)
 	set_process(false)
+	load_ssh_controller()
 
 	apply_change()
 
@@ -98,6 +101,12 @@ func show_name_with_icon():
 	$AppName.visible = true
 
 
+func load_ssh_controller():
+	ssh_controller = plugin_loader.get_plugin_loader("SSH")
+	if ssh_controller:
+		ssh_controller = ssh_controller.get_controller()
+
+
 func _on_AppButton_pressed():
 	# If we are in edit mode we don't execute the command, but instead
 	# open the prompt to edit this button
@@ -109,7 +118,23 @@ func _on_AppButton_pressed():
 		macroboard.edit_button(self)
 		return
 
-	if config_loader.get_config()["Debug"]:
+	if not ssh_client.is_empty():
+		# Check for valid ssh_controller
+		if not ssh_controller:
+			load_ssh_controller()
+			if not ssh_controller:
+				push_error("Couldn't execute on SSH Client %s" % ssh_client)
+				return
+
+		# Some hacky stuff to format the cmd better
+		# TODO remove when app and argument are combined into one
+		ssh_controller.exec_on_client(ssh_client, app +
+			("" if arguments.size() == 0
+				or arguments.size() == 1
+				and arguments[0] == "" else
+			 " " + array_to_string(arguments)))
+
+	elif config_loader.get_config()["Debug"]:
 		var process = ProcessNode.new()
 		process.connect("stdout", Callable(self, "_on_process_stdout"))
 		process.connect("stderr", Callable(self, "_on_process_stderr"))
@@ -121,6 +146,7 @@ func _on_AppButton_pressed():
 		# Error happened
 		if ret:
 			print_debug_msg(app, arguments, "error occurred: " + ret, "red")
+
 	else:
 		OS.create_process(app, arguments)
 
@@ -162,7 +188,8 @@ func save():
 		"arguments" : arguments,
 		"app_name" : app_name,
 		"icon_path" : icon_path,
-		"show_app_name" : show_app_name
+		"show_app_name" : show_app_name,
+		"ssh_client": ssh_client,
 	}
 	return save_dict
 

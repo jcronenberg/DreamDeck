@@ -87,3 +87,13 @@ func construct_config():
 	new_config = plugin_settings_submenu.construct_dict()
 	if new_config.hash() != plugin_loader.get_all_plugin_configs().hash():
 		plugin_loader.change_all_plugin_configs(plugin_settings_submenu.construct_dict())
+
+
+## Adds a custom button to the MainMenu
+## The button needs to be freed by the caller when it is no longer needed
+func add_custom_button(button_scene):
+	# Because this may be called before _ready
+	if not main_menu_constructed:
+		_ready()
+
+	$Menu/SettingSeparator.add_child(button_scene)
