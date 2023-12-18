@@ -14,7 +14,7 @@ static func load_config(path) -> Dictionary:
 		var json = JSON.new()
 		var error = json.parse(config_file.get_as_text())
 		if error != OK:
-			print("JSON Parse Error: ", json.get_error_message())
+			push_error("JSON Parse Error: ", json.get_error_message())
 			return {}
 		config_data = json.data
 	else:
