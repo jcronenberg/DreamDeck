@@ -7,7 +7,7 @@ var loaded := false
 
 func plugin_load():
 	if OS.get_name() != "Linux":
-		push_error("SpotifyPanelLegacy only works on linux")
+		push_error("Touch plugin only works on linux")
 		return
 	if not loaded:
 		var touch_scene = load("res://plugins/Touch/scenes/Touch.tscn").instantiate()
