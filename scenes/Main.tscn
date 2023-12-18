@@ -36,6 +36,7 @@ custom_minimum_size = Vector2(60, 0)
 layout_mode = 2
 
 [node name="Placeholder" type="Control" parent="VSeparator/MarginContainer/ControlsSeparator"]
+editor_description = "Placeholder for Touch controls. Will be set to invisible when Touch controls are enabled"
 layout_mode = 2
 size_flags_horizontal = 3
 
