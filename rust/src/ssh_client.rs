@@ -196,7 +196,7 @@ pub impl SSHClient {
         match block_on(self._disconnect_session()) {
             Err(error) => {
                 godot_error!("Failed to disconnect ssh session: {}", error);
-            },
+            }
             _ => (),
         }
     }
@@ -304,13 +304,25 @@ pub impl SSHClient {
     }
 
     async fn _exec_ssh(&mut self, cmd: String) -> bool {
-        if self.debug && self.session.is_none() {
-            godot_print!("No session open at exec call, trying to open one")
-        }
         if self.session.is_none() {
+            if self.debug {
+                godot_print!("No session open at exec call, trying to open one")
+            }
             match block_on(self._open_session()) {
                 Ok(session) => self.session = Some(session),
                 Err(error) => {
+                    godot_error!("Failed to open ssh session: {}", error);
+                    return false;
+                }
+            }
+        }
+        // Check if session is closed
+        if self.session.as_ref().unwrap().is_closed() {
+            // Try reopening session once
+            match self._open_session().await {
+                Ok(session) => self.session = Some(session),
+                Err(error) => {
+                    self.session = None;
                     godot_error!("Failed to open ssh session: {}", error);
                     return false;
                 }
