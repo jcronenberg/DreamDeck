@@ -7,7 +7,7 @@
 
 [sub_resource type="StyleBoxEmpty" id="2"]
 
-[sub_resource type="StyleBoxFlat" id="1"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fojgy"]
 bg_color = Color(0.12549, 0.121569, 0.14902, 1)
 
 [node name="MainMenu" type="Control"]
@@ -35,14 +35,14 @@ theme_override_styles/disabled = SubResource("2")
 theme_override_styles/focus = SubResource("2")
 script = ExtResource("1")
 
-[node name="Menu" type="Label" parent="."]
+[node name="Menu" type="Panel" parent="."]
 visible = false
 layout_mode = 1
 anchors_preset = 9
 anchor_bottom = 1.0
 offset_right = 1.0
 grow_vertical = 2
-theme_override_styles/normal = SubResource("1")
+theme_override_styles/panel = SubResource("StyleBoxFlat_fojgy")
 script = ExtResource("3")
 
 [node name="SettingSeparator" type="VBoxContainer" parent="Menu"]
