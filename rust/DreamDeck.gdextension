@@ -3,4 +3,5 @@ entry_symbol = "gdext_rust_init"
 compatibility_minimum = 4.1
 
 [libraries]
-linux.x86_64 = "res://rust/target/release/libdreamdeck.so"
+linux.x86_64.debug = "res://rust/target/debug/libdreamdeck.so"
+linux.x86_64.release = "res://rust/target/release/libdreamdeck.so"
