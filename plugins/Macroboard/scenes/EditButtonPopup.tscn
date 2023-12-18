@@ -1,13 +1,13 @@
-[gd_scene load_steps=3 format=3 uid="uid://cf4w2hhtf73dt"]
+[gd_scene load_steps=4 format=3 uid="uid://cf4w2hhtf73dt"]
 
 [ext_resource type="Theme" uid="uid://duea6v8sw5cfx" path="res://themes/MainTheme.tres" id="1"]
 [ext_resource type="Script" path="res://plugins/Macroboard/scripts/EditButtonPopup.gd" id="2"]
+[ext_resource type="Script" path="res://plugins/Macroboard/scripts/EditButtonPopupSSHClientList.gd" id="3_at1w5"]
 
 [node name="EditButtonPopup" type="PopupPanel"]
 transparent_bg = true
-title = "Test"
 initial_position = 1
-size = Vector2i(800, 500)
+size = Vector2i(800, 540)
 visible = true
 unresizable = false
 borderless = false
@@ -102,30 +102,42 @@ text = "Show App Name"
 [node name="CheckBox" type="CheckBox" parent="MarginContainer/Rows/ShowAppNameSplit"]
 layout_mode = 2
 
+[node name="SSHClients" type="VBoxContainer" parent="MarginContainer/Rows"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Label" type="Label" parent="MarginContainer/Rows/SSHClients"]
+layout_mode = 2
+text = "Execute on SSH Client"
+
+[node name="SSHClientList" type="ItemList" parent="MarginContainer/Rows/SSHClients"]
+layout_mode = 2
+auto_height = true
+max_columns = 10
+script = ExtResource("3_at1w5")
+
 [node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/Rows"]
 layout_mode = 2
-size_flags_vertical = 10
+size_flags_vertical = 8
 theme_override_constants/separation = 40
 
 [node name="ConfirmButton" type="Button" parent="MarginContainer/Rows/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme = ExtResource("1")
 text = "Confirm"
 
 [node name="DeleteButton" type="Button" parent="MarginContainer/Rows/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme = ExtResource("1")
 text = "Delete"
 
 [node name="CancelButton" type="Button" parent="MarginContainer/Rows/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme = ExtResource("1")
 text = "Cancel"
 
+[connection signal="item_clicked" from="MarginContainer/Rows/SSHClients/SSHClientList" to="MarginContainer/Rows/SSHClients/SSHClientList" method="_on_item_clicked"]
 [connection signal="pressed" from="MarginContainer/Rows/HBoxContainer/ConfirmButton" to="." method="_on_ConfirmButton_pressed"]
 [connection signal="pressed" from="MarginContainer/Rows/HBoxContainer/DeleteButton" to="." method="_on_DeleteButton_pressed"]
 [connection signal="pressed" from="MarginContainer/Rows/HBoxContainer/CancelButton" to="." method="_on_CancelButton_pressed"]
