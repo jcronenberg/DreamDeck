@@ -8,9 +8,8 @@ use osshkeys::keys::KeyPair;
 use russh::client::Handle;
 use russh::*;
 use russh_keys::*;
-use std::str::FromStr;
+use std::fs;
 use std::sync::Arc;
-use std::{fs, net::SocketAddr};
 
 // TODO make blocking an option
 // because right now we just log the received data,
@@ -21,7 +20,8 @@ use std::{fs, net::SocketAddr};
 
 struct Client {
     debug: bool,
-    host: SocketAddr,
+    ip: String,
+    port: u16,
     server_check: ServerCheckMethod,
 }
 
@@ -49,8 +49,8 @@ impl client::Handler for Client {
             }
             ServerCheckMethod::KnownHostsFile(known_hosts_path) => {
                 let result = russh_keys::check_known_hosts_path(
-                    &self.host.ip().to_string(),
-                    self.host.port(),
+                    &self.ip,
+                    self.port,
                     server_public_key,
                     known_hosts_path,
                 )
@@ -59,12 +59,8 @@ impl client::Handler for Client {
                 Ok((self, result))
             }
             ServerCheckMethod::DefaultKnownHostsFile => {
-                let result = russh_keys::check_known_hosts(
-                    &self.host.ip().to_string(),
-                    self.host.port(),
-                    server_public_key,
-                )
-                .map_err(|_| async_ssh2_tokio::Error::ServerCheckFailed)?;
+                let result = russh_keys::check_known_hosts(&self.ip, self.port, server_public_key)
+                    .map_err(|_| async_ssh2_tokio::Error::ServerCheckFailed)?;
 
                 Ok((self, result))
             }
@@ -80,8 +76,10 @@ impl client::Handler for Client {
     ) -> Result<(Self, client::Session), Self::Error> {
         if self.debug {
             godot_print!(
-                "{}: SSH STDOUT on {:?}: {}",
+                "{}: SSH STDOUT on {}:{}:{:?}: {}",
                 Local::now().format("%Y-%m-%dT%H:%M:%S"),
+                self.ip,
+                self.port,
                 channel,
                 String::from_utf8_lossy(data)
             );
@@ -98,8 +96,10 @@ impl client::Handler for Client {
     ) -> Result<(Self, client::Session), Self::Error> {
         if ext == 1 && self.debug {
             godot_print!(
-                "{}: SSH STDERR on {:?}: {}",
+                "{}: SSH STDERR on {}:{}:{:?}: {}",
                 Local::now().format("%Y-%m-%dT%H:%M:%S"),
+                self.ip,
+                self.port,
                 channel,
                 String::from_utf8_lossy(data)
             );
@@ -115,8 +115,10 @@ impl client::Handler for Client {
     ) -> Result<(Self, client::Session), Self::Error> {
         if self.debug {
             godot_print!(
-                "{}: SSH on {:?}: exited with code {}",
+                "{}: SSH on {}:{}:{:?}: exited with code {}",
                 Local::now().format("%Y-%m-%dT%H:%M:%S"),
+                self.ip,
+                self.port,
                 channel,
                 exit_status
             );
@@ -361,10 +363,8 @@ pub impl SSHClient {
         let config = russh::client::Config::default();
         let config = Arc::new(config);
         let sh = Client {
-            host: SocketAddr::from_str(
-                format!("{}:{}", self.ip.clone().unwrap(), self.port).as_str(),
-            )
-            .unwrap(),
+            ip: self.ip.clone().unwrap(),
+            port: self.port,
             server_check: self.server_check.clone(),
             debug: self.debug,
         };
