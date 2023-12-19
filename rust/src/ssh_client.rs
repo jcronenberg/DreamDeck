@@ -331,7 +331,7 @@ pub impl SSHClient {
             }
         }
         // open channel
-        let mut channel = match self.session.as_ref().unwrap().channel_open_session().await {
+        let channel = match self.session.as_ref().unwrap().channel_open_session().await {
             Ok(channel) => channel,
             Err(error) => {
                 godot_error!("Couldn't open channel: {}", error);
@@ -419,7 +419,7 @@ pub impl SSHClient {
         handle: &mut Handle<Client>,
         username: &String,
         auth: AuthMethod,
-    ) -> Result<(), async_ssh2_tokio::Error> {
+    ) -> Result<(), anyhow::Error> {
         match auth {
             AuthMethod::Password(password) => {
                 if handle
@@ -429,13 +429,13 @@ pub impl SSHClient {
                 {
                     return Ok(());
                 };
-                Err(async_ssh2_tokio::Error::PasswordWrong)
+                Err(anyhow!("Wrong Password"))
             }
             AuthMethod::PrivateKey { key_data, key_pass } => {
                 let cprivk =
                     match russh_keys::decode_secret_key(key_data.as_str(), key_pass.as_deref()) {
                         Ok(kp) => kp,
-                        Err(e) => return Err(async_ssh2_tokio::Error::KeyInvalid(e)),
+                        Err(e) => return Err(anyhow!(e)),
                     };
 
                 if handle
@@ -445,7 +445,7 @@ pub impl SSHClient {
                 {
                     return Ok(());
                 };
-                Err(async_ssh2_tokio::Error::KeyAuthFailed)
+                Err(anyhow!("Private key auth failed"))
             }
             AuthMethod::PrivateKeyFile {
                 key_file_name,
@@ -453,7 +453,7 @@ pub impl SSHClient {
             } => {
                 let cprivk = match russh_keys::load_secret_key(key_file_name, key_pass.as_deref()) {
                     Ok(kp) => kp,
-                    Err(e) => return Err(async_ssh2_tokio::Error::KeyInvalid(e)),
+                    Err(e) => return Err(anyhow!(e)),
                 };
 
                 if let Ok(is_authenticated) = handle
@@ -464,9 +464,9 @@ pub impl SSHClient {
                         return Ok(());
                     }
                 };
-                Err(async_ssh2_tokio::Error::KeyAuthFailed)
+                Err(anyhow!("Private key auth failed"))
             }
-            _ => Err(async_ssh2_tokio::Error::KeyAuthFailed),
+            _ => Err(anyhow!("Private key auth failed")),
         }
     }
 }
