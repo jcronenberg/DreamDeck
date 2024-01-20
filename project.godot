@@ -50,6 +50,10 @@ window/per_pixel_transparency/enabled=true
 
 run/main_run_args="--confdir=local_config"
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/gut/plugin.cfg")
+
 [filesystem]
 
 import/blender/enabled=false

@@ -1,0 +1,4 @@
+[submodule "addons/submodules/Gut"]
+	path = addons/submodules/Gut
+	url = https://github.com/bitwes/Gut.git
+	branch = godot_4
