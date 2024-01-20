@@ -176,21 +176,24 @@ pub impl SSHClient {
     #[func]
     fn exec(&mut self, cmd: GodotString) -> bool {
         if self.session.is_none() {
-            godot_error!("Session isn't active, can't execute ssh command");
-            return false;
+            if !self.open_session() {
+                return false;
+            }
         }
         return block_on(self._exec_ssh(cmd.to_string()));
     }
 
     #[func]
-    fn open_session(&mut self) {
+    fn open_session(&mut self) -> bool {
         match block_on(self._open_session()) {
             Ok(session) => self.session = Some(session),
             Err(error) => {
                 self.session = None;
                 godot_error!("Failed to open ssh session: {}", error);
+                return false;
             }
         }
+        true
     }
 
     #[func]
