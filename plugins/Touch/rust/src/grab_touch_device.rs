@@ -17,11 +17,8 @@ const RETRY_TIMER: f64 = 0.5;
 const INPUT_DIR_PATH: &str = "/dev/input/";
 
 macro_rules! PARSE_EVENT {
-    ($owner:expr,$function:expr,$event:expr) => {
-        $owner
-            .get_parent()
-            .unwrap()
-            .call($function, &[$event.value().to_variant()])
+    ($parent:expr,$function:expr,$event:expr) => {
+        $parent.call($function, &[$event.value().to_variant()])
     };
 }
 
@@ -33,7 +30,7 @@ pub struct GrabTouchDevice {
     /// The current device
     device: Option<Device>,
     /// String is formatted like this: "{id}: {name}"
-    device_list: Option<HashMap<GodotString, usize>>,
+    device_list: Option<HashMap<GString, usize>>,
     /// State of device
     grabbed: bool,
     /// Timer for trying to reconnect
@@ -41,13 +38,14 @@ pub struct GrabTouchDevice {
     /// Flag to try and grab the device for set amount of time
     try_grab: bool,
     /// Name of the currently selected device
-    device_name: GodotString,
+    device_name: GString,
     /// Current /dev/input dir, used to detect input device changes
-    input_dir: GodotString,
+    input_dir: GString,
     /// The maximum absolute x axis value of current device
     device_max_abs_x: i32,
     /// The maximum absolute y axis value of current device
     device_max_abs_y: i32,
+    parent: Option<Gd<Node>>,
 
     #[base]
     base: Base<Node>,
@@ -126,7 +124,7 @@ impl GrabTouchDevice {
 
     /// Set self.device by specified name
     #[func]
-    fn set_device(&mut self, name: GodotString) -> Variant {
+    fn set_device(&mut self, name: GString) -> Variant {
         self._get_devices();
 
         self.device_name = name;
@@ -155,7 +153,7 @@ impl GrabTouchDevice {
 
         let mut devices = evdev::enumerate().map(|t| t.1).collect::<Vec<_>>();
         devices.reverse();
-        let mut device_map: HashMap<GodotString, usize> = HashMap::new();
+        let mut device_map: HashMap<GString, usize> = HashMap::new();
         for (i, d) in devices.iter().enumerate() {
             if d.supported_absolute_axes().map_or(false, |axes| {
                 axes.contains(AbsoluteAxisType::ABS_X) && axes.contains(AbsoluteAxisType::ABS_Y)
@@ -171,14 +169,14 @@ impl GrabTouchDevice {
     fn get_devices(&mut self) -> PackedStringArray {
         self._get_devices();
 
-        let mut device_list_string: Vec<GodotString> = Vec::new();
+        let mut device_list_string: Vec<GString> = Vec::new();
         if let Some(device_list) = self.device_list.as_mut() {
             for n in device_list.keys() {
                 device_list_string.push(format!("{}", n).into());
             }
         }
         device_list_string.reverse();
-        PackedStringArray::from_iter(device_list_string.into_iter())
+        PackedStringArray::from_iter(device_list_string)
     }
 
     /// Grab the current self.device, set self.grabbed accordingly
@@ -217,7 +215,7 @@ impl GrabTouchDevice {
 }
 
 #[godot_api]
-impl NodeVirtual for GrabTouchDevice {
+impl INode for GrabTouchDevice {
     fn init(base: Base<Self::Base>) -> Self {
         GrabTouchDevice {
             device: None,
@@ -225,10 +223,11 @@ impl NodeVirtual for GrabTouchDevice {
             grabbed: false,
             retry_device: 0.0,
             try_grab: false,
-            device_name: GodotString::new(),
-            input_dir: GodotString::new(),
+            device_name: GString::new(),
+            input_dir: GString::new(),
             device_max_abs_x: 0,
             device_max_abs_y: 0,
+            parent: None,
             base,
         }
     }
@@ -262,6 +261,15 @@ impl NodeVirtual for GrabTouchDevice {
             return;
         }
 
+        // let mut parent = self.base_mut().get_parent().unwrap();
+        if self.parent.is_none() {
+            let parent = self.base_mut().get_parent();
+            if parent.is_none() {
+                godot_error!("Touch: failed to get parent");
+                return;
+            }
+            self.parent = parent;
+        }
         // Main loop when device is grabbed
         if let Some(device) = self.device.as_mut() {
             match device.fetch_events() {
@@ -269,13 +277,13 @@ impl NodeVirtual for GrabTouchDevice {
                     // Match event
                     for ev in iterator {
                         if ev.kind() == AbsAxis(AbsoluteAxisType::ABS_X) {
-                            PARSE_EVENT!(self.base, "x_coord_event".into(), ev);
+                            PARSE_EVENT!(self.parent.clone().unwrap(), "x_coord_event".into(), ev);
                         } else if ev.kind() == AbsAxis(AbsoluteAxisType::ABS_Y) {
-                            PARSE_EVENT!(self.base, "y_coord_event".into(), ev);
+                            PARSE_EVENT!(self.parent.clone().unwrap(), "y_coord_event".into(), ev);
                         } else if ev.kind() == Key(evdev::Key::BTN_TOUCH)
                             || ev.kind() == Key(evdev::Key::BTN_LEFT)
                         {
-                            PARSE_EVENT!(self.base, "key_event".into(), ev);
+                            PARSE_EVENT!(self.parent.clone().unwrap(), "key_event".into(), ev);
                         }
                     }
                 }

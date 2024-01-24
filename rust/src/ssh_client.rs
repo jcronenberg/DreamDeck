@@ -142,7 +142,7 @@ pub struct SSHClient {
 }
 
 #[godot_api]
-pub impl NodeVirtual for SSHClient {
+pub impl INode for SSHClient {
     fn init(base: Base<Node>) -> Self {
         Self {
             debug: false,
@@ -162,7 +162,7 @@ pub impl NodeVirtual for SSHClient {
 #[godot_api]
 pub impl SSHClient {
     #[func]
-    fn setup(&mut self, user: GodotString, ip: GodotString, port: i64) {
+    fn setup(&mut self, user: GString, ip: GString, port: i64) {
         self.user = Some(user.into());
         self.ip = Some(ip.clone().into());
         self.port = port as u16;
@@ -174,11 +174,9 @@ pub impl SSHClient {
     }
 
     #[func]
-    fn exec(&mut self, cmd: GodotString) -> bool {
-        if self.session.is_none() {
-            if !self.open_session() {
-                return false;
-            }
+    fn exec(&mut self, cmd: GString) -> bool {
+        if self.session.is_none() && !self.open_session() {
+            return false;
         }
         return block_on(self._exec_ssh(cmd.to_string()));
     }
@@ -198,11 +196,8 @@ pub impl SSHClient {
 
     #[func]
     fn disconnect_session(&mut self) {
-        match block_on(self._disconnect_session()) {
-            Err(error) => {
-                godot_error!("Failed to disconnect ssh session: {}", error);
-            }
-            _ => (),
+        if let Err(error) = block_on(self._disconnect_session()) {
+            godot_error!("Failed to disconnect ssh session: {}", error);
         }
     }
 
@@ -219,7 +214,7 @@ pub impl SSHClient {
     /// to establish an ssh session which then copies the key a password needs to be
     /// supplied to handle authentication
     #[func]
-    fn add_key(&mut self, password: GodotString) -> bool {
+    fn add_key(&mut self, password: GString) -> bool {
         let key_path;
         let passphrase: Option<String>;
 
@@ -273,12 +268,7 @@ pub impl SSHClient {
     }
 
     #[func]
-    fn set_auth_method(
-        &mut self,
-        method: GodotString,
-        key_path: GodotString,
-        password: GodotString,
-    ) {
+    fn set_auth_method(&mut self, method: GString, key_path: GString, password: GString) {
         match method.to_string().as_str() {
             "key_file" => {
                 self.auth_method = Some(AuthMethod::PrivateKeyFile {
@@ -298,7 +288,7 @@ pub impl SSHClient {
     }
 
     #[func]
-    fn set_server_check_method(&mut self, method: GodotString) {
+    fn set_server_check_method(&mut self, method: GString) {
         match method.to_string().as_str() {
             "known_hosts_file" => self.server_check = ServerCheckMethod::DefaultKnownHostsFile,
             "no_check" => self.server_check = ServerCheckMethod::NoCheck,
