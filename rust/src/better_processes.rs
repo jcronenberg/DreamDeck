@@ -13,7 +13,7 @@ pub struct ProcessNode {
     #[export]
     pub start_on_ready: bool,
     #[export]
-    pub cmd: GodotString,
+    pub cmd: GString,
     #[export]
     pub args: PackedStringArray,
 
@@ -23,11 +23,11 @@ pub struct ProcessNode {
 }
 
 #[godot_api]
-pub impl NodeVirtual for ProcessNode {
+pub impl INode for ProcessNode {
     fn init(base: Base<Node>) -> Self {
         Self {
             start_on_ready: false,
-            cmd: GodotString::from(""),
+            cmd: GString::from(""),
             args: PackedStringArray::new(),
             raw_process: None,
             base,
@@ -47,24 +47,26 @@ pub impl NodeVirtual for ProcessNode {
     fn process(&mut self, _delta: f64) {
         if let Some(mut raw_process) = self.raw_process.take() {
             let out = raw_process.read_stdout();
+            let cmd = self.cmd.clone();
+            let args = self.args.clone();
             if !out.is_empty() {
-                self.base.emit_signal(
+                self.base_mut().emit_signal(
                     "stdout".into(),
                     &[
                         PackedByteArray::from_iter(out).to_variant(),
-                        self.cmd.to_variant(),
-                        self.args.to_variant(),
+                        cmd.to_variant(),
+                        args.to_variant(),
                     ],
                 );
             }
             let err = raw_process.read_stderr();
             if !err.is_empty() {
-                self.base.emit_signal(
+                self.base_mut().emit_signal(
                     "stderr".into(),
                     &[
                         PackedByteArray::from_iter(err).to_variant(),
-                        self.cmd.to_variant(),
-                        self.args.to_variant(),
+                        cmd.to_variant(),
+                        args.to_variant(),
                     ],
                 );
             }
@@ -72,15 +74,11 @@ pub impl NodeVirtual for ProcessNode {
                 Some(raw_process)
             } else {
                 let a = raw_process.child.wait().unwrap().code().unwrap();
-                self.base.emit_signal(
+                self.base_mut().emit_signal(
                     "finished".into(),
-                    &[
-                        Variant::from(a),
-                        self.cmd.to_variant(),
-                        self.args.to_variant(),
-                    ],
+                    &[Variant::from(a), cmd.to_variant(), args.to_variant()],
                 );
-                self.base.queue_free();
+                self.base_mut().queue_free();
                 None
             };
         }
@@ -90,14 +88,14 @@ pub impl NodeVirtual for ProcessNode {
 #[godot_api]
 pub impl ProcessNode {
     #[func]
-    fn start(&mut self) -> GodotString {
+    fn start(&mut self) -> GString {
         //start cmd
         let cmd = self.cmd.to_string();
         let args: Vec<String> = self
             .args
             .to_vec()
             .iter()
-            .map(|i: &GodotString| i.to_string())
+            .map(|i: &GString| i.to_string())
             .collect();
         let rp = match RawProcess::new(cmd, args) {
             Ok(rp) => rp,
