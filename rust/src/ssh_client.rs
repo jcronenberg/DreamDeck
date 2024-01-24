@@ -1,5 +1,6 @@
 use anyhow::anyhow;
 use async_ssh2_tokio::{AuthMethod, ServerCheckMethod};
+use async_std::future;
 use async_std::task::block_on;
 use async_trait::async_trait;
 use chrono::Local;
@@ -10,6 +11,7 @@ use russh::*;
 use russh_keys::*;
 use std::fs;
 use std::sync::Arc;
+use std::time::Duration;
 
 // TODO make blocking an option
 // because right now we just log the received data,
@@ -324,7 +326,19 @@ pub impl SSHClient {
             }
         }
         // open channel
-        let channel = match self.session.as_ref().unwrap().channel_open_session().await {
+        // TODO maybe make this configurable
+        let dur = Duration::new(1, 0);
+        let channel =
+            match future::timeout(dur, self.session.as_ref().unwrap().channel_open_session()).await
+            {
+                Ok(channel) => channel,
+                Err(_) => {
+                    self.session = None;
+                    godot_error!("Timed out when trying to open channel");
+                    return false;
+                }
+            };
+        let channel = match channel {
             Ok(channel) => channel,
             Err(error) => {
                 godot_error!("Couldn't open channel: {}", error);
@@ -353,7 +367,11 @@ pub impl SSHClient {
             return Err(anyhow!("Client not configured"));
         }
 
-        let config = russh::client::Config::default();
+        let config = russh::client::Config {
+            // TODO make this configurable
+            keepalive_interval: Some(Duration::new(300, 0)),
+            ..Default::default()
+        };
         let config = Arc::new(config);
         let sh = Client {
             ip: self.ip.clone().unwrap(),
@@ -370,8 +388,19 @@ pub impl SSHClient {
             );
         }
 
-        let mut session =
-            russh::client::connect(config, (self.ip.clone().unwrap(), self.port), sh).await?;
+        // TODO maybe make this configurable
+        let dur = Duration::new(1, 0);
+        let mut session = match future::timeout(
+            dur,
+            russh::client::connect(config, (self.ip.clone().unwrap(), self.port), sh),
+        )
+        .await
+        {
+            Ok(channel) => channel,
+            Err(_) => {
+                return Err(anyhow!("Timed out when trying to open channel"));
+            }
+        }?;
 
         let result = match self
             ._authenticate(
