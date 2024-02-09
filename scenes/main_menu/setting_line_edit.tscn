@@ -1,0 +1,30 @@
+[gd_scene load_steps=3 format=3 uid="uid://crfoumhld2xt0"]
+
+[ext_resource type="Theme" uid="uid://duea6v8sw5cfx" path="res://themes/main_theme.tres" id="1"]
+[ext_resource type="Script" path="res://scripts/main_menu/setting_line_edit.gd" id="2"]
+
+[node name="OptionLineEdit" type="HBoxContainer"]
+custom_minimum_size = Vector2(416, 60)
+offset_right = 300.0
+offset_bottom = 60.0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+theme = ExtResource("1")
+theme_override_constants/separation = 16
+script = ExtResource("2")
+
+[node name="Key" type="Label" parent="."]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+text = "This is a very long text to see..."
+
+[node name="Value" type="LineEdit" parent="."]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_vertical = 4
+expand_to_text_length = true
+caret_blink = true
+caret_blink_interval = 0.5
+
+[connection signal="item_rect_changed" from="." to="." method="_on_rect_changed"]
+[connection signal="resized" from="." to="." method="_on_resized"]

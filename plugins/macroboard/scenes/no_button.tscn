@@ -1,0 +1,32 @@
+[gd_scene load_steps=3 format=3 uid="uid://556d60vyew88"]
+
+[ext_resource type="Texture2D" uid="uid://xrd5da3pj5cy" path="res://plugins/macroboard/icons/plus_line_icon.png" id="2"]
+[ext_resource type="Script" path="res://plugins/macroboard/scripts/no_button.gd" id="3"]
+
+[node name="NoButton" type="Control"]
+custom_minimum_size = Vector2(150, 150)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 12.0
+offset_bottom = 20.0
+script = ExtResource("3")
+
+[node name="AddButton" type="Button" parent="."]
+visible = false
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Icon" type="TextureRect" parent="AddButton"]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 30.0
+offset_top = 30.0
+offset_right = -30.0
+offset_bottom = -30.0
+texture = ExtResource("2")
+expand_mode = 1
+stretch_mode = 5
+
+[connection signal="pressed" from="AddButton" to="." method="_on_AddButton_pressed"]

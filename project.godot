@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="DreamDeck"
-run/main_scene="res://scenes/Main.tscn"
+run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.2")
 run/flush_stdout_on_print=true
 run/low_processor_mode=true
@@ -25,11 +25,11 @@ config/windows_native_icon="res://resources/general/dreamdeck.ico"
 
 [autoload]
 
-ArgumentParser="*res://scripts/AutoLoad/ArgumentParser.gd"
-ConfigLoader="*res://scripts/AutoLoad/ConfigLoader.gd"
-GlobalSignals="*res://scripts/AutoLoad/GlobalSignals.gd"
-HandleConfig="*res://scripts/AutoLoad/HandleConfig.gd"
-PluginLoader="*res://scripts/AutoLoad/PluginLoader.gd"
+ArgumentParser="*res://scripts/auto_load/argument_parser.gd"
+ConfigLoader="*res://scripts/auto_load/config_loader.gd"
+GlobalSignals="*res://scripts/auto_load/global_signals.gd"
+HandleConfig="*res://scripts/auto_load/handle_config.gd"
+PluginLoader="*res://scripts/auto_load/plugin_loader.gd"
 
 [debug]
 
@@ -56,7 +56,7 @@ import/blender/enabled=false
 
 [gui]
 
-theme/custom="res://themes/MainTheme.tres"
+theme/custom="res://themes/main_theme.tres"
 
 [input]
 

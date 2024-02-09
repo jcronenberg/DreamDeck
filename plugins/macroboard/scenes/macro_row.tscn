@@ -1,0 +1,4 @@
+[gd_scene format=2]
+
+[node name="MacroRow" type="HBoxContainer"]
+theme_override_constants/separation = 10

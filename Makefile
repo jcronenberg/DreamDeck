@@ -3,7 +3,7 @@ ifdef GODOT_EXECUTABLE
 	GODOT_VERSION := $(shell $(GODOT_EXECUTABLE) --version 2>/dev/null | cut -d'.' -f1)
 endif
 CARGO := $(shell command -v cargo 2> /dev/null)
-RUST_DIRS = rust/ plugins/Touch/rust/
+RUST_DIRS = rust/ plugins/touch/rust/
 INSTALL_BIN = /usr/local/bin/
 INSTALL_LIB = /usr/local/lib/
 ICON_DIR = /usr/local/share/icons/hicolor/256x256/apps/

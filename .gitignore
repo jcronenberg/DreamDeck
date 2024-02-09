@@ -4,6 +4,6 @@ bin/*
 export.cfg
 
 rust/target
-plugins/Touch/rust/target
+plugins/touch/rust/target
 
 local_config

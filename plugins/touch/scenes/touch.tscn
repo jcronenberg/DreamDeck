@@ -1,0 +1,58 @@
+[gd_scene load_steps=6 format=3 uid="uid://c62nj40j07xei"]
+
+[ext_resource type="Script" path="res://plugins/touch/scripts/reconnect_button.gd" id="1"]
+[ext_resource type="Script" path="res://plugins/touch/scripts/grab_check_button.gd" id="2"]
+[ext_resource type="Theme" uid="uid://duea6v8sw5cfx" path="res://themes/main_theme.tres" id="3"]
+[ext_resource type="Script" path="res://plugins/touch/scripts/device_options.gd" id="4"]
+[ext_resource type="Script" path="res://plugins/touch/scripts/touch.gd" id="5"]
+
+[node name="Touch" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 110.0
+offset_right = 1730.0
+offset_bottom = 100.0
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 2.0
+script = ExtResource("5")
+
+[node name="ControlsSeparator" type="HBoxContainer" parent="."]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/separation = 50
+
+[node name="LeftMargin" type="Control" parent="ControlsSeparator"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DeviceOptions" type="OptionButton" parent="ControlsSeparator"]
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+alignment = 1
+script = ExtResource("4")
+
+[node name="ReconnectButton" type="Button" parent="ControlsSeparator"]
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+size_flags_vertical = 4
+theme = ExtResource("3")
+text = "Reconnect"
+script = ExtResource("1")
+
+[node name="GrabCheckButton" type="CheckButton" parent="ControlsSeparator"]
+layout_mode = 2
+theme = ExtResource("3")
+button_pressed = true
+text = "Grabbed"
+script = ExtResource("2")
+
+[node name="RightMargin" type="Control" parent="ControlsSeparator"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[connection signal="item_selected" from="ControlsSeparator/DeviceOptions" to="ControlsSeparator/DeviceOptions" method="_on_DeviceOptions_item_selected"]
+[connection signal="pressed" from="ControlsSeparator/ReconnectButton" to="ControlsSeparator/ReconnectButton" method="_on_ReconnectButton_pressed"]
+[connection signal="toggled" from="ControlsSeparator/GrabCheckButton" to="ControlsSeparator/GrabCheckButton" method="_on_GrabCheckButton_toggled"]

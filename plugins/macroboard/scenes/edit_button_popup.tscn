@@ -1,0 +1,142 @@
+[gd_scene load_steps=4 format=3 uid="uid://cf4w2hhtf73dt"]
+
+[ext_resource type="Theme" uid="uid://duea6v8sw5cfx" path="res://themes/main_theme.tres" id="1"]
+[ext_resource type="Script" path="res://plugins/macroboard/scripts/edit_button_popup.gd" id="2"]
+[ext_resource type="Script" path="res://plugins/macroboard/scripts/edit_button_popup_sshclient_list.gd" id="3_at1w5"]
+
+[node name="EditButtonPopup" type="PopupPanel"]
+transparent_bg = true
+initial_position = 1
+size = Vector2i(800, 540)
+unresizable = false
+borderless = false
+transparent = true
+theme = ExtResource("1")
+script = ExtResource("2")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 50
+
+[node name="Rows" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="AppSplit" type="HBoxContainer" parent="MarginContainer/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Label" type="Label" parent="MarginContainer/Rows/AppSplit"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+tooltip_text = "The path to the executable e.g. 'firefox' or '/home/example/firefox'"
+mouse_filter = 0
+text = "App"
+
+[node name="LineEdit" type="LineEdit" parent="MarginContainer/Rows/AppSplit"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ArgumentsSplit" type="HBoxContainer" parent="MarginContainer/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Label" type="Label" parent="MarginContainer/Rows/ArgumentsSplit"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+tooltip_text = "Arguments for the executable e.g. '--test example'"
+mouse_filter = 0
+text = "Arguments"
+
+[node name="LineEdit" type="LineEdit" parent="MarginContainer/Rows/ArgumentsSplit"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="AppNameSplit" type="HBoxContainer" parent="MarginContainer/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Label" type="Label" parent="MarginContainer/Rows/AppNameSplit"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+tooltip_text = "Name that gets displayed if no icon is set or show_app_name is true"
+mouse_filter = 0
+text = "App Name"
+
+[node name="LineEdit" type="LineEdit" parent="MarginContainer/Rows/AppNameSplit"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="IconPathSplit" type="HBoxContainer" parent="MarginContainer/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Label" type="Label" parent="MarginContainer/Rows/IconPathSplit"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+tooltip_text = "Relative path to the icon. Icons need to be stored in the config directory in a 'icons' directory."
+mouse_filter = 0
+text = "Icon Path"
+
+[node name="LineEdit" type="LineEdit" parent="MarginContainer/Rows/IconPathSplit"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ShowAppNameSplit" type="HBoxContainer" parent="MarginContainer/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Label" type="Label" parent="MarginContainer/Rows/ShowAppNameSplit"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+tooltip_text = "Displays the app_name in a small text below the icon"
+mouse_filter = 0
+text = "Show App Name"
+
+[node name="CheckBox" type="CheckBox" parent="MarginContainer/Rows/ShowAppNameSplit"]
+layout_mode = 2
+
+[node name="SSHClients" type="VBoxContainer" parent="MarginContainer/Rows"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Label" type="Label" parent="MarginContainer/Rows/SSHClients"]
+layout_mode = 2
+text = "Execute on SSH Client"
+
+[node name="SSHClientList" type="ItemList" parent="MarginContainer/Rows/SSHClients"]
+layout_mode = 2
+auto_height = true
+max_columns = 10
+script = ExtResource("3_at1w5")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/Rows"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_constants/separation = 40
+
+[node name="ConfirmButton" type="Button" parent="MarginContainer/Rows/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Confirm"
+
+[node name="DeleteButton" type="Button" parent="MarginContainer/Rows/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Delete"
+
+[node name="CancelButton" type="Button" parent="MarginContainer/Rows/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Cancel"
+
+[connection signal="item_clicked" from="MarginContainer/Rows/SSHClients/SSHClientList" to="MarginContainer/Rows/SSHClients/SSHClientList" method="_on_item_clicked"]
+[connection signal="pressed" from="MarginContainer/Rows/HBoxContainer/ConfirmButton" to="." method="_on_ConfirmButton_pressed"]
+[connection signal="pressed" from="MarginContainer/Rows/HBoxContainer/DeleteButton" to="." method="_on_DeleteButton_pressed"]
+[connection signal="pressed" from="MarginContainer/Rows/HBoxContainer/CancelButton" to="." method="_on_CancelButton_pressed"]

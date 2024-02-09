@@ -1,0 +1,172 @@
+[gd_scene load_steps=3 format=3 uid="uid://dvc73c3tiauv6"]
+
+[ext_resource type="Script" path="res://plugins/ssh/scripts/ssh_client_config_stage.gd" id="2_57o21"]
+[ext_resource type="Script" path="res://plugins/ssh/scripts/ssh_config_window.gd" id="2_hny1s"]
+
+[node name="SSHConfigWindow" type="Window"]
+title = "SSH Config"
+initial_position = 1
+size = Vector2i(800, 500)
+script = ExtResource("2_hny1s")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 50
+
+[node name="SSHClientListStage" type="Control" parent="MarginContainer"]
+visible = false
+layout_mode = 2
+
+[node name="Rows" type="VBoxContainer" parent="MarginContainer/SSHClientListStage"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+
+[node name="SSHClients" type="VBoxContainer" parent="MarginContainer/SSHClientListStage/Rows"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="SSHClientsLabel" type="Label" parent="MarginContainer/SSHClientListStage/Rows/SSHClients"]
+layout_mode = 2
+text = "SSH Clients"
+horizontal_alignment = 1
+
+[node name="SSHClientList" type="ItemList" parent="MarginContainer/SSHClientListStage/Rows/SSHClients"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="SaveButtons" type="HBoxContainer" parent="MarginContainer/SSHClientListStage/Rows"]
+layout_mode = 2
+size_flags_vertical = 8
+
+[node name="CloseButton" type="Button" parent="MarginContainer/SSHClientListStage/Rows/SaveButtons"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 6
+text = "Close"
+
+[node name="SSHClientConfigStage" type="Control" parent="MarginContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("2_57o21")
+
+[node name="Items" type="VBoxContainer" parent="MarginContainer/SSHClientConfigStage"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+
+[node name="NameSplit" type="HBoxContainer" parent="MarginContainer/SSHClientConfigStage/Items"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Label" type="Label" parent="MarginContainer/SSHClientConfigStage/Items/NameSplit"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+tooltip_text = "Relative path to the icon. Icons need to be stored in the config directory in a 'icons' directory."
+mouse_filter = 0
+text = "Name"
+
+[node name="LineEdit" type="LineEdit" parent="MarginContainer/SSHClientConfigStage/Items/NameSplit"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_next = NodePath("../../IpSplit/LineEdit")
+
+[node name="IpSplit" type="HBoxContainer" parent="MarginContainer/SSHClientConfigStage/Items"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Label" type="Label" parent="MarginContainer/SSHClientConfigStage/Items/IpSplit"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+tooltip_text = "Relative path to the icon. Icons need to be stored in the config directory in a 'icons' directory."
+mouse_filter = 0
+text = "Hostname/IP"
+
+[node name="LineEdit" type="LineEdit" parent="MarginContainer/SSHClientConfigStage/Items/IpSplit"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_next = NodePath("../../UserSplit/LineEdit")
+
+[node name="UserSplit" type="HBoxContainer" parent="MarginContainer/SSHClientConfigStage/Items"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Label" type="Label" parent="MarginContainer/SSHClientConfigStage/Items/UserSplit"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+tooltip_text = "Relative path to the icon. Icons need to be stored in the config directory in a 'icons' directory."
+mouse_filter = 0
+text = "User"
+
+[node name="LineEdit" type="LineEdit" parent="MarginContainer/SSHClientConfigStage/Items/UserSplit"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_next = NodePath("../../PortSplit/LineEdit")
+
+[node name="PortSplit" type="HBoxContainer" parent="MarginContainer/SSHClientConfigStage/Items"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Label" type="Label" parent="MarginContainer/SSHClientConfigStage/Items/PortSplit"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+tooltip_text = "Relative path to the icon. Icons need to be stored in the config directory in a 'icons' directory."
+mouse_filter = 0
+text = "Port"
+
+[node name="LineEdit" type="LineEdit" parent="MarginContainer/SSHClientConfigStage/Items/PortSplit"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_next = NodePath("../../KeyPathSplit/LineEdit")
+
+[node name="KeyPathSplit" type="HBoxContainer" parent="MarginContainer/SSHClientConfigStage/Items"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Label" type="Label" parent="MarginContainer/SSHClientConfigStage/Items/KeyPathSplit"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+tooltip_text = "Relative path to the icon. Icons need to be stored in the config directory in a 'icons' directory."
+mouse_filter = 0
+text = "Key Path"
+
+[node name="LineEdit" type="LineEdit" parent="MarginContainer/SSHClientConfigStage/Items/KeyPathSplit"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Buttons" type="HBoxContainer" parent="MarginContainer/SSHClientConfigStage/Items"]
+layout_mode = 2
+size_flags_vertical = 10
+theme_override_constants/separation = 40
+
+[node name="SaveButton" type="Button" parent="MarginContainer/SSHClientConfigStage/Items/Buttons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Save"
+
+[node name="CancelButton" type="Button" parent="MarginContainer/SSHClientConfigStage/Items/Buttons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Cancel"
+
+[connection signal="close_requested" from="." to="." method="_on_close_requested"]
+[connection signal="item_clicked" from="MarginContainer/SSHClientListStage/Rows/SSHClients/SSHClientList" to="." method="_on_ssh_client_list_item_clicked"]
+[connection signal="pressed" from="MarginContainer/SSHClientListStage/Rows/SaveButtons/CloseButton" to="." method="_on_close_button_pressed"]
+[connection signal="pressed" from="MarginContainer/SSHClientConfigStage/Items/Buttons/SaveButton" to="MarginContainer/SSHClientConfigStage" method="_on_save_button_pressed"]
+[connection signal="pressed" from="MarginContainer/SSHClientConfigStage/Items/Buttons/CancelButton" to="MarginContainer/SSHClientConfigStage" method="_on_cancel_button_pressed"]
