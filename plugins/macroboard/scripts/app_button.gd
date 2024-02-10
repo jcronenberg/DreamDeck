@@ -102,7 +102,7 @@ func show_name_with_icon():
 
 
 func load_ssh_controller():
-	ssh_controller = plugin_loader.get_plugin_loader("SSH")
+	ssh_controller = plugin_loader.get_plugin_loader("ssh")
 	if ssh_controller:
 		ssh_controller = ssh_controller.get_controller()
 
