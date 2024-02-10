@@ -1,8 +1,9 @@
-[gd_scene load_steps=7 format=3 uid="uid://cmqfrusykgypy"]
+[gd_scene load_steps=8 format=3 uid="uid://cmqfrusykgypy"]
 
 [ext_resource type="Script" path="res://scripts/main_menu/exit_area_button.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/main_menu/menu.gd" id="3"]
 [ext_resource type="Script" path="res://scripts/main_menu/menu_button.gd" id="4"]
+[ext_resource type="Texture2D" uid="uid://ccblccwjfrh2j" path="res://resources/icons/hamburger_menu.png" id="4_rvcit"]
 [ext_resource type="Script" path="res://scripts/main_menu/main_menu.gd" id="5"]
 
 [sub_resource type="StyleBoxEmpty" id="2"]
@@ -68,6 +69,9 @@ offset_left = 20.0
 offset_top = 20.0
 offset_right = 80.0
 offset_bottom = 80.0
+icon = ExtResource("4_rvcit")
+icon_alignment = 1
+expand_icon = true
 script = ExtResource("4")
 
 [connection signal="pressed" from="ExitAreaButton" to="ExitAreaButton" method="_on_ExitAreaButton_pressed"]
