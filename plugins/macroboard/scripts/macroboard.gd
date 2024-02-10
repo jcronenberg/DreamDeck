@@ -134,11 +134,6 @@ func _load_buttons():
 	if not layout:
 		layout = layout_config.get_config()
 
-	# if old style, convert to new style
-	# FIXME remove
-	if layout["Page0"].size() != 0 and typeof(layout["Page0"][0]) == TYPE_ARRAY:
-		layout["Page0"] = _generate_1d_layout()
-
 	layout_instances = []
 	var button_iterator := 0
 	for row in max_buttons.y:
@@ -294,18 +289,6 @@ func _on_size_changed():
 		return
 	button_min_size = new_button_min_size
 	_resize_buttons()
-
-
-## Tmp function to convert old layouts to new style.[br]
-## FIXME will be removed in the future.
-func _generate_1d_layout() -> Array:
-	var array := []
-	for row in layout["Page0"]:
-		if not row:
-			continue
-		for value in row:
-			array.append(value)
-	return array
 
 
 ## Load the saved [Macroboard] configuration from disk.[br]
