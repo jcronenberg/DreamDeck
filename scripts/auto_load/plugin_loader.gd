@@ -118,7 +118,7 @@ func save_plugin_config(plugin_name: String, new_data) -> bool:
 	return plugin_configs[plugin_name].save()
 
 
-func get_conf_dir(plugin_name: String):
+func get_conf_dir(plugin_name: String) -> String:
 	conf_lib.ensure_dir_exists(plugin_path(plugin_name))
 	return plugin_path(plugin_name)
 

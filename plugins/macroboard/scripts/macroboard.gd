@@ -1,153 +1,126 @@
+class_name Macroboard
 extends Control
 ## A board that contains [AppButton]s which can execute all kind of functions.
-class_name Macroboard
 
 const PLUGIN_NAME = "macroboard"
 ## Note setting this doesn't actually change the gap currently.
 ## This is just used for calculating the size the [AppButton]s can have.
 ## It is supposed to match what is set in [b]MacroRow[/b] in [i]theme_override_constants/separation[/i].
+
 const BUTTON_GAP = 10
-const DEFAULT_CONFIG := {
+
+const DEFAULT_CONFIG = {
 	"Size": {
 		"X": 8,
 		"Y": 5
-		},
+	},
 	"Square buttons": true
-	}
+}
 
 ## [b]Instance[/b] from where global signals originate.
-@onready var global_signals = get_node("/root/GlobalSignals")
+@onready var global_signals: GlobalSignals = get_node("/root/GlobalSignals")
 
 ## [b]Resource[/b] for creating rows.
-var macro_row = load("res://plugins/macroboard/scenes/macro_row.tscn")
+var macro_row: PackedScene = load("res://plugins/macroboard/scenes/macro_row.tscn")
+
 ## [b]Resource[/b] for creating new [AppButton]s.
-var app_button = load("res://plugins/macroboard/scenes/app_button.tscn")
+var app_button: PackedScene = load("res://plugins/macroboard/scenes/app_button.tscn")
+
 ## [b]Resource[/b] for creating new [NoButton]s.
-var no_button = load("res://plugins/macroboard/scenes/no_button.tscn")
+var no_button: PackedScene = load("res://plugins/macroboard/scenes/no_button.tscn")
 
 ## The amount of rows and columns this [Macroboard] is supposed to have.
 var max_buttons: Vector2
+
 ## Minimum size for all [AppButton]s.
 var button_min_size: Vector2
+
+## [b]Instance[/b] of plugin coordinator.
+@onready var plugin_loader: PluginLoader = get_node("/root/PluginLoader")
+
+## Current config directory
+@onready var conf_dir: String = plugin_loader.get_conf_dir(PLUGIN_NAME)
+
+# Page0 hardcoded for now, because we don't support multiple pages yet.
+## [Config] that handles layout saving and loading.
+@onready var layout_config: Config = load("res://scripts/global/config.gd").new({"Page0": []}, conf_dir + "layout.json")
+
+## Array that contains the [b]information[/b] of all buttons.
+## FIXME currently not an array, but a dict with an Array at "Page0"
+var layout: Dictionary
+
+## Array that contains the [b]instances[/b] of all buttons.
+var layout_instances: Array = []
+
+## Flag if buttons are supposed to be maximum size or keep square (square can leave a gap at the bottom).
+var keep_buttons_square: bool = true
+
+## Instance of temporary button that gets placed when a button is being dragged.
+var tmp_button
+
+## Current Position of the temporary button in [member layout_instances].
+## Is -1 when [member tmp_button] doesn't exist.
+var tmp_button_position: int = -1
+
 
 func _ready():
 	global_signals.connect("entered_edit_mode", Callable(self, "_on_entered_edit_mode"))
 	global_signals.connect("exited_edit_mode", Callable(self, "_on_exited_edit_mode"))
 	global_signals.connect("plugin_configs_changed", Callable(self, "_on_plugin_configs_changed"))
-	load_config()
+	_load_config()
 	layout_config.load_config()
 	_on_size_changed()
-	load_buttons()
+	_load_buttons()
 
 
-###############################################################################
-# Configs
-###############################################################################
-
-## [b]Instance[/b] of plugin coordinator.
-@onready var plugin_loader := get_node("/root/PluginLoader")
-## Current config directory
-@onready var conf_dir = plugin_loader.get_conf_dir(PLUGIN_NAME)
-# Page0 hardcoded for now, because we don't support multiple pages yet.
-## [Config] that handles layout saving and loading.
-@onready var layout_config = load("res://scripts/global/config.gd").new({"Page0": []}, conf_dir + "layout.json")
-## Array that contains the [b]information[/b] of all buttons.
-var layout
-## Array that contains the [b]instances[/b] of all buttons.
-var layout_instances := []
-## Flag if buttons are supposed to be maximum size or keep square (square can leave a gap at the bottom).
-var keep_buttons_square := true
+## Function to be called when an existing button is pressed in edit mode.[br]
+## [param button]: [b]Instance[/b] of the button itself that is calling this function.
+func edit_button(button):
+	$EditButtonPopup.show_popup(button)
 
 
-## Tmp function to convert old layouts to new style.[br]
-## FIXME will be removed in the future.
-func generate_1d_layout() -> Array:
-	var array := []
-	for row in layout["Page0"]:
-		if not row:
-			continue
-		for value in row:
-			array.append(value)
-	return array
+## Adds or edits a button depending on if it is a [AppButton] or not.[br]
+## [param button]: [b]Instance[/b] of the button from which the change was requested.[br]
+##                 If it is a [AppButton] it gets edited otherwise a new [AppButton] is created.[br]
+## [param button_dict]: [Dictionary] containing all keys that this button is supposed to have.[br]
+func add_or_edit_button(button, button_dict: Dictionary):
+	# If button is new
+	if not button.has_method("save"):
+		var new_button: AppButton = app_button.instantiate()
+		# Apply button settings
+		new_button.set_custom_minimum_size(button_min_size)
+		_replace_button(button, new_button)
+		button = new_button
+
+	_edit_button_keys(button, button_dict)
+	button.apply_change()
+
+	layout["Page0"] = _merge_layout_array(layout["Page0"], _create_layout_array())
 
 
-func _on_plugin_configs_changed():
-	load_config()
-	_on_size_changed()
-	load_buttons()
+## "Deletes" [param button] [b]instance[/b] by replacing it with a [NoButton] [b]instance[/b].
+func delete_button(button):
+	var new_no_button = no_button.instantiate()
+	new_no_button.set_custom_minimum_size(button_min_size)
+	_replace_button(button, new_no_button)
 
-
-## Load the saved [Macroboard] configuration from disk.[br]
-## Note: Doesn't load [member layout].
-func load_config():
-	var data = plugin_loader.get_plugin_config(PLUGIN_NAME, DEFAULT_CONFIG)
-
-	if not data or data == {}:
-		return
-
-	# Load button settings
-	# button_min_size = Vector2(data["Button Settings"]["Height"], data["Button Settings"]["Width"])
-	max_buttons = Vector2(data["Size"]["X"], data["Size"]["Y"])
-	keep_buttons_square = data["Square buttons"]
-
-
-## Create a layout array from all existing nodes inside this [Macroboard].
-func create_layout_array() -> Array:
-	var button_array := []
-	for row in $RowSeparator.get_children():
-		for button in row.get_children():
-			if button.has_method("save"):
-				button_array.append(button.save())
-			else:
-				button_array.append(null)
-
-	return button_array
-
-
-# This is so we don't overwrite/clear existing buttons only because
-# they aren't currently displayed e.g. because of current window size
-## A special merge for 2 arrays. It only overwrites entries in [param original_array]
-## if there is something at that place in [param new_array] so no information is lost.
-func merge_layout_array(original_array: Array, new_array: Array) -> Array:
-	if new_array.size() >= original_array.size():
-		return new_array
-	var ret_array := original_array.duplicate()
-	var i := 0
-	for value in new_array:
-		ret_array[i] = value
-		i += 1
-
-	ret_array = clean_nulls(ret_array)
-	return ret_array
-
-
-## Takes an array and returns a copy of the array the size of where the last non null element is located.
-func clean_nulls(array: Array) -> Array:
-	var last_element := 0
-	for i in array.size():
-		if array[i]:
-			last_element = i
-
-	array.resize(last_element + 1)
-	return array
+	# Because we are guaranteed currently in edit mode
+	new_no_button.toggle_add_button()
 
 
 ## Saves [Macroboard] config via [member plugin_loader] and saves [member layout] via [member layout_config].[br]
 ## Note: This doesn't update [member layout] so before calling [member layout] must contain the latest changes.
-func save():
-	plugin_loader.save_plugin_config(PLUGIN_NAME, {"Button Settings": {"Height": button_min_size.x, "Width": button_min_size.y}})
+func _save():
+	plugin_loader.save_plugin_config(PLUGIN_NAME,
+		{"Button Settings": {"Height": button_min_size.x, "Width": button_min_size.y}})
 
-	layout["Page0"] = merge_layout_array(layout["Page0"], create_layout_array())
+	layout["Page0"] = _merge_layout_array(layout["Page0"], _create_layout_array())
 	layout_config.change_config(layout)
 	layout_config.save()
 
 
-###############################################################################
-# Button placing
-###############################################################################
-
 ## Frees all current rows.
-func free_rows():
+func _free_rows():
 	for row in $RowSeparator.get_children():
 		row.free()
 
@@ -155,8 +128,8 @@ func free_rows():
 # TODO there is some performance optimization here where we could compare what is different
 #      compared to just always creating from scratch.
 ## Loads [member layout] from [member layout_config] and then creates all [AppButton]s accordingly.
-func load_buttons():
-	free_rows()
+func _load_buttons():
+	_free_rows()
 
 	if not layout:
 		layout = layout_config.get_config()
@@ -164,7 +137,7 @@ func load_buttons():
 	# if old style, convert to new style
 	# FIXME remove
 	if layout["Page0"].size() != 0 and typeof(layout["Page0"][0]) == TYPE_ARRAY:
-		layout["Page0"] = generate_1d_layout()
+		layout["Page0"] = _generate_1d_layout()
 
 	layout_instances = []
 	var button_iterator := 0
@@ -175,7 +148,7 @@ func load_buttons():
 			# Only if an entry exists at this position we add it
 			if layout["Page0"].size() > button_iterator and layout["Page0"][button_iterator]:
 				new_button = app_button.instantiate()
-				edit_button_keys(new_button, layout["Page0"][button_iterator])
+				_edit_button_keys(new_button, layout["Page0"][button_iterator])
 			else:
 				new_button = no_button.instantiate()
 
@@ -186,14 +159,14 @@ func load_buttons():
 			button_iterator += 1
 
 
-	place_buttons()
+	_place_buttons()
 	# Since all buttons get reset, we need to account for edit mode
 	if global_signals.get_edit_state():
-		toggle_add_buttons()
+		_toggle_add_buttons()
 
 
 ## Places buttons according to [member layout_instances].
-func place_buttons():
+func _place_buttons():
 	var i := 0
 	for button in layout_instances:
 		var row
@@ -213,7 +186,7 @@ func place_buttons():
 
 
 ## Frees [param original_button] and replaces it with [param new_button].
-func replace_button(original_button, new_button):
+func _replace_button(original_button, new_button):
 	var row = original_button.get_parent()
 	var pos = original_button.get_index()
 
@@ -224,90 +197,25 @@ func replace_button(original_button, new_button):
 	original_button.queue_free()
 
 
-## "Deletes" [param button] [b]instance[/b] by replacing it with a [NoButton] [b]instance[/b].
-func delete_button(button):
-	var new_no_button = no_button.instantiate()
-	new_no_button.set_custom_minimum_size(button_min_size)
-	replace_button(button, new_no_button)
-
-	# Because we are guaranteed currently in edit mode
-	new_no_button.toggle_add_button()
-
-
-###############################################################################
-# Edit mode
-###############################################################################
-
 ## Toggles all [NoButton]s.
-func toggle_add_buttons():
+func _toggle_add_buttons():
 	for row in $RowSeparator.get_children():
 		for button in row.get_children():
 			if button.has_method("toggle_add_button"):
 				button.toggle_add_button()
 
 
-func _on_entered_edit_mode():
-	toggle_add_buttons()
-
-
-func _on_exited_edit_mode():
-	toggle_add_buttons()
-
-	save()
-
-	# If there is a popup left open we need to close it
-	$EditButtonPopup.visible = false
-
-
-## Adds or edits a button depending on if it is a [AppButton] or not.[br]
-## [param button]: [b]Instance[/b] of the button from which the change was requested.[br]
-##                 If it is a [AppButton] it gets edited otherwise a new [AppButton] is created.[br]
-## [param button_dict]: [Dictionary] containing all keys that this button is supposed to have.[br]
-func add_or_edit_button(button, button_dict: Dictionary):
-	# If button is new
-	if not button.has_method("save"):
-		var new_button = app_button.instantiate()
-		# Apply button settings
-		new_button.set_custom_minimum_size(button_min_size)
-		replace_button(button, new_button)
-		button = new_button
-
-	edit_button_keys(button, button_dict)
-	button.apply_change()
-
-	layout["Page0"] = merge_layout_array(layout["Page0"], create_layout_array())
-
-
 ## Edit all values of the [param button] [b]instance[/b].[br]
 ## [param button_dict]: [Dictionary] that contains all key value pairs that are supposed to be set.[br]
-func edit_button_keys(button, button_dict: Dictionary):
+func _edit_button_keys(button, button_dict: Dictionary):
 	# Iterate through all values that need to be set in button
 	for key in button_dict.keys():
 		button.set(key, button_dict[key])
 
 
-## Function to be called when an existing button is pressed in edit mode.[br]
-## [param button]: [b]Instance[/b] of the button itself that is calling this function.
-func edit_button(button):
-	$EditButtonPopup.show_popup(button)
-
-
-###############################################################################
-# Max buttons
-# Restricts the amount of buttons shown to size of macroboard
-###############################################################################
-
-func _on_size_changed():
-	var new_button_min_size := calculate_button_size()
-	if button_min_size == new_button_min_size:
-		return
-	button_min_size = new_button_min_size
-	resize_buttons()
-
-
 ## Returns the maximum size the buttons can have based on [member max_buttons] and current size.[br]
 ## Respects [member keep_buttons_square] flag.
-func calculate_button_size() -> Vector2:
+func _calculate_button_size() -> Vector2:
 	var macroboard_size = get_size()
 	var button_size := Vector2()
 	button_size.x = int((macroboard_size.x - max_buttons.x * BUTTON_GAP) / max_buttons.x)
@@ -326,31 +234,20 @@ func calculate_button_size() -> Vector2:
 	return button_size
 
 
-###############################################################################
-# Dragging in edit mode
-###############################################################################
-
-## Instance of temporary button that gets placed when a button is being dragged.
-var tmp_button
-## Current Position of the temporary button in [member layout_instances].
-## Is -1 when [member tmp_button] doesn't exist.
-var tmp_button_position := -1
-
-
 ## Entry function for a button being dragged.[br]
 ## The button is supposed to update it's position itself.[br]
 ## [param cursor_position]: The position of the cursor relative to this macroboard.[br]
 ## [param lifted_button]: [b]Instance[/b] of the button itself that is calling this function.
-func handle_lifted_button(cursor_position: Vector2, lifted_button):
+func _handle_lifted_button(cursor_position: Vector2, lifted_button):
 	if not tmp_button:
 		tmp_button = no_button.instantiate()
 		tmp_button.set_custom_minimum_size(button_min_size)
 		layout_instances[layout_instances.find(lifted_button)] = tmp_button
-	place_tmp_button(calculate_button_position(cursor_position))
+	_place_tmp_button(_calculate_button_position(cursor_position))
 
 
 ## Calculates where in the layout array [param cursor_position] would slot in.
-func calculate_button_position(cursor_position: Vector2) -> int:
+func _calculate_button_position(cursor_position: Vector2) -> int:
 	var pos = floor(cursor_position / (button_min_size + Vector2(BUTTON_GAP, BUTTON_GAP)))
 	if pos.y >= max_buttons.y: pos.y = max_buttons.y - 1
 	if pos.x >= max_buttons.x: pos.x = max_buttons.x - 1
@@ -359,27 +256,121 @@ func calculate_button_position(cursor_position: Vector2) -> int:
 
 ## Places the [member tmp_button] [b]instance[/b] at [param pos] and updates [member tmp_button_position] accordingly.[br]
 ## Note: The [b]instance[/b] is also saved in [member layout_instances].
-func place_tmp_button(pos: int):
+func _place_tmp_button(pos: int):
 	if pos == tmp_button_position: return
 
 	layout_instances.remove_at(layout_instances.find(tmp_button))
 	layout_instances.insert(pos, tmp_button)
 
 	tmp_button_position = pos
-	place_buttons()
+	_place_buttons()
 
 
 ## Places [param button] at [member tmp_button_position] and frees [member tmp_button].
-func place_button(button):
+func _place_button(button):
 	layout_instances[tmp_button_position] = button
-	place_buttons()
+	_place_buttons()
 	if tmp_button:
 		tmp_button.free()
 	tmp_button_position = -1
 
 
 ## Applies [member button_min_size] to all buttons.
-func resize_buttons():
+func _resize_buttons():
 	for row in $RowSeparator.get_children():
 		for child in row.get_children():
 			child.set_custom_minimum_size(button_min_size)
+
+
+func _on_plugin_configs_changed():
+	_load_config()
+	_on_size_changed()
+	_load_buttons()
+
+
+func _on_size_changed():
+	var new_button_min_size := _calculate_button_size()
+	if button_min_size == new_button_min_size:
+		return
+	button_min_size = new_button_min_size
+	_resize_buttons()
+
+
+## Tmp function to convert old layouts to new style.[br]
+## FIXME will be removed in the future.
+func _generate_1d_layout() -> Array:
+	var array := []
+	for row in layout["Page0"]:
+		if not row:
+			continue
+		for value in row:
+			array.append(value)
+	return array
+
+
+## Load the saved [Macroboard] configuration from disk.[br]
+## Note: Doesn't load [member layout].
+func _load_config():
+	var data = plugin_loader.get_plugin_config(PLUGIN_NAME, DEFAULT_CONFIG)
+
+	if not data or data == {}:
+		return
+
+	# Load button settings
+	# button_min_size = Vector2(data["Button Settings"]["Height"], data["Button Settings"]["Width"])
+	max_buttons = Vector2(data["Size"]["X"], data["Size"]["Y"])
+	keep_buttons_square = data["Square buttons"]
+
+
+## Create a layout array from all existing nodes inside this [Macroboard].
+func _create_layout_array() -> Array:
+	var button_array := []
+	for row in $RowSeparator.get_children():
+		for button in row.get_children():
+			if button.has_method("save"):
+				button_array.append(button.save())
+			else:
+				button_array.append(null)
+
+	return button_array
+
+
+# This is so we don't overwrite/clear existing buttons only because
+# they aren't currently displayed e.g. because of current window size
+## A special merge for 2 arrays. It only overwrites entries in [param original_array]
+## if there is something at that place in [param new_array] so no information is lost.
+func _merge_layout_array(original_array: Array, new_array: Array) -> Array:
+	if new_array.size() >= original_array.size():
+		return new_array
+	var ret_array := original_array.duplicate()
+	var i := 0
+	for value in new_array:
+		ret_array[i] = value
+		i += 1
+
+	ret_array = _clean_nulls(ret_array)
+	return ret_array
+
+
+## Takes an array and returns a copy of the array the size of where the last non null element is located.
+func _clean_nulls(array: Array) -> Array:
+	var last_element := 0
+	for i in array.size():
+		if array[i]:
+			last_element = i
+
+	array.resize(last_element + 1)
+	return array
+
+
+func _on_entered_edit_mode():
+	_toggle_add_buttons()
+
+
+func _on_exited_edit_mode():
+	_toggle_add_buttons()
+
+	_save()
+
+	# If there is a popup left open we need to close it
+	$EditButtonPopup.visible = false
