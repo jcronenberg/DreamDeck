@@ -4,8 +4,11 @@ DreamDeck is a versatile Macroboard software designed for touchscreen devices, o
 ![image](https://github.com/jcronenberg/DreamDeck/assets/54934253/996e89e4-4991-4f19-ad1f-5c928e267af9)
 
 ## Project status
-DreamDeck is currently in a prototype stage. While the basic functionality is implemented, ongoing development will introduce additional features.  
-Current features include:
+DreamDeck is in a prototype stage, so expect potential breaking changes. Use it at your own discretion.  
+While the basic functionality is implemented, there are significant features yet to be added before the software reaches the alpha stage.  
+Feedback and contributions are of course always welcome.
+
+### Current features
 * Local shell buttons
 * SSH buttons
 * Spotify integration
@@ -13,7 +16,7 @@ Current features include:
 
 ## Installation
 ### Building the project
-To build DreamDeck, ensure you have Rust/Cargo and Godot 4 (latest stable version recommended) installed.
+To build DreamDeck, ensure you have Rust/Cargo and Godot 4 (latest stable version recommended) with the corresponding export templates installed.
 ```bash
 # Download
 ## Clone the project
