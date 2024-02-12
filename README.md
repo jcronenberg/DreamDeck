@@ -7,7 +7,7 @@ DreamDeck is a versatile Macroboard software designed for touchscreen devices, o
 DreamDeck is currently in a prototype stage. While the basic functionality is implemented, ongoing development will introduce additional features.  
 Current features include:
 * Local shell buttons
-* SSH shell buttons
+* SSH buttons
 * Spotify integration
 * Linux exclusive touch
 
