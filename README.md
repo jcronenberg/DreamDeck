@@ -1,5 +1,5 @@
 # DreamDeck
-DreamDeck is a versatile Macroboard software designed for touchscreen devices, offering functionality similar to that of a Stream Deck.
+DreamDeck is a versatile Macroboard software tailored for touchscreen devices, distinguishing itself from Stream Decks and similar software by leveraging the entire screen, offering more than just simple button displays.
 
 ![image](https://github.com/jcronenberg/DreamDeck/assets/54934253/996e89e4-4991-4f19-ad1f-5c928e267af9)
 
