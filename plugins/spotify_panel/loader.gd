@@ -1,7 +1,6 @@
 extends Node
 
 var loaded := false
-const TIME_MAX := 10
 const scene := "res://plugins/spotify_panel/scenes/spotify_panel.tscn"
 
 
