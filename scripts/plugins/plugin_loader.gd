@@ -40,9 +40,9 @@ extends Node
 ## [b]FIXME[/b] temporary, will be removed in the future when this isn't "hardcoded" anymore.
 @export var parent: String
 
-## Stores if plugin is loaded
+## Stores if plugin is loaded.
 var _loaded := false
-## Instance of [member scene] when loaded
+## Instance of [member scene] when loaded.
 var _instance = null
 
 
@@ -69,14 +69,14 @@ func plugin_load():
 
 ## Function called when plugin is being unloaded.[br]
 ## Note: doesn't get called when quitting DreamDeck,
-## just when unload while running happens
+## just when unload while running happens.
 func plugin_unload():
 	if _loaded:
 		_instance.queue_free()
 		_loaded = false
 
 
-## Function called when asynchronous loading of [member scene] is finished
+## Function called when asynchronous loading of [member scene] is finished.
 func add_scene(resource):
 	if resource is GDScript:
 		_instance = resource.new()
