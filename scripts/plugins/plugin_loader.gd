@@ -34,7 +34,8 @@ extends Node
 ## Your plugin's name.[br]
 ## [b]FIXME[/b] currently not utilised.
 @export var plugin_name: String
-## The scene your plugin wants to have loaded.
+## The scene your plugin wants to have loaded.[br]
+## Example: [code]"res://plugins/your_plugin/scenes/default_scene.tscn"[/code]
 @export var scene: String
 ## [b]FIXME[/b] temporary, will be removed in the future when this isn't "hardcoded" anymore.
 @export var parent: String
