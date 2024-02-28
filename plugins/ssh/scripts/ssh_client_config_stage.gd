@@ -2,8 +2,8 @@ extends Control
 
 var initial_name: String = ""
 var client_index: int = 0
-@onready var plugin_loader := get_node("/root/PluginLoader")
-@onready var ssh_controller = plugin_loader.get_plugin_loader("ssh").get_controller()
+@onready var plugin_coordinator := get_node("/root/PluginCoordinator")
+@onready var ssh_controller = plugin_coordinator.get_plugin_loader("ssh").get_controller()
 
 @onready var edit_scenes := {
 	"name": $Items/NameSplit/LineEdit,

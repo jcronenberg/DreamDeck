@@ -24,7 +24,7 @@ var window_area_min: Vector2 = Vector2(0, 0)
 var window_area_max: Vector2 = Vector2(0, 0)
 
 # Config
-@onready var plugin_loader := get_node("/root/PluginLoader")
+@onready var plugin_coordinator := get_node("/root/PluginCoordinator")
 const DEFAULT_CONFIG = {
 	"Default Device": ""
 }
@@ -56,7 +56,7 @@ func _on_main_window_resized():
 
 
 func load_config():
-	device_options.set_default_device(plugin_loader.get_plugin_config(PLUGIN_NAME, DEFAULT_CONFIG)["Default Device"])
+	device_options.set_default_device(plugin_coordinator.get_plugin_config(PLUGIN_NAME, DEFAULT_CONFIG)["Default Device"])
 
 
 func calculate_window_area():

@@ -6,7 +6,7 @@ class_name EditButtonPopup
 var button_to_edit: Node
 
 ## [b]Instance[/b] of plugin coordinator.
-@onready var plugin_loader := get_node("/root/PluginLoader")
+@onready var plugin_coordinator := get_node("/root/PluginCoordinator")
 
 
 ## Shows the popup to create or edit a button.[br]
@@ -16,10 +16,10 @@ func show_popup(button):
 	button_to_edit = button
 
 	# SSH setup
-	if plugin_loader.get_activated_plugins()["ssh"]:
+	if plugin_coordinator.get_activated_plugins()["ssh"]:
 		$MarginContainer/Rows/SSHClients.visible = true
 		fill_ssh_client_list(
-			plugin_loader.get_plugin_loader("ssh").get_controller().get_client_list()
+			plugin_coordinator.get_plugin_loader("ssh").get_controller().get_client_list()
 			)
 	else:
 		$MarginContainer/Rows/SSHClients.visible = false

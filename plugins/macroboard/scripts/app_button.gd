@@ -16,7 +16,7 @@ var lift_timer := 0.0
 # Global nodes
 @onready var config_loader = get_node("/root/ConfigLoader")
 @onready var global_signals = get_node("/root/GlobalSignals")
-@onready var plugin_loader := get_node("/root/PluginLoader")
+@onready var plugin_coordinator := get_node("/root/PluginCoordinator")
 @onready var ssh_controller
 
 func _ready():
@@ -102,7 +102,7 @@ func show_name_with_icon():
 
 
 func load_ssh_controller():
-	ssh_controller = plugin_loader.get_plugin_loader("ssh")
+	ssh_controller = plugin_coordinator.get_plugin_loader("ssh")
 	if ssh_controller:
 		ssh_controller = ssh_controller.get_controller()
 

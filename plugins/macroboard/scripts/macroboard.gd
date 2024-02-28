@@ -36,10 +36,10 @@ var max_buttons: Vector2
 var button_min_size: Vector2
 
 ## [b]Instance[/b] of plugin coordinator.
-@onready var plugin_loader: PluginLoader = get_node("/root/PluginLoader")
+@onready var plugin_coordinator: PluginCoordinator = get_node("/root/PluginCoordinator")
 
 ## Current config directory
-@onready var conf_dir: String = plugin_loader.get_conf_dir(PLUGIN_NAME)
+@onready var conf_dir: String = plugin_coordinator.get_conf_dir(PLUGIN_NAME)
 
 # Page0 hardcoded for now, because we don't support multiple pages yet.
 ## [Config] that handles layout saving and loading.
@@ -108,10 +108,10 @@ func delete_button(button):
 	new_no_button.toggle_add_button()
 
 
-## Saves [Macroboard] config via [member plugin_loader] and saves [member layout] via [member layout_config].[br]
+## Saves [Macroboard] config via [member plugin_coordinator] and saves [member layout] via [member layout_config].[br]
 ## Note: This doesn't update [member layout] so before calling [member layout] must contain the latest changes.
 func _save():
-	plugin_loader.save_plugin_config(PLUGIN_NAME,
+	plugin_coordinator.save_plugin_config(PLUGIN_NAME,
 		{"Button Settings": {"Height": button_min_size.x, "Width": button_min_size.y}})
 
 	layout["Page0"] = _merge_layout_array(layout["Page0"], _create_layout_array())
@@ -294,7 +294,7 @@ func _on_size_changed():
 ## Load the saved [Macroboard] configuration from disk.[br]
 ## Note: Doesn't load [member layout].
 func _load_config():
-	var data = plugin_loader.get_plugin_config(PLUGIN_NAME, DEFAULT_CONFIG)
+	var data = plugin_coordinator.get_plugin_config(PLUGIN_NAME, DEFAULT_CONFIG)
 
 	if not data or data == {}:
 		return

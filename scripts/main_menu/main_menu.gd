@@ -2,7 +2,7 @@ extends Control
 
 # Nodes
 @onready var config_loader = get_node("/root/ConfigLoader")
-@onready var plugin_loader = get_node("/root/PluginLoader")
+@onready var plugin_coordinator = get_node("/root/PluginCoordinator")
 
 # Submenus
 var settings_submenu
@@ -36,13 +36,13 @@ func construct_main_menu():
 	# Plugins
 	new_button = submenu_button.instantiate()
 	new_button.size.x = 400
-	new_button.init("Plugins", plugin_loader.get_activated_plugins())
+	new_button.init("Plugins", plugin_coordinator.get_activated_plugins())
 	plugins_submenu = new_button
 	$Menu/SettingSeparator.add_child(new_button)
 	# Plugin settings
 	new_button = submenu_button.instantiate()
 	new_button.size.x = 400
-	new_button.init("Plugin settings", plugin_loader.get_all_plugin_configs())
+	new_button.init("Plugin settings", plugin_coordinator.get_all_plugin_configs())
 	plugin_settings_submenu = new_button
 	$Menu/SettingSeparator.add_child(new_button)
 	# Edit Mode
@@ -61,7 +61,7 @@ func edit_plugin_settings():
 		_ready()
 
 	plugin_settings_submenu.clear_submenu()
-	plugin_settings_submenu.add_submenu(plugin_loader.get_all_plugin_configs())
+	plugin_settings_submenu.add_submenu(plugin_coordinator.get_all_plugin_configs())
 
 
 func edit_settings():
@@ -81,12 +81,12 @@ func construct_config():
 		config_loader.change_config(settings_submenu.construct_dict())
 
 	new_config = plugins_submenu.construct_dict()
-	if new_config.hash() != plugin_loader.get_activated_plugins().hash():
-		plugin_loader.change_activated_plugins(plugins_submenu.construct_dict())
+	if new_config.hash() != plugin_coordinator.get_activated_plugins().hash():
+		plugin_coordinator.change_activated_plugins(plugins_submenu.construct_dict())
 
 	new_config = plugin_settings_submenu.construct_dict()
-	if new_config.hash() != plugin_loader.get_all_plugin_configs().hash():
-		plugin_loader.change_all_plugin_configs(plugin_settings_submenu.construct_dict())
+	if new_config.hash() != plugin_coordinator.get_all_plugin_configs().hash():
+		plugin_coordinator.change_all_plugin_configs(plugin_settings_submenu.construct_dict())
 
 
 ## Adds a custom button to the MainMenu
