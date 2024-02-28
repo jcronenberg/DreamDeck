@@ -1,3 +1,4 @@
+class_name MacroboardLoader
 extends PluginLoader
 
 func _init():
