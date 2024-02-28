@@ -1,24 +1,19 @@
-extends Node
+extends PluginLoader
 
-var loaded := false
+func _init():
+	plugin_name = "touch"
+	scene = "res://plugins/touch/scenes/touch.tscn"
+	parent = "/root/Main/VSeparator/MarginContainer/ControlsSeparator"
+	allow_os = ["Linux"]
 
-@onready var parent := get_node("/root/Main/VSeparator/MarginContainer/ControlsSeparator")
 
-
-func plugin_load():
-	if OS.get_name() != "Linux":
-		push_error("Touch plugin only works on linux")
-		return
-	if not loaded:
-		var touch_scene = load("res://plugins/touch/scenes/touch.tscn").instantiate()
-		parent.add_child(touch_scene)
-		parent.move_child(touch_scene, 1)
-		parent.get_node("Placeholder").visible = false
-		loaded = true
+func add_scene(resource):
+	super(resource)
+	var parent_instance = get_node(parent)
+	parent_instance.get_node("Placeholder").visible = false
+	parent_instance.move_child(_instance, 1)
 
 
 func plugin_unload():
-	if loaded:
-		parent.get_node("Placeholder").visible = true
-		parent.get_node("Touch").queue_free()
-		loaded = false
+	get_node(parent + "/Placeholder").visible = true
+	super()

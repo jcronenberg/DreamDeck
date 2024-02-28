@@ -29,7 +29,7 @@ ArgumentParser="*res://scripts/auto_load/argument_parser.gd"
 ConfigLoader="*res://scripts/auto_load/config_loader.gd"
 GlobalSignals="*res://scripts/auto_load/global_signals.gd"
 HandleConfig="*res://scripts/auto_load/handle_config.gd"
-PluginLoader="*res://scripts/auto_load/plugin_loader.gd"
+PluginCoordinator="*res://scripts/auto_load/plugin_coordinator.gd"
 
 [debug]
 

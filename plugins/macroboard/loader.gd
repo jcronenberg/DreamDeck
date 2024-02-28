@@ -1,17 +1,6 @@
-extends Node
+extends PluginLoader
 
-var loaded := false
-
-
-func plugin_load():
-	if not loaded:
-		get_node("/root/Main/VSeparator/ElementSeparator/MacroMargin").add_child(
-			load("res://plugins/macroboard/scenes/macroboard.tscn").instantiate()
-			)
-		loaded = true
-
-
-func plugin_unload():
-	if loaded:
-		get_node("/root/Main/VSeparator/ElementSeparator/MacroMargin/Macroboard").queue_free()
-		loaded = false
+func _init():
+	plugin_name = "macroboard"
+	scene = "res://plugins/macroboard/scenes/macroboard.tscn"
+	parent = "/root/Main/VSeparator/ElementSeparator/MacroMargin"

@@ -18,8 +18,8 @@ var thread_pool: Array
 var main_menu_button = null
 var config_window_scene = null
 
-@onready var plugin_loader := get_node("/root/PluginLoader")
-@onready var conf_dir = plugin_loader.get_conf_dir(PLUGIN_NAME)
+@onready var plugin_coordinator := get_node("/root/PluginCoordinator")
+@onready var conf_dir = plugin_coordinator.get_conf_dir(PLUGIN_NAME)
 @onready var client_config = load("res://scripts/global/config.gd").new({"ssh_clients": []}, conf_dir + "clients.json")
 @onready var execute_function_button := load("res://scenes/main_menu/execute_function_button.tscn")
 @onready var config_window := load("res://plugins/ssh/scenes/ssh_config_window.tscn")

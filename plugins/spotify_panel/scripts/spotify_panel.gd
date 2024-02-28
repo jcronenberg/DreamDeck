@@ -93,16 +93,16 @@ func config_stage3_text() -> String:
 var http_server
 
 # Nodes
-@onready var plugin_loader := get_node("/root/PluginLoader")
+@onready var plugin_coordinator := get_node("/root/PluginCoordinator")
 @onready var http_get := get_node("HTTPGet")
 @onready var http_post := get_node("HTTPPost")
 @onready var http_get_devices := get_node("HTTPGetDevices")
 
 # Download cache
-@onready var cache_dir_path: String = plugin_loader.get_cache_dir(PLUGIN_NAME)
+@onready var cache_dir_path: String = plugin_coordinator.get_cache_dir(PLUGIN_NAME)
 
 # Configs
-@onready var conf_dir = plugin_loader.get_conf_dir(PLUGIN_NAME)
+@onready var conf_dir = plugin_coordinator.get_conf_dir(PLUGIN_NAME)
 @onready var credentials = load("res://scripts/global/config.gd").new({"refresh_token": "", "encoded_client": ""}, conf_dir + "credentials.json")
 
 const DEFAULT_CONFIG = {
@@ -156,7 +156,7 @@ func _on_plugin_configs_changed():
 # Load config from config_loader and apply the settings to local variables
 func load_plugin_config():
 	# Load global config
-	var config_data = plugin_loader.get_plugin_config(PLUGIN_NAME, DEFAULT_CONFIG)
+	var config_data = plugin_coordinator.get_plugin_config(PLUGIN_NAME, DEFAULT_CONFIG)
 	if not config_data:
 		return
 
