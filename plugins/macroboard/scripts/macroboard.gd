@@ -69,8 +69,38 @@ func _ready():
 	global_signals.connect("plugin_configs_changed", Callable(self, "_on_plugin_configs_changed"))
 	_load_config()
 	layout_config.load_config()
+	_migrate_buttons()
 	_on_size_changed()
 	_load_buttons()
+
+
+# TODO remove in the future
+# Migration from separate app and arguments to single command string
+func _migrate_buttons():
+	var layout_config_dict = layout_config.get_config()
+	var button_array = layout_config_dict["Page0"]
+	var button_counter: int = 0
+	var shown_warning: bool = false
+	for button in button_array:
+		if button and button.has("app"):
+			if not shown_warning:
+				push_warning("Old config detected, it will now automatically be migrated.")
+				shown_warning = true
+
+			var command: String = button["app"] + " "
+			for arg in button["arguments"]:
+				command += arg + " "
+
+			# Clean left over spaces, because the old saving often appended spaces
+			while not command.is_empty() and command[command.length() - 1] == " ":
+				command = command.erase(command.length() - 1)
+			button_array[button_counter]["command"] = command
+			button_array[button_counter].erase("app")
+			button_array[button_counter].erase("arguments")
+		button_counter += 1
+
+	layout_config.change_config({"Page0": button_array})
+	layout_config.save()
 
 
 ## Function to be called when an existing button is pressed in edit mode.[br]

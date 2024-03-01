@@ -1,8 +1,6 @@
 class_name ShellButton
 extends MacroButton
 
-@export var app: String
-@export var arguments: PackedStringArray
 @export var command: String
 @export var app_name: String
 @export var icon_path: String
@@ -20,9 +18,21 @@ extends MacroButton
 
 func _ready():
 	super()
-	load_ssh_controller()
+	_load_ssh_controller()
 
 	apply_change()
+
+
+func save():
+	var save_dict = {
+		# "button_type" : button_type,
+		"command" : command,
+		"app_name" : app_name,
+		"icon_path" : icon_path,
+		"show_app_name" : show_app_name,
+		"ssh_client": ssh_client,
+	}
+	return save_dict
 
 
 func apply_change():
@@ -31,7 +41,7 @@ func apply_change():
 	elif app_name:
 		text = app_name
 	else:
-		text = app
+		text = command
 
 	if show_app_name:
 		show_name_with_icon()
@@ -41,12 +51,8 @@ func apply_change():
 	# Platform specific
 	# If the os is windows we have to run commands like this:
 	# OS.execute("CMD.exe", ["/c", ...])
-	if OS.get_name() == "Windows":
-		var args = ["/c", app]
-		app = "CMD.exe"
-		for arg in arguments:
-			args.append(arg)
-			arguments = args
+	if OS.get_name() == "Windows" and not ssh_client.is_empty():
+		command = "CMD.exe /c " + command
 
 
 func set_image():
@@ -72,12 +78,6 @@ func show_name_with_icon():
 	$AppName.visible = true
 
 
-func load_ssh_controller():
-	ssh_controller = plugin_coordinator.get_plugin_loader("ssh")
-	if ssh_controller:
-		ssh_controller = ssh_controller.get_controller()
-
-
 func _on_AppButton_pressed():
 	# If we are in edit mode we don't execute the command, but instead
 	# open the prompt to edit this button
@@ -92,75 +92,65 @@ func _on_AppButton_pressed():
 	if not ssh_client.is_empty():
 		# Check for valid ssh_controller
 		if not ssh_controller:
-			load_ssh_controller()
+			_load_ssh_controller()
 			if not ssh_controller:
 				push_error("Couldn't execute on SSH Client %s" % ssh_client)
 				return
 
 		# Some hacky stuff to format the cmd better
 		# TODO remove when app and argument are combined into one
-		ssh_controller.exec_on_client(ssh_client, app +
-			("" if arguments.size() == 0
-				or arguments.size() == 1
-				and arguments[0] == "" else
-			 " " + array_to_string(arguments)))
+		ssh_controller.exec_on_client(ssh_client, command)
 
 	elif config_loader.get_config()["Debug"]:
 		var process = ProcessNode.new()
 		process.connect("stdout", Callable(self, "_on_process_stdout"))
 		process.connect("stderr", Callable(self, "_on_process_stderr"))
 		process.connect("finished", Callable(self, "_on_process_finished"))
-		process.set("cmd", app)
-		process.set("args", arguments as PackedStringArray)
+		process.set("cmd", _text_to_args(command)[0])
+		var args = _text_to_args(command)
+		args.remove_at(0)
+		process.set("args", args as PackedStringArray)
 		self.add_child(process)
 		var ret = process.start()
 		# Error happened
 		if ret:
-			print_debug_msg(app, arguments, "error occurred: " + ret, "red")
+			_print_dbg_msg(command, "error occurred: " + ret, "red")
 
 	else:
-		OS.create_process(app, arguments)
+		var args = _text_to_args(command)
+		args.remove_at(0)
+		OS.create_process(_text_to_args(command)[0], args)
 
 
-func _on_process_stdout(stdout: PackedByteArray, cmd: String, args: PackedStringArray):
-	print_debug_msg(cmd, args, stdout.get_string_from_utf8())
-
-func _on_process_stderr(stderr: PackedByteArray, cmd: String, args: PackedStringArray):
-	print_debug_msg(cmd, args, stderr.get_string_from_utf8(), "yellow")
-
-func _on_process_finished(err_code: int, cmd: String, args: PackedStringArray):
-	if err_code:
-		print_debug_msg(cmd, args, "exited with code: " + str(err_code), "red")
-	else:
-		print_debug_msg(cmd, args, "exited with code: success", "green")
+func _load_ssh_controller():
+	ssh_controller = plugin_coordinator.get_plugin_loader("ssh")
+	if ssh_controller:
+		ssh_controller = ssh_controller.get_controller()
 
 
-## Prints a formatted error msg
-## TODO will probably be replaced in the future by some sort of custom logger
-func print_debug_msg(cmd: String, args: PackedStringArray, msg: String, color_code: String = "white"):
+# TODO will probably be replaced in the future by some sort of custom logger
+func _print_dbg_msg(cmd: String, msg: String, color_code: String = "white"):
 	# The second color code is there because when msg contains newlines the color delimiter seems to break
 	# and be written as plain text into the output.
 	# To circumvent this we just print a white color again before the delimiter
-	print_rich("[color=" + color_code + "]" + Time.get_datetime_string_from_system() + " \"" + cmd + ("" if args.size() == 0 or args.size() == 1 and args[0] == "" else " " + array_to_string(args)) + "\": " + msg + "[color=white][/color]")
+	print_rich("[color=" + color_code + "]" + Time.get_datetime_string_from_system() + " \"" + cmd + "\": " + msg + "[color=white][/color]")
 
 
-## Creates a single [String] from an [Array] of [String]s.
-func array_to_string(array) -> String:
-	var ret = ""
-	for arg in array:
-		ret += arg + " "
+# Creates an Array of Strings from a single String.
+func _text_to_args(args) -> Array:
+	return args.split(" ")
 
-	ret = ret.erase(ret.length() - 1, 1)
-	return ret
 
-func save():
-	var save_dict = {
-		# "button_type" : button_type,
-		"app" : app,
-		"arguments" : arguments,
-		"app_name" : app_name,
-		"icon_path" : icon_path,
-		"show_app_name" : show_app_name,
-		"ssh_client": ssh_client,
-	}
-	return save_dict
+func _on_process_stdout(stdout: PackedByteArray, _cmd: String, _args: PackedStringArray):
+	_print_dbg_msg(command, stdout.get_string_from_utf8())
+
+
+func _on_process_stderr(stderr: PackedByteArray, _cmd: String, _args: PackedStringArray):
+	_print_dbg_msg(command, stderr.get_string_from_utf8(), "yellow")
+
+
+func _on_process_finished(err_code: int, _cmd: String, _args: PackedStringArray):
+	if err_code:
+		_print_dbg_msg(command, "exited with code: " + str(err_code), "red")
+	else:
+		_print_dbg_msg(command, "exited with code: success", "green")

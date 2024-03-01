@@ -27,33 +27,18 @@ theme_override_constants/margin_bottom = 50
 layout_mode = 2
 theme_override_constants/separation = 20
 
-[node name="AppSplit" type="HBoxContainer" parent="MarginContainer/Rows"]
+[node name="CommandSplit" type="HBoxContainer" parent="MarginContainer/Rows"]
 layout_mode = 2
 theme_override_constants/separation = 14
 
-[node name="Label" type="Label" parent="MarginContainer/Rows/AppSplit"]
+[node name="Label" type="Label" parent="MarginContainer/Rows/CommandSplit"]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-tooltip_text = "The path to the executable e.g. 'firefox' or '/home/example/firefox'"
+tooltip_text = "Command to be exectued e.g. 'bin/binary --test example'"
 mouse_filter = 0
-text = "App"
+text = "Command"
 
-[node name="LineEdit" type="LineEdit" parent="MarginContainer/Rows/AppSplit"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="ArgumentsSplit" type="HBoxContainer" parent="MarginContainer/Rows"]
-layout_mode = 2
-theme_override_constants/separation = 14
-
-[node name="Label" type="Label" parent="MarginContainer/Rows/ArgumentsSplit"]
-custom_minimum_size = Vector2(200, 0)
-layout_mode = 2
-tooltip_text = "Arguments for the executable e.g. '--test example'"
-mouse_filter = 0
-text = "Arguments"
-
-[node name="LineEdit" type="LineEdit" parent="MarginContainer/Rows/ArgumentsSplit"]
+[node name="LineEdit" type="LineEdit" parent="MarginContainer/Rows/CommandSplit"]
 layout_mode = 2
 size_flags_horizontal = 3
 
