@@ -1,10 +1,10 @@
 class_name Macroboard
 extends Control
-## A board that contains [AppButton]s which can execute all kind of functions.
+## A board that contains [ShellButton]s which can execute all kind of functions.
 
 const PLUGIN_NAME = "macroboard"
 ## Note setting this doesn't actually change the gap currently.
-## This is just used for calculating the size the [AppButton]s can have.
+## This is just used for calculating the size the [ShellButton]s can have.
 ## It is supposed to match what is set in [b]MacroRow[/b] in [i]theme_override_constants/separation[/i].
 
 const BUTTON_GAP = 10
@@ -23,8 +23,8 @@ const DEFAULT_CONFIG = {
 ## [b]Resource[/b] for creating rows.
 var macro_row: PackedScene = load("res://plugins/macroboard/scenes/macro_row.tscn")
 
-## [b]Resource[/b] for creating new [AppButton]s.
-var app_button: PackedScene = load("res://plugins/macroboard/scenes/app_button.tscn")
+## [b]Resource[/b] for creating new [ShellButton]s.
+var shell_button: PackedScene = load("res://plugins/macroboard/button_types/shell_button/shell_button.tscn")
 
 ## [b]Resource[/b] for creating new [NoButton]s.
 var no_button: PackedScene = load("res://plugins/macroboard/scenes/no_button.tscn")
@@ -32,7 +32,7 @@ var no_button: PackedScene = load("res://plugins/macroboard/scenes/no_button.tsc
 ## The amount of rows and columns this [Macroboard] is supposed to have.
 var max_buttons: Vector2
 
-## Minimum size for all [AppButton]s.
+## Minimum size for all [ShellButton]s.
 var button_min_size: Vector2
 
 ## [b]Instance[/b] of plugin coordinator.
@@ -79,14 +79,14 @@ func edit_button(button):
 	$EditButtonPopup.show_popup(button)
 
 
-## Adds or edits a button depending on if it is a [AppButton] or not.[br]
+## Adds or edits a button depending on if it is a [ShellButton] or not.[br]
 ## [param button]: [b]Instance[/b] of the button from which the change was requested.[br]
-##                 If it is a [AppButton] it gets edited otherwise a new [AppButton] is created.[br]
+##                 If it is a [ShellButton] it gets edited otherwise a new [ShellButton] is created.[br]
 ## [param button_dict]: [Dictionary] containing all keys that this button is supposed to have.[br]
 func add_or_edit_button(button, button_dict: Dictionary):
 	# If button is new
 	if not button.has_method("save"):
-		var new_button: AppButton = app_button.instantiate()
+		var new_button: ShellButton = shell_button.instantiate()
 		# Apply button settings
 		new_button.set_custom_minimum_size(button_min_size)
 		_replace_button(button, new_button)
@@ -127,7 +127,7 @@ func _free_rows():
 
 # TODO there is some performance optimization here where we could compare what is different
 #      compared to just always creating from scratch.
-## Loads [member layout] from [member layout_config] and then creates all [AppButton]s accordingly.
+## Loads [member layout] from [member layout_config] and then creates all [ShellButton]s accordingly.
 func _load_buttons():
 	_free_rows()
 
@@ -142,7 +142,7 @@ func _load_buttons():
 
 			# Only if an entry exists at this position we add it
 			if layout["Page0"].size() > button_iterator and layout["Page0"][button_iterator]:
-				new_button = app_button.instantiate()
+				new_button = shell_button.instantiate()
 				_edit_button_keys(new_button, layout["Page0"][button_iterator])
 			else:
 				new_button = no_button.instantiate()
