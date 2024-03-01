@@ -395,11 +395,11 @@ func set_song_state(data):
 
 	# Track name
 	track_name = data["name"]
-	$Background/TrackName.set_new_text(track_name)
+	$Background/ScrollSideMargin/TrackName.set_new_text(track_name)
 
 	# Artist name
 	artist = data["artists"][0]["name"]
-	$Background/ArtistsName.set_new_text(artist)
+	$Background/ScrollSideMargin/ArtistsName.set_new_text(artist)
 
 	# Cover art 300x300, which makes most sense
 	# TODO make this configurable
@@ -410,7 +410,7 @@ func set_song_state(data):
 
 	# Album name
 	album = data["album"]["name"]
-	$Background/AlbumName.set_new_text(album)
+	$Background/ScrollSideMargin/AlbumName.set_new_text(album)
 
 
 # Sends a http get request
