@@ -34,7 +34,7 @@ linux:
 
 _check-godot:
 ifndef GODOT_EXECUTABLE
-	$(error "Godot executable not found. Please make sure Godot3 is installed and in your system PATH.")
+	$(error "Godot executable not found. Please make sure Godot4 is installed and in your system PATH.")
 endif
 	@$(MAKE) _check-godot-version
 

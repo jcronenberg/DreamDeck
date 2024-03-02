@@ -74,8 +74,7 @@ func get_selected_ssh_client() -> String:
 ## Creates and returns a dictionary from all input fields.
 func create_button_dict() -> Dictionary:
 	var button_dict = {}
-	button_dict["app"] = $MarginContainer/Rows/AppSplit/LineEdit.text
-	button_dict["arguments"] = text_to_args($MarginContainer/Rows/ArgumentsSplit/LineEdit.text)
+	button_dict["command"] = $MarginContainer/Rows/CommandSplit/LineEdit.text
 	button_dict["app_name"] = $MarginContainer/Rows/AppNameSplit/LineEdit.text
 	button_dict["icon_path"] = $MarginContainer/Rows/IconPathSplit/LineEdit.text
 	button_dict["show_app_name"] = $MarginContainer/Rows/ShowAppNameSplit/CheckBox.button_pressed
@@ -86,8 +85,7 @@ func create_button_dict() -> Dictionary:
 
 ## Takes a [Dictionary] with a button's keys and fills all LineEdits with the values.
 func fill_from_button_dict(button_dict: Dictionary):
-	$MarginContainer/Rows/AppSplit/LineEdit.text = button_dict["app"]
-	$MarginContainer/Rows/ArgumentsSplit/LineEdit.text = args_to_text(button_dict["arguments"])
+	$MarginContainer/Rows/CommandSplit/LineEdit.text = button_dict["command"]
 	$MarginContainer/Rows/AppNameSplit/LineEdit.text = button_dict["app_name"]
 	$MarginContainer/Rows/IconPathSplit/LineEdit.text = button_dict["icon_path"]
 	$MarginContainer/Rows/ShowAppNameSplit/CheckBox.button_pressed = button_dict["show_app_name"]
@@ -100,25 +98,9 @@ func fill_from_button_dict(button_dict: Dictionary):
 
 ## Resets all inputs to default state.
 func reset_prompt():
-	$MarginContainer/Rows/AppSplit/LineEdit.text = ""
-	$MarginContainer/Rows/ArgumentsSplit/LineEdit.text = ""
+	$MarginContainer/Rows/CommandSplit/LineEdit.text = ""
 	$MarginContainer/Rows/AppNameSplit/LineEdit.text = ""
 	$MarginContainer/Rows/IconPathSplit/LineEdit.text = ""
 	$MarginContainer/Rows/ShowAppNameSplit/CheckBox.button_pressed = false
 	$MarginContainer/Rows/SSHClients/SSHClientList.clear()
 	$MarginContainer/Rows/SSHClients/SSHClientList.selected_item = -1
-
-
-## Creates a single [String] from an [Array] of [String]s.
-func args_to_text(args) -> String:
-	var ret = ""
-	for arg in args:
-		ret += arg + " "
-
-	ret.erase(ret.length() - 1, 1)
-	return ret
-
-
-## Creates an [Array] of [String]s from a single [String].
-func text_to_args(args) -> Array:
-	return args.split(" ")

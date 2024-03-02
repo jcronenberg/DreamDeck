@@ -1,5 +1,5 @@
-extends Control
 class_name NoButton
+extends Control
 
 func toggle_add_button():
 	$AddButton.visible = not $AddButton.visible
