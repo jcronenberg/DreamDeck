@@ -1,4 +1,4 @@
-class_name SpotifyPanelLoader
+class_name SpotifyPanelPluginLoader
 extends PluginLoader
 
 func _init():

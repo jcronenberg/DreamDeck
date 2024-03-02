@@ -1,4 +1,4 @@
-class_name SSHLoader
+class_name SSHPluginLoader
 extends PluginLoader
 
 func _init():

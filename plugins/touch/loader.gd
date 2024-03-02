@@ -1,4 +1,4 @@
-class_name TouchLoader
+class_name TouchPluginLoader
 extends PluginLoader
 
 func _init():
