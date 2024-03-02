@@ -61,3 +61,22 @@ static func conf_merge(dict1: Dictionary, dict2: Dictionary):
 			dict1[key] = dict2[key]
 		elif typeof(dict1[key]) == TYPE_INT:
 			dict1[key] = int(dict2[key])
+
+
+## Returns an [Array] with a recursive list of files in [param path] with absolute path.[br]
+## Instead of [method DirAccess.get_files_at], that only lists filenames and not absolute path.
+static func list_files_in_dir(path: String) -> Array:
+	var file_list: Array = []
+	var dir = DirAccess.open(path)
+	if dir:
+		dir.list_dir_begin()
+		var file_name = dir.get_next()
+		while file_name != "":
+			if dir.current_is_dir():
+				file_list.append_array(list_files_in_dir(path + "/" + file_name))
+			else:
+				file_list.append(path + "/" + file_name)
+			file_name = dir.get_next()
+	else:
+		push_error("Failed to access %s" % path)
+	return file_list
