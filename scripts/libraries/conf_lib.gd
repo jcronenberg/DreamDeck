@@ -1,7 +1,8 @@
+class_name ConfLib
 extends RefCounted
+## Helper class for [Config] and custom configs
 
-
-# Load config at path. If it doesn't exist this create's it
+## Load config at [param path]. If it doesn't exist a new config is created.
 static func load_config(path) -> Dictionary:
 	var config_file: FileAccess
 	var config_data := {}
@@ -26,8 +27,7 @@ static func load_config(path) -> Dictionary:
 	return config_data
 
 
-# Save new_data as json at path
-# returns true if successful and false if not
+## Save [param new_data] as json at [param path].
 static func save_config(path: String, new_data) -> bool:
 	var config_file: FileAccess
 
@@ -41,7 +41,7 @@ static func save_config(path: String, new_data) -> bool:
 	return true
 
 
-# Checks if a directory exists, if not it creates it recursively
+## Checks if a directory exists, if not it creates it recursively.
 static func ensure_dir_exists(path):
 	var dir := DirAccess.open(path)
 	if not dir:
@@ -49,8 +49,8 @@ static func ensure_dir_exists(path):
 			push_warning("Couldn't create " + path + " dir")
 
 
-# Merges dict2 into dict1, overwriting the values in dict1 recursively for Dictionaries
-# Sanitizes against user input, by only copying if dict1 already contains the key and ensuring matching type
+## Merges [param dict2] into [param dict1], overwriting the values in [param dict1] recursively for Dictionaries. [br]
+## Sanitizes against user input, by only copying if [param dict1] already contains the key and ensuring matching type.
 static func conf_merge(dict1: Dictionary, dict2: Dictionary):
 	for key in dict2.keys():
 		if not dict1.has(key):
