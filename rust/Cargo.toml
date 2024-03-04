@@ -9,7 +9,7 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-godot = { git = "https://github.com/godot-rust/gdext", branch = "master" }
+godot = { git = "https://github.com/godot-rust/gdext", branch = "master", features = ["experimental-threads"] }
 russh = { version = "0.40.2", features = ["openssl"] }
 russh-keys = { version = "0.40.1", features = ["openssl"] }
 async-trait = "0.1.73"
