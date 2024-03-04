@@ -19,7 +19,7 @@ extends Label
 ## When text is scrolled what string should be appended to separate it.
 @export var separator_string: String = ""
 
-## When a full scroll happend a cooldown can be set before another scroll happens
+## When a full scroll happened a cooldown can be set before another scroll happens
 @export var cooldown: float = 0.0
 
 # The text set by set_new_text.
