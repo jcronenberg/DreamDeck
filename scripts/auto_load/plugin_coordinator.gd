@@ -31,6 +31,8 @@ func _ready():
 
 
 func discover_plugins():
+	_runtime_load_plugins()
+
 	var discovered_plugins := list_plugins()
 	var new_activated_plugins: Dictionary = activated_plugins.get_config()
 	for plugin in discovered_plugins:
@@ -39,6 +41,22 @@ func discover_plugins():
 			new_activated_plugins[plugin] = false
 
 	activated_plugins.change_config(new_activated_plugins)
+
+
+func _runtime_load_plugins():
+	_migrate_plugin_dir()
+	conf_lib.ensure_dir_exists(conf_dir + "plugins")
+	var file_list = conf_lib.list_files_in_dir(conf_dir + "plugins")
+	for file in file_list:
+		if not ProjectSettings.load_resource_pack(file):
+			push_error("Failed to load plugin %s" % file)
+
+
+# FIXME remove in the future
+func _migrate_plugin_dir():
+	if not DirAccess.dir_exists_absolute(conf_dir + "plugin_configs"):
+		print("Detected old plugin config dir, migrating plugins -> plugin_configs")
+		DirAccess.rename_absolute(conf_dir + "plugins", conf_dir + "plugin_configs")
 
 
 func get_activated_plugins() -> Dictionary:
@@ -147,7 +165,7 @@ func list_plugins() -> Array:
 
 # Has trailing slash
 func plugin_path(plugin_name) -> String:
-	return conf_dir + "plugins/" + plugin_name + "/"
+	return conf_dir + "plugin_configs/" + plugin_name + "/"
 
 
 func get_plugin_loader(plugin_name: String):
