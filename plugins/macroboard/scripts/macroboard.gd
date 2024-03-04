@@ -3,10 +3,10 @@ extends Control
 ## A board that contains [ShellButton]s which can execute all kind of functions.
 
 const PLUGIN_NAME = "macroboard"
+
 ## Note setting this doesn't actually change the gap currently.
 ## This is just used for calculating the size the [ShellButton]s can have.
 ## It is supposed to match what is set in [b]MacroRow[/b] in [i]theme_override_constants/separation[/i].
-
 const BUTTON_GAP = 10
 
 const DEFAULT_CONFIG = {
