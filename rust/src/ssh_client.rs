@@ -97,8 +97,8 @@ impl client::Handler for Client {
         session: client::Session,
     ) -> Result<(Self, client::Session), Self::Error> {
         if ext == 1 && self.debug {
-            godot_print!(
-                "{}: SSH STDERR on {}:{}:{:?}: {}",
+            godot_print_rich!(
+                "[color=yellow]{}: SSH STDERR on {}:{}:{:?}: {}[color=white][/color]",
                 Local::now().format("%Y-%m-%dT%H:%M:%S"),
                 self.ip,
                 self.port,
@@ -116,8 +116,10 @@ impl client::Handler for Client {
         session: client::Session,
     ) -> Result<(Self, client::Session), Self::Error> {
         if self.debug {
-            godot_print!(
-                "{}: SSH on {}:{}:{:?}: exited with code {}",
+            let color = if exit_status != 0 { "red" } else { "white" };
+            godot_print_rich!(
+                "[color={}]{}: SSH on {}:{}:{:?}: exited with code {}[color=white][/color]",
+                color,
                 Local::now().format("%Y-%m-%dT%H:%M:%S"),
                 self.ip,
                 self.port,
