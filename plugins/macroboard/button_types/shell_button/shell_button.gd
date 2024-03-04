@@ -51,7 +51,7 @@ func apply_change():
 	# Platform specific
 	# If the os is windows we have to run commands like this:
 	# OS.execute("CMD.exe", ["/c", ...])
-	if OS.get_name() == "Windows" and not ssh_client.is_empty():
+	if OS.get_name() == "Windows" and ssh_client.is_empty():
 		command = "CMD.exe /c " + command
 
 
