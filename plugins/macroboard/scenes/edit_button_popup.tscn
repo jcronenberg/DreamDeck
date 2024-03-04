@@ -34,7 +34,7 @@ theme_override_constants/separation = 14
 [node name="Label" type="Label" parent="MarginContainer/Rows/CommandSplit"]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-tooltip_text = "Command to be exectued e.g. 'bin/binary --test example'"
+tooltip_text = "Command to be executed e.g. 'bin/binary --test example'"
 mouse_filter = 0
 text = "Command"
 
