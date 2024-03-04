@@ -47,7 +47,6 @@ pub struct GrabTouchDevice {
     device_max_abs_y: i32,
     parent: Option<Gd<Node>>,
 
-    #[base]
     base: Base<Node>,
 }
 

@@ -18,7 +18,6 @@ pub struct ProcessNode {
     pub args: PackedStringArray,
 
     raw_process: Option<RawProcess>,
-    #[base]
     base: Base<Node>,
 }
 

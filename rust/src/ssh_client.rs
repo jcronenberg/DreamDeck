@@ -139,7 +139,6 @@ pub struct SSHClient {
     user: Option<String>,
     ip: Option<String>,
     port: u16,
-    #[base]
     _base: Base<Node>,
 }
 
