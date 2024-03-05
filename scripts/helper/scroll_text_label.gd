@@ -26,7 +26,7 @@ extends Label
 # As text gets changed but often the original value is needed.
 var _original_text: String
 
-@onready var _tween
+var _tween
 
 
 ## Set text for the label.
@@ -61,6 +61,9 @@ func _init_scroll():
 		return
 
 	await get_tree().create_timer(cooldown).timeout
+	# If a newer instance of the recursive function exists, the older should exit
+	if _tween:
+		return
 
 	# append separator string and the duplicate text
 	set_text(_original_text + separator_string + _original_text)
