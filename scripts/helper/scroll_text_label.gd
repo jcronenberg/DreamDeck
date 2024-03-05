@@ -53,16 +53,16 @@ func set_new_text(value: String):
 # Determines if scrolling should occur.
 # If it should, initializes scrolling and repeats via recursive calling.
 func _init_scroll():
+	await get_tree().create_timer(cooldown).timeout
+	# If a newer instance of the recursive function exists, the older should exit
+	if _tween:
+		return
+
 	# Determining the size of the string feels so hacky lol
 	if get_theme_default_font().get_string_size(_original_text,
 			HORIZONTAL_ALIGNMENT_CENTER,
 			-1,
 			get_theme_default_font_size()).x <= get_parent_area_size().x:
-		return
-
-	await get_tree().create_timer(cooldown).timeout
-	# If a newer instance of the recursive function exists, the older should exit
-	if _tween:
 		return
 
 	# append separator string and the duplicate text
