@@ -54,6 +54,7 @@ func set_new_text(value: String):
 # If it should, initializes scrolling and repeats via recursive calling.
 func _init_scroll():
 	await get_tree().create_timer(cooldown).timeout
+	_reset_pos_and_size()
 	# If a newer instance of the recursive function exists, the older should exit
 	if _tween:
 		return
