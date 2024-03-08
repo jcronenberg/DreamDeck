@@ -259,8 +259,22 @@ func _calculate_button_size() -> Vector2:
 	return button_size
 
 
+# Handle button dragging
+func _can_drop_data(at_position, data):
+	if data.has("type") and data["type"] == "macroboard_button":
+		_handle_lifted_button(at_position, data["ref"])
+		return true
+
+	return false
+
+
+# Add button when dragging stops
+func _drop_data(_at_position, data):
+	data["ref"].visible = true
+	_place_button(data["ref"])
+
+
 ## Entry function for a button being dragged.[br]
-## The button is supposed to update it's position itself.[br]
 ## [param cursor_position]: The position of the cursor relative to this macroboard.[br]
 ## [param lifted_button]: [b]Instance[/b] of the button itself that is calling this function.
 func _handle_lifted_button(cursor_position: Vector2, lifted_button):
