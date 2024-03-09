@@ -12,6 +12,8 @@ config_version=5
 
 config/name="DreamDeck"
 run/main_scene="res://scenes/main.tscn"
+config/use_custom_user_dir=true
+config/custom_user_dir_name="dreamdeck"
 config/features=PackedStringArray("4.2")
 run/flush_stdout_on_print=true
 run/low_processor_mode=true

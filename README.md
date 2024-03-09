@@ -34,10 +34,10 @@ On linux you can now also install via `make install`
 
 ### Configuring
 In the main menu, plugins can be enabled and disabled. You can also enter edit mode, which let's you configure the Macroboard plugin.  
-The configuration files can be found in `~/.local/share/godot/app_userdata/DreamDeck` after the app was once launched.
+The configuration files can be found in `~/.local/share/dreamdeck` after the app was once launched.
 You can also specify a custom directory via a cli argument like this `--confdir=local_config` (Note that a `=` is mandatory because of the way godot handles cli arguments).  
 It is not recommended to edit the config files yourself.  
-Note: Icons for buttons need to be stored in the config directory at `~/.local/share/godot/app_userdata/DreamDeck/icons/` folder and the path in buttons is relative to this directory.
+Note: Icons for buttons need to be stored in the config directory at `~/.local/share/dreamdeck/icons/` folder and the path in buttons is relative to this directory.
 
 ## Plugins
 ### Connect to Spotify's API

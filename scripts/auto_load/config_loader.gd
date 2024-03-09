@@ -27,6 +27,10 @@ func _ready():
 
 		conf_dir = new_conf_dir
 
+	if OS.has_feature("editor"):
+		# So in editor we don't overwrite logs in normal config
+		ProjectSettings.set_setting("application/config/use_custom_user_dir", false)
+
 	config = load("res://scripts/global/config.gd").new(DEFAULT_CONFIG, conf_dir + "config.json")
 
 	# Now that path is set if it is changed we can load
