@@ -51,6 +51,12 @@ func construct_main_menu():
 	new_button.size.x = 400
 	edit_mode_button = new_button
 	$Menu/SettingSeparator.add_child(new_button)
+	# Quit button
+	new_button = execute_function_button.instantiate()
+	new_button.init("Quit", "", "quit")
+	new_button.size.x = 400
+	edit_mode_button = new_button
+	$Menu/SettingSeparator.add_child(new_button)
 
 	main_menu_constructed = true
 
@@ -97,3 +103,5 @@ func add_custom_button(button_scene):
 		_ready()
 
 	$Menu/SettingSeparator.add_child(button_scene)
+	# Quit and Edit Mode should be the last buttons
+	$Menu/SettingSeparator.move_child(button_scene, $Menu/SettingSeparator.get_child_count() - 3)
