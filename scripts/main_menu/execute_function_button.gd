@@ -11,4 +11,8 @@ func init(ini_name, ini_function_node_path, ini_function):
 
 
 func _on_ExecuteFunctionButton_pressed():
+	if function == "quit":
+		get_tree().quit()
+		return
+
 	get_node(function_node_path).call(function)
