@@ -243,8 +243,8 @@ func _edit_button_keys(button, button_dict: Dictionary):
 func _calculate_button_size() -> Vector2:
 	var macroboard_size = get_size()
 	var button_size := Vector2()
-	button_size.x = int((macroboard_size.x - max_buttons.x * BUTTON_GAP) / max_buttons.x)
-	button_size.y = int((macroboard_size.y - max_buttons.y * BUTTON_GAP) / max_buttons.y)
+	button_size.x = int(((macroboard_size.x - max_buttons.x * BUTTON_GAP) + BUTTON_GAP) / max_buttons.x)
+	button_size.y = int(((macroboard_size.y - max_buttons.y * BUTTON_GAP) + BUTTON_GAP) / max_buttons.y)
 
 	# Only return positive values
 	if button_size.abs() != button_size:
