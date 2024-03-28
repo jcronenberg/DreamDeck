@@ -1,0 +1,28 @@
+[gd_scene load_steps=2 format=3 uid="uid://c6rlr2xana6g4"]
+
+[ext_resource type="Script" path="res://src/layout/layout_edit_buttons.gd" id="1_pe5rt"]
+
+[node name="LayoutEditButtons" type="HBoxContainer"]
+custom_minimum_size = Vector2(80, 20)
+offset_right = 60.0
+offset_bottom = 20.0
+script = ExtResource("1_pe5rt")
+
+[node name="EditPanelButton" type="Button" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "E"
+
+[node name="AddPanelButton" type="Button" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "A"
+
+[node name="DeletePanelButton" type="Button" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "D"
+
+[connection signal="pressed" from="EditPanelButton" to="." method="_on_edit_panel_button_pressed"]
+[connection signal="pressed" from="AddPanelButton" to="." method="_on_add_panel_button_pressed"]
+[connection signal="pressed" from="DeletePanelButton" to="." method="_on_delete_panel_button_pressed"]

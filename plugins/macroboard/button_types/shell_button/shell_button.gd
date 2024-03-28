@@ -8,9 +8,7 @@ extends MacroButton
 @export var ssh_client: String = ""
 
 # Global nodes
-@onready var config_loader = get_node("/root/ConfigLoader")
-@onready var plugin_coordinator := get_node("/root/PluginCoordinator")
-@onready var ssh_controller
+var ssh_controller
 
 #func _init():
 # 	button_type = "shell_button"
@@ -57,7 +55,7 @@ func apply_change():
 
 func set_image():
 	if icon_path:
-		var complete_icon_path = config_loader.get_conf_dir() + "icons/" + icon_path
+		var complete_icon_path = ConfigLoader.get_conf_dir() + "icons/" + icon_path
 		var image = Image.load_from_file(complete_icon_path)
 		$Icon.texture = ImageTexture.create_from_image(image)
 
@@ -81,7 +79,7 @@ func show_name_with_icon():
 func _on_AppButton_pressed():
 	# If we are in edit mode we don't execute the command, but instead
 	# open the prompt to edit this button
-	if _global_signals.get_edit_state():
+	if GlobalSignals.get_edit_state():
 		var macroboard = get_parent()
 		while macroboard.name != "Macroboard":
 			macroboard = macroboard.get_parent()
@@ -101,7 +99,7 @@ func _on_AppButton_pressed():
 		# TODO remove when app and argument are combined into one
 		ssh_controller.exec_on_client(ssh_client, command)
 
-	elif config_loader.get_config()["Debug"]:
+	elif ConfigLoader.get_config()["Debug"]:
 		var process = ProcessNode.new()
 		process.connect("stdout", Callable(self, "_on_process_stdout"))
 		process.connect("stderr", Callable(self, "_on_process_stderr"))
@@ -123,7 +121,7 @@ func _on_AppButton_pressed():
 
 
 func _load_ssh_controller():
-	ssh_controller = plugin_coordinator.get_plugin_loader("ssh")
+	ssh_controller = PluginCoordinator.get_plugin_loader("ssh")
 	if ssh_controller:
 		ssh_controller = ssh_controller.get_controller()
 

@@ -1,4 +1,5 @@
-extends Control
+extends PluginSceneBase
+# TODO separate into a plugin scene and a plugin controller to make the plugin scene optional
 
 const PLUGIN_NAME = "touch"
 
@@ -15,19 +16,20 @@ var divide_y_by: float = 0.0
 
 # Nodes
 var grab_touch_devices_script
-@onready var device_options = get_node("ControlsSeparator/DeviceOptions")
-@onready var reconnect_button = get_node("ControlsSeparator/ReconnectButton")
-@onready var grab_check_button = get_node("ControlsSeparator/GrabCheckButton")
+@onready var device_options = get_node("CenterContainer/ControlsSeparator/DeviceOptions")
+@onready var reconnect_button = get_node("CenterContainer/ControlsSeparator/ReconnectButton")
+@onready var grab_check_button = get_node("CenterContainer/ControlsSeparator/GrabCheckButton")
 
 # Non fullscreen functions
 var window_area_min: Vector2 = Vector2(0, 0)
 var window_area_max: Vector2 = Vector2(0, 0)
 
 # Config
-@onready var plugin_coordinator := get_node("/root/PluginCoordinator")
-const DEFAULT_CONFIG = {
-	"Default Device": ""
-}
+const CONFIG_PROTO: Array[Dictionary] = [{"TYPE": "STRING", "KEY": "Default Device", "DEFAULT_VALUE": ""}]
+
+
+func _init():
+	_config_proto = CONFIG_PROTO
 
 
 func _ready():
@@ -41,8 +43,9 @@ func _ready():
 	# Set event_lmb to left mouse button
 	event_lmb.button_index = 1
 
-	# Handle default device from plugin config
-	load_config()
+	# Because this requires device_options and thus needs to be _ready() we call handle_config
+	# here manually
+	handle_config()
 
 	if OS.has_feature("editor"):
 		get_node("/root/Main/DebugCursor").visible = true
@@ -55,8 +58,11 @@ func _on_main_window_resized():
 		calculate_window_area()
 
 
-func load_config():
-	device_options.set_default_device(plugin_coordinator.get_plugin_config(PLUGIN_NAME, DEFAULT_CONFIG)["Default Device"])
+func handle_config():
+	var data = config.get_as_dict()
+
+	if device_options:
+		device_options.set_default_device(data["Default Device"])
 
 
 func calculate_window_area():

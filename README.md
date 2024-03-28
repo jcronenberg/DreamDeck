@@ -58,3 +58,5 @@ DreamDeck uses code from some Addons that awesome people made. Huge thanks to th
 * [GodotTPD](https://github.com/deep-entertainment/godottpd)
 * [GODOT YT-DLP](https://github.com/Nolkaloid/godot-yt-dlp)
 * [Better Processes](https://gitlab.com/greenfox/better-processes)
+* [Godot UUID](https://github.com/binogure-studio/godot-uuid)
+* [Dockable Container](https://github.com/gilzoide/godot-dockable-container)

@@ -1,14 +1,10 @@
-extends Control
+extends PluginSceneBase
 
 # Plugin
 const PLUGIN_NAME = "spotify_panel"
 
-const conf_lib := preload("res://scripts/libraries/conf_lib.gd")
-
-# Downloader
-const DOWNLOADER = preload("res://scripts/helper/downloader.gd")
 # DOWNLOADER instance
-var downloader: DOWNLOADER
+var downloader: Downloader
 
 # Plugin state
 
@@ -93,32 +89,34 @@ func config_stage3_text() -> String:
 var http_server
 
 # Nodes
-@onready var plugin_coordinator := get_node("/root/PluginCoordinator")
 @onready var http_get := get_node("HTTPGet")
 @onready var http_post := get_node("HTTPPost")
 @onready var http_get_devices := get_node("HTTPGetDevices")
 
 # Download cache
-@onready var cache_dir_path: String = plugin_coordinator.get_cache_dir(PLUGIN_NAME)
+@onready var cache_dir_path: String = PluginCoordinator.get_cache_dir(PLUGIN_NAME)
 
 # Configs
-@onready var conf_dir = plugin_coordinator.get_conf_dir(PLUGIN_NAME)
-@onready var credentials = load("res://scripts/global/config.gd").new({"refresh_token": "", "encoded_client": ""}, conf_dir + "credentials.json")
+var credentials: Config
 
-const DEFAULT_CONFIG = {
-	"Refresh Interval": 5.0
-}
+const CONFIG_PROTO: Array[Dictionary] = [{"TYPE": "FLOAT", "KEY": "Refresh Interval", "DEFAULT_VALUE": 5.0}]
+const CREDENTIALS_PROTO: Array[Dictionary] = [{"TYPE": "STRING", "KEY": "refresh_token", "DEFAULT_VALUE": ""},
+	{"TYPE": "STRING", "KEY": "encoded_client", "DEFAULT_VALUE": ""}]
+
+
+func _init():
+	_config_proto = CONFIG_PROTO
 
 
 func _ready():
+	super()
+
 	# Ensure prerequisites exist
-	conf_lib.ensure_dir_exists(cache_dir_path)
+	ConfLib.ensure_dir_exists(cache_dir_path)
 
 	# Load configs
-	load_plugin_config()
+	credentials = Config.new(CREDENTIALS_PROTO, conf_dir + "credentials.json")
 	load_credentials()
-	# Handle for settings changed event
-	get_node("/root/GlobalSignals").connect("plugin_configs_changed", Callable(self, "_on_plugin_configs_changed"))
 
 	# Clear cache dir to not fill the user dir with endless albumarts
 	clear_cache()
@@ -149,27 +147,19 @@ func _physics_process(delta):
 		devices_delta = 0.0
 
 
-func _on_plugin_configs_changed():
-	load_plugin_config()
+func handle_config():
+	var data = config.get_as_dict()
 
-
-# Load config from config_loader and apply the settings to local variables
-func load_plugin_config():
-	# Load global config
-	var config_data = plugin_coordinator.get_plugin_config(PLUGIN_NAME, DEFAULT_CONFIG)
-	if not config_data:
-		return
-
-	metadata_refresh = config_data["Refresh Interval"]
+	metadata_refresh = data["Refresh Interval"]
 	# We don't need to refresh devices as often
 	# Add + 0.1 to offset it a bit to metadata_refresh
-	devices_refresh = config_data["Refresh Interval"] * 3 + 0.1
+	devices_refresh = data["Refresh Interval"] * 3 + 0.1
 
 func load_credentials():
 	# Load plugin config
 	credentials.load_config()
-	var plugin_config = credentials.get_config()
-	if not plugin_config["refresh_token"]:
+	var plugin_config = credentials.get_as_dict()
+	if plugin_config["refresh_token"] == "":
 		create_config()
 	else:
 		refresh_token = plugin_config["refresh_token"]
@@ -344,7 +334,7 @@ func _on_get_request_completed(_result, response_code, _headers, body):
 		refresh_token = json_result["refresh_token"]
 		access_token = json_result["access_token"]
 		# Save new credentials
-		credentials.change_config({"refresh_token": refresh_token, "encoded_client": encoded_client})
+		credentials.apply_dict({"refresh_token": refresh_token, "encoded_client": encoded_client})
 		credentials.save()
 	# POST /api/token refresh_token result
 	elif json_result.has("access_token"):
@@ -447,7 +437,7 @@ func download_cover():
 	var filename = art_url.right(art_url.rfind("/") + 1) + ".jpeg"
 
 	# Set up downloader
-	downloader = DOWNLOADER.new()
+	downloader = Downloader.new()
 
 	# Download and wait for completion
 	downloader.download(art_url, cache_dir_path + filename)

@@ -3,9 +3,9 @@ extends PluginLoader
 
 func _init():
 	plugin_name = "ssh"
-	scene = "res://plugins/ssh/scripts/ssh_controller.gd"
+	scripts = {"SSHController": "res://plugins/ssh/scripts/ssh_controller.gd"}
 
 
 func get_controller():
-	if _loaded:
-		return _instance
+	if get_child_count() > 0:
+		return get_child(0)

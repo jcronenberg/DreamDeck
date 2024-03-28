@@ -1,5 +1,5 @@
 class_name Macroboard
-extends Control
+extends PluginSceneBase
 ## A board that contains [ShellButton]s which can execute all kind of functions.
 
 const PLUGIN_NAME = "macroboard"
@@ -9,16 +9,9 @@ const PLUGIN_NAME = "macroboard"
 ## It is supposed to match what is set in [b]MacroRow[/b] in [i]theme_override_constants/separation[/i].
 const BUTTON_GAP = 10
 
-const DEFAULT_CONFIG = {
-	"Size": {
-		"X": 8,
-		"Y": 5
-	},
-	"Square buttons": true
-}
-
-## [b]Instance[/b] from where global signals originate.
-@onready var global_signals: GlobalSignals = get_node("/root/GlobalSignals")
+const CONFIG_PROTO: Array[Dictionary] = [{"TYPE": "INT", "KEY": "Columns", "DEFAULT_VALUE": 8},
+	{"TYPE": "INT", "KEY": "Rows", "DEFAULT_VALUE": 5},
+	{"TYPE": "BOOL", "KEY": "Square buttons", "DEFAULT_VALUE": false}]
 
 ## [b]Resource[/b] for creating rows.
 var macro_row: PackedScene = load("res://plugins/macroboard/scenes/macro_row.tscn")
@@ -35,15 +28,9 @@ var max_buttons: Vector2
 ## Minimum size for all [ShellButton]s.
 var button_min_size: Vector2
 
-## [b]Instance[/b] of plugin coordinator.
-@onready var plugin_coordinator: PluginCoordinator = get_node("/root/PluginCoordinator")
-
-## Current config directory
-@onready var conf_dir: String = plugin_coordinator.get_conf_dir(PLUGIN_NAME)
-
 # Page0 hardcoded for now, because we don't support multiple pages yet.
-## [Config] that handles layout saving and loading.
-@onready var layout_config: Config = load("res://scripts/global/config.gd").new({"Page0": []}, conf_dir + "layout.json")
+## [SimpleConfig] that handles layout saving and loading.
+var layout_config: SimpleConfig
 
 ## Array that contains the [b]information[/b] of all buttons.
 ## FIXME currently not an array, but a dict with an Array at "Page0"
@@ -63,44 +50,16 @@ var tmp_button
 var tmp_button_position: int = -1
 
 
+func _init():
+	_config_proto = CONFIG_PROTO
+
+
 func _ready():
-	global_signals.connect("entered_edit_mode", Callable(self, "_on_entered_edit_mode"))
-	global_signals.connect("exited_edit_mode", Callable(self, "_on_exited_edit_mode"))
-	global_signals.connect("plugin_configs_changed", Callable(self, "_on_plugin_configs_changed"))
-	_load_config()
+	# Init layout_config
+	layout_config = SimpleConfig.new({"Page0": []}, conf_dir + "layout.json")
 	layout_config.load_config()
-	_migrate_buttons()
-	_on_size_changed()
-	_load_buttons()
 
-
-# TODO remove in the future
-# Migration from separate app and arguments to single command string
-func _migrate_buttons():
-	var layout_config_dict = layout_config.get_config()
-	var button_array = layout_config_dict["Page0"]
-	var button_counter: int = 0
-	var shown_warning: bool = false
-	for button in button_array:
-		if button and button.has("app"):
-			if not shown_warning:
-				push_warning("Old config detected, it will now automatically be migrated.")
-				shown_warning = true
-
-			var command: String = button["app"] + " "
-			for arg in button["arguments"]:
-				command += arg + " "
-
-			# Clean left over spaces, because the old saving often appended spaces
-			while not command.is_empty() and command[command.length() - 1] == " ":
-				command = command.erase(command.length() - 1)
-			button_array[button_counter]["command"] = command
-			button_array[button_counter].erase("app")
-			button_array[button_counter].erase("arguments")
-		button_counter += 1
-
-	layout_config.change_config({"Page0": button_array})
-	layout_config.save()
+	super()
 
 
 ## Function to be called when an existing button is pressed in edit mode.[br]
@@ -141,9 +100,6 @@ func delete_button(button):
 ## Saves [Macroboard] config via [member plugin_coordinator] and saves [member layout] via [member layout_config].[br]
 ## Note: This doesn't update [member layout] so before calling [member layout] must contain the latest changes.
 func _save():
-	plugin_coordinator.save_plugin_config(PLUGIN_NAME,
-		{"Button Settings": {"Height": button_min_size.x, "Width": button_min_size.y}})
-
 	layout["Page0"] = _merge_layout_array(layout["Page0"], _create_layout_array())
 	layout_config.change_config(layout)
 	layout_config.save()
@@ -186,7 +142,7 @@ func _load_buttons():
 
 	_place_buttons()
 	# Since all buttons get reset, we need to account for edit mode
-	if global_signals.get_edit_state():
+	if GlobalSignals.get_edit_state():
 		_toggle_add_buttons()
 
 
@@ -313,18 +269,15 @@ func _place_button(button):
 		tmp_button.free()
 	tmp_button_position = -1
 
+	# when button is from a different macroboard it's size may need to be adjusted
+	_resize_buttons()
+
 
 ## Applies [member button_min_size] to all buttons.
 func _resize_buttons():
 	for row in $RowSeparator.get_children():
 		for child in row.get_children():
 			child.set_custom_minimum_size(button_min_size)
-
-
-func _on_plugin_configs_changed():
-	_load_config()
-	_on_size_changed()
-	_load_buttons()
 
 
 func _on_size_changed():
@@ -337,16 +290,17 @@ func _on_size_changed():
 
 ## Load the saved [Macroboard] configuration from disk.[br]
 ## Note: Doesn't load [member layout].
-func _load_config():
-	var data = plugin_coordinator.get_plugin_config(PLUGIN_NAME, DEFAULT_CONFIG)
-
-	if not data or data == {}:
-		return
+func handle_config():
+	var data = config.get_as_dict()
 
 	# Load button settings
 	# button_min_size = Vector2(data["Button Settings"]["Height"], data["Button Settings"]["Width"])
-	max_buttons = Vector2(data["Size"]["X"], data["Size"]["Y"])
+	max_buttons = Vector2(data["Columns"], data["Rows"])
 	keep_buttons_square = data["Square buttons"]
+
+	# Apply settings
+	_on_size_changed()
+	_load_buttons()
 
 
 ## Create a layout array from all existing nodes inside this [Macroboard].

@@ -2,7 +2,7 @@ extends OptionButton
 
 var device_list: Array
 
-@onready var handler = get_node("../..")
+@onready var handler = get_node("../../..")
 
 
 func get_items():

@@ -1,0 +1,53 @@
+[gd_scene load_steps=3 format=3 uid="uid://caoqgnvp6nf64"]
+
+[ext_resource type="Script" path="res://src/layout/layout_popup.gd" id="1_72joe"]
+[ext_resource type="Script" path="res://src/layout/layout_popup_panel_editor.gd" id="2_hcrcp"]
+
+[node name="LayoutPopup" type="Window"]
+title = "Modify Layout"
+initial_position = 1
+size = Vector2i(800, 400)
+visible = false
+script = ExtResource("1_72joe")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 50
+
+[node name="Rows" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 40
+
+[node name="PanelEditor" type="Control" parent="MarginContainer/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+script = ExtResource("2_hcrcp")
+
+[node name="OptionButtons" type="HBoxContainer" parent="MarginContainer/Rows"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_constants/separation = 40
+
+[node name="ConfirmButton" type="Button" parent="MarginContainer/Rows/OptionButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Confirm"
+
+[node name="CancelButton" type="Button" parent="MarginContainer/Rows/OptionButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Cancel"
+
+[connection signal="close_requested" from="." to="." method="_on_cancel_button_pressed"]
+[connection signal="pressed" from="MarginContainer/Rows/OptionButtons/ConfirmButton" to="." method="_on_confirm_button_pressed"]
+[connection signal="pressed" from="MarginContainer/Rows/OptionButtons/CancelButton" to="." method="_on_cancel_button_pressed"]

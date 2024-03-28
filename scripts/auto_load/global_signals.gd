@@ -4,7 +4,6 @@ signal entered_edit_mode
 signal exited_edit_mode
 signal config_changed
 signal global_config_changed
-signal plugin_configs_changed
 signal activated_plugins_changed
 
 
@@ -40,11 +39,3 @@ func emit_config_changed():
 func emit_global_config_changed():
 	get_node("/root/Main/MainMenu").edit_settings()
 	emit_signal("global_config_changed")
-
-
-func emit_plugin_configs_changed():
-	emit_signal("plugin_configs_changed")
-
-
-func emit_activated_plugins_changed():
-	emit_signal("activated_plugins_changed")

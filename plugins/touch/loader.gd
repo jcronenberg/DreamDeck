@@ -1,20 +1,8 @@
 class_name TouchPluginLoader
 extends PluginLoader
 
+# TODO fix, currently doesn't work
 func _init():
 	plugin_name = "touch"
-	scene = "res://plugins/touch/scenes/touch.tscn"
-	parent = "/root/Main/VSeparator/MarginContainer/ControlsSeparator"
+	scenes = {"Touch": "res://plugins/touch/scenes/touch.tscn"}
 	allow_os = ["Linux"]
-
-
-func add_scene(resource):
-	super(resource)
-	var parent_instance = get_node(parent)
-	parent_instance.get_node("Placeholder").visible = false
-	parent_instance.move_child(_instance, 1)
-
-
-func plugin_unload():
-	get_node(parent + "/Placeholder").visible = true
-	super()

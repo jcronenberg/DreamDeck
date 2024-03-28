@@ -6,11 +6,12 @@ const DEFAULT_ACTIVATED_PLUGINS := {
 	"macroboard": true,
 }
 
-const conf_lib := preload("res://scripts/libraries/conf_lib.gd")
 var conf_dir: String = OS.get_user_data_dir() + "/"
-var activated_plugins
+var activated_plugins: SimpleConfig
 var plugin_loaders: Dictionary
-var plugin_configs: Dictionary
+
+@export var layout_setup_finished: bool = false:
+	set = set_layout_setup_finished
 
 
 func _ready():
@@ -21,7 +22,7 @@ func _ready():
 
 		conf_dir = new_conf_dir
 
-	activated_plugins = load("res://scripts/global/config.gd").new(DEFAULT_ACTIVATED_PLUGINS, conf_dir + FILENAME)
+	activated_plugins = SimpleConfig.new(DEFAULT_ACTIVATED_PLUGINS, conf_dir + FILENAME)
 
 	discover_plugins()
 
@@ -44,22 +45,24 @@ func discover_plugins():
 
 
 func _runtime_load_plugins():
-	_migrate_plugin_dir()
-	conf_lib.ensure_dir_exists(conf_dir + "plugins")
-	var file_list = conf_lib.list_files_in_dir(conf_dir + "plugins")
+	ConfLib.ensure_dir_exists(conf_dir + "plugins")
+	var file_list = ConfLib.list_files_in_dir(conf_dir + "plugins")
 	for file in file_list:
 		if not ProjectSettings.load_resource_pack(file):
 			push_error("Failed to load plugin %s" % file)
 
 
-# FIXME remove in the future
-func _migrate_plugin_dir():
-	if not DirAccess.dir_exists_absolute(conf_dir + "plugin_configs"):
-		print("Detected old plugin config dir, migrating plugins -> plugin_configs")
-		DirAccess.rename_absolute(conf_dir + "plugins", conf_dir + "plugin_configs")
+func get_activated_plugins() -> Array:
+	var ret_array: Array = []
+	var activated_plugins_array = activated_plugins.get_config()
+	for item in activated_plugins_array:
+		if activated_plugins_array[item]:
+			ret_array.push_back(item)
+
+	return ret_array
 
 
-func get_activated_plugins() -> Dictionary:
+func get_plugin_config() -> Dictionary:
 	return activated_plugins.get_config()
 
 
@@ -68,7 +71,7 @@ func change_activated_plugins(new_data):
 	activated_plugins.save()
 
 	handle_activated_plugins()
-	get_node("/root/GlobalSignals").emit_activated_plugins_changed()
+	get_node("/root/Main/Layout").load_scenes()
 
 
 func handle_activated_plugins():
@@ -86,63 +89,18 @@ func handle_activated_plugins():
 			plugin_loaders[plugin].free()
 			plugin_loaders.erase(plugin)
 
-			# If plugin had settings we need to free and delete them from menu
-			if plugin in plugin_configs.keys():
-				plugin_configs.erase(plugin)
-				get_node("/root/Main/MainMenu").edit_plugin_settings()
-
-
-func get_plugin_config(plugin_name: String, plugin_default_config):
-	conf_lib.ensure_dir_exists(plugin_path(plugin_name))
-
-	# We check that plugin_name has a plugin_loader because otherwise
-	# there can be race conditions when freeing a plugin.
-	# Because the plugin loader will likely call queue_free when unloading
-	# but because there may still be nodes connected to the plugin_configs_changed signal,
-	# they may attempt to try loading their config, which was already freed
-	# then this gets triggered and would allocate a new config for a plugin that is exiting
-	if not plugin_name in plugin_loaders.keys():
-		return
-
-	if not plugin_name in plugin_configs.keys():
-		plugin_configs[plugin_name] = load("res://scripts/global/config.gd").new(plugin_default_config, plugin_path(plugin_name) + "config.json")
-
-	plugin_configs[plugin_name].load_config()
-	get_node("/root/Main/MainMenu").edit_plugin_settings()
-	return plugin_configs[plugin_name].get_config()
-
-
-func get_all_plugin_configs() -> Dictionary:
-	var configs := {}
-	for plugin in plugin_configs.keys():
-		configs[plugin] = plugin_configs[plugin].get_config()
-
-	return configs
-
-
-func change_all_plugin_configs(new_data: Dictionary):
-	for plugin in new_data:
-		if not plugin in plugin_configs.keys():
-			continue
-		plugin_configs[plugin].change_config(new_data[plugin])
-		plugin_configs[plugin].save()
-
-	get_node("/root/GlobalSignals").emit_plugin_configs_changed()
-
-
-func save_plugin_config(plugin_name: String, new_data) -> bool:
-	conf_lib.ensure_dir_exists(plugin_path(plugin_name))
-	plugin_configs[plugin_name].change_config(new_data)
-	return plugin_configs[plugin_name].save()
-
 
 func get_conf_dir(plugin_name: String) -> String:
-	conf_lib.ensure_dir_exists(plugin_path(plugin_name))
+	# TODO should probably move this to a separate place
+	if plugin_name == "":
+		return conf_dir
+
+	ConfLib.ensure_dir_exists(plugin_path(plugin_name))
 	return plugin_path(plugin_name)
 
 
 func get_cache_dir(plugin_name: String):
-	conf_lib.ensure_dir_exists(conf_dir + "cache/" + plugin_name + "/")
+	ConfLib.ensure_dir_exists(conf_dir + "cache/" + plugin_name + "/")
 	return conf_dir + "cache/" + plugin_name + "/"
 
 
@@ -168,9 +126,89 @@ func plugin_path(plugin_name) -> String:
 	return conf_dir + "plugin_configs/" + plugin_name + "/"
 
 
-func get_plugin_loader(plugin_name: String):
+## Returns loader of [param plugin_name]. Null if plugin doesn't exist or isn't loaded.
+func get_plugin_loader(plugin_name: String) -> PluginLoader:
 	var activated_plugins_data: Dictionary = activated_plugins.get_config()
 	if not plugin_name in activated_plugins_data or not activated_plugins_data[plugin_name]:
 		return null
 
 	return plugin_loaders[plugin_name]
+
+
+func set_layout_setup_finished(value: bool):
+	layout_setup_finished = value
+	# TODO handle already loaded plugins
+
+
+# The loaded scenes
+# e.g. {"SpotifyPanel": {"SpotifyPanel1": scene, "SpotifyPanel2": scene}, "Macroboard": {"Macroboard": scene}}
+var _scenes: Dictionary
+
+## Should be called when a scene of a plugin has loaded and should now be added to the layout.[br]
+## [param scene_dict] should be: [code]{scene_name: resource}[/code][br]
+func add_scene(plugin_name: String, scene_dict: Dictionary):
+	# Store scene
+	if _scenes.has(plugin_name):
+		_scenes[plugin_name].merge(scene_dict, true)
+	else:
+		_scenes[plugin_name] = scene_dict
+
+	# If layout setup isn't yet finished, move to later (TODO)
+	if not layout_setup_finished:
+		return
+
+	# Add scene to layout
+	get_tree().call_group("layout_panels", "add_plugin_scene", plugin_name, scene_dict)
+
+
+## Loads a plugin scene.
+# Tries to use cached resources in [member _scenes].
+func load_plugin_scene(plugin_name: String, scene: String):
+	# If cached in _scenes directly use it
+	if _scenes.has(plugin_name) and _scenes[plugin_name].has(scene):
+		get_tree().call_group("layout_panels", "add_plugin_scene", plugin_name, {scene: _scenes[plugin_name][scene]})
+		# FIXME remove debug
+		print("used cached")
+		print(scene)
+		return
+
+	var loader = get_plugin_loader(plugin_name)
+	if not loader:
+		return
+
+	loader.plugin_load_scene(scene)
+
+
+## Should be called when a scene of a plugin is to be removed and should be unloaded from layout.[br]
+func remove_scene(plugin_name: String, scene: String):
+	if _scenes.has(plugin_name) and _scenes[plugin_name].erase(scene):
+		get_tree().call_group("layout_panels", "remove_plugin_scene", plugin_name, scene)
+
+
+func edit_panel(panel: LayoutPanel):
+	get_node("/root/Main/LayoutPopup").show_config(panel.get_plugin_instance().edit_config())
+
+
+func generate_plugins_enum() -> Dictionary:
+	var ret_dict: Dictionary = {}
+	var i: int = 0
+	for plugin in get_activated_plugins():
+		ret_dict[plugin] = i
+		i += 1
+
+	return ret_dict
+
+
+func generate_scene_enum(plugin: String) -> Dictionary:
+	var ret_dict: Dictionary = {}
+	var i: int = 0
+	for scene in get_plugin_loader(plugin).scenes:
+		ret_dict[scene] = i
+		i += 1
+
+	return ret_dict
+
+
+func add_panel(leaf: DockableLayoutPanel):
+	get_node("/root/Main/Layout").set_new_panel_leaf(leaf)
+	get_node("/root/Main/LayoutPopup").new_panel()

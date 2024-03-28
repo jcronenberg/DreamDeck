@@ -3,6 +3,7 @@
 # https://github.com/Nolkaloid/godot-yt-dlp
 
 extends RefCounted
+class_name Downloader
 
 signal download_completed
 signal download_failed
