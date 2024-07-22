@@ -1,8 +1,5 @@
-extends Node
-# TODO add a way to delete SSHClients
-# TODO add a generic controller type to extend from
-
 class_name SSHController
+extends PluginControllerBase
 
 const PLUGIN_NAME = "ssh"
 const EMPTY_CLIENT = {
@@ -19,10 +16,14 @@ var thread_pool: Array
 var main_menu_button = null
 var config_window_scene = null
 
-var conf_dir = PluginCoordinator.get_conf_dir(PLUGIN_NAME)
-var client_config: SimpleConfig = SimpleConfig.new({"ssh_clients": []}, conf_dir + "clients.json")
+@onready var client_config: SimpleConfig = SimpleConfig.new({"ssh_clients": []}, conf_dir + "clients.json")
 const execute_function_button = preload("res://scenes/main_menu/execute_function_button.tscn")
 const config_window = preload("res://plugins/ssh/scenes/ssh_config_window.tscn")
+
+
+func _init():
+	plugin_name = PLUGIN_NAME
+
 
 func _exit_tree():
 	if main_menu_button:
