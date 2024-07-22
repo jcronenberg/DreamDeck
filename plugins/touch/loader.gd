@@ -1,5 +1,5 @@
 class_name TouchPluginLoader
-extends PluginLoader
+extends PluginLoaderBase
 
 # TODO fix, currently doesn't work
 func _init():

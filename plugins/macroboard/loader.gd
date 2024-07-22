@@ -1,5 +1,5 @@
 class_name MacroboardPluginLoader
-extends PluginLoader
+extends PluginLoaderBase
 
 func _init():
 	plugin_name = "macroboard"

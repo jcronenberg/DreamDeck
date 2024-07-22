@@ -1,5 +1,5 @@
 class_name SpotifyPanelPluginLoader
-extends PluginLoader
+extends PluginLoaderBase
 
 func _init():
 	plugin_name = "spotify_panel"

@@ -1,5 +1,5 @@
 class_name SSHPluginLoader
-extends PluginLoader
+extends PluginLoaderBase
 
 func _init():
 	plugin_name = "ssh"

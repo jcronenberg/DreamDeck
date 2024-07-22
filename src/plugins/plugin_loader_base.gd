@@ -1,4 +1,4 @@
-class_name PluginLoader
+class_name PluginLoaderBase
 extends Node
 ## The default plugin loader.
 ##

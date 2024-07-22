@@ -127,7 +127,7 @@ func plugin_path(plugin_name) -> String:
 
 
 ## Returns loader of [param plugin_name]. Null if plugin doesn't exist or isn't loaded.
-func get_plugin_loader(plugin_name: String) -> PluginLoader:
+func get_plugin_loader(plugin_name: String) -> PluginLoaderBase:
 	var activated_plugins_data: Dictionary = activated_plugins.get_config()
 	if not plugin_name in activated_plugins_data or not activated_plugins_data[plugin_name]:
 		return null
