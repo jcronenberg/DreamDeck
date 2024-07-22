@@ -12,7 +12,6 @@ const DEFAULT_CONFIG := {
 	}
 
 var conf_dir: String = OS.get_user_data_dir() + "/"
-
 var config: SimpleConfig
 
 

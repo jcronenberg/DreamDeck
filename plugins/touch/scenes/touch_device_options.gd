@@ -1,12 +1,18 @@
+class_name TouchDeviceOptions
 extends OptionButton
 
+## List of all available valid touch devices.
 var device_list: Array
 
-@onready var handler = get_node("../../..")
+@onready var _controller: TouchController = PluginCoordinator.get_plugin_loader("touch").get_controller()
 
 
-func get_items():
-	device_list = handler.get_devices()
+func _ready():
+	set_default_device(_controller.get_default_device())
+
+
+func populate_devices():
+	device_list = _controller.get_devices()
 	self.clear()
 	self.add_item("Devices")
 	self.set_item_disabled(0, true)
@@ -17,9 +23,9 @@ func get_items():
 
 func set_default_device(default_device):
 	if not device_list:
-		get_items()
+		populate_devices()
 
-	if not default_device:
+	if default_device == "":
 		return
 
 	# This is a hack to enable setting the default_device even if it is not connected
@@ -29,9 +35,9 @@ func set_default_device(default_device):
 	else:
 		self.add_item(default_device, len(device_list))
 		self.select(len(device_list) + 2)
-	handler.call_deferred("set_device", default_device)
+	_controller.call_deferred("set_device", default_device)
 
 
 func _on_DeviceOptions_item_selected(index):
-	handler.call_deferred("set_device", device_list[index - 2])
-	$"../GrabCheckButton".button_pressed = true
+	_controller.call_deferred("set_device", device_list[index - 2])
+	%GrabCheckButton.button_pressed = true

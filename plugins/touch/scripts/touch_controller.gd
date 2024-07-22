@@ -1,4 +1,5 @@
-extends PluginSceneBase
+class_name TouchController
+extends PluginControllerBase
 # TODO separate into a plugin scene and a plugin controller to make the plugin scene optional
 
 const PLUGIN_NAME = "touch"
@@ -16,9 +17,6 @@ var divide_y_by: float = 0.0
 
 # Nodes
 var grab_touch_devices_script
-@onready var device_options = get_node("CenterContainer/ControlsSeparator/DeviceOptions")
-@onready var reconnect_button = get_node("CenterContainer/ControlsSeparator/ReconnectButton")
-@onready var grab_check_button = get_node("CenterContainer/ControlsSeparator/GrabCheckButton")
 
 # Non fullscreen functions
 var window_area_min: Vector2 = Vector2(0, 0)
@@ -27,16 +25,19 @@ var window_area_max: Vector2 = Vector2(0, 0)
 # Config
 const CONFIG_PROTO: Array[Dictionary] = [{"TYPE": "STRING", "KEY": "Default Device", "DEFAULT_VALUE": ""}]
 
+var _default_device: String
+
 
 func _init():
-	_config_proto = CONFIG_PROTO
+	config_proto = CONFIG_PROTO
+	plugin_name = PLUGIN_NAME
 
 
 func _ready():
 	grab_touch_devices_script = GrabTouchDevice.new()
 	add_child(grab_touch_devices_script)
 
-	get_tree().get_root().connect("size_changed", Callable(self, "_on_main_window_resized"))
+	get_tree().get_root().connect("size_changed", _on_main_window_resized)
 	# Need to trigger it once on ready to populate values on startup
 	_on_main_window_resized()
 
@@ -61,8 +62,11 @@ func _on_main_window_resized():
 func handle_config():
 	var data = config.get_as_dict()
 
-	if device_options:
-		device_options.set_default_device(data["Default Device"])
+	_default_device = data["Default Device"]
+
+
+func get_default_device() -> String:
+	return _default_device
 
 
 func calculate_window_area():
