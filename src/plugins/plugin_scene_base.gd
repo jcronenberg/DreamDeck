@@ -6,17 +6,20 @@ extends Control
 ## please do so in this directory.
 var conf_dir: String
 
-## The config for the scene. This will be used by default for [method get_config].
-## You can of course overwrite this behaviour.
+## The config for the scene.
+## Requires setting [member config_proto] to work by default.
 var config: Config
 
+## The [class Dictionary] from which [member config] gets created.[br]
+## Look at [class Config] for the info what this is supposed to look like.
+## Not setting this disables the default [member config] initialization.
 var config_proto: Array[Dictionary]
 
 # The unique id of the scene.
 var _scene_uuid: String
 
 
-## Called by plugin coordinator when being initialized
+## Called by PluginCoordinator when being initialized.
 func init(init_scene_id: String):
 	GlobalSignals.connect("entered_edit_mode", _on_entered_edit_mode)
 	GlobalSignals.connect("exited_edit_mode", _on_exited_edit_mode)
@@ -43,10 +46,8 @@ func _init_config():
 ## Overwrite this function and handle your data e.g.
 ## [codeblock]
 ## func handle_config():
-##    var data = config.get_config()
+##    var data = config.get_as_dict()
 ##
-##    if not data or data == {}:
-##        return
 ##    setting1 = data["setting1"]
 ##    setting2 = data["setting2"]
 ## [/codeblock]
@@ -64,7 +65,7 @@ func _on_exited_edit_mode():
 	pass
 
 
-## Called when user applied changes to the config
+## Called when user applied changes to the config.
 func _on_config_changed():
 	handle_config()
 
