@@ -11,7 +11,8 @@ const _layout_panel = preload("res://src/layout/layout_panel.tscn")
 
 func _ready():
 	super()
-	load_layout()
+	if not load_layout():
+		get_tree().quit(1)
 	# TODO is this necessary?
 	PluginCoordinator.set_layout_setup_finished(true)
 	GlobalSignals.connect("exited_edit_mode", _on_edit_mode_exited)
@@ -35,31 +36,54 @@ func serialize() -> Dictionary:
 	return {"Layout": layout.to_dict(), "Panels": panels}
 
 
-func load_layout():
-	var save_file = FileAccess.open(_conf_dir + SAVE_FILENAME, FileAccess.READ)
+func load_layout() -> bool:
+	var save_file: FileAccess = FileAccess.open(_conf_dir + SAVE_FILENAME, FileAccess.READ)
 	if not save_file:
-		push_error(FileAccess.get_open_error())
-		return
+		if FileAccess.get_open_error() == ERR_FILE_NOT_FOUND:
+			# We don't have any data, so we exit here even if successful
+			# And the first time launch helper does the rest
+			return ConfLib.save_config(_conf_dir + SAVE_FILENAME, {})
+		else:
+			push_error("Failed to open layout config file "
+				, _conf_dir, SAVE_FILENAME, ": ", str(FileAccess.get_open_error()))
+			return false
 
-	var json = JSON.new()
-	var error = json.parse(save_file.get_as_text())
-	if error != OK:
-		push_error("JSON Parse Error: ", json.get_error_message())
-		return
+	var json: JSON = JSON.new()
+	if json.parse(save_file.get_as_text()) != OK:
+		push_error("Failed to parse loadout: ", json.get_error_message())
+		return false
 
-	var config = json.data
+	var config: Dictionary = json.data
+
+	# Check for invalid layout
+	# We don't error out here because this can happen if e.g. the user
+	# quit before adding their first panel
+	if not config.has("Layout") or not config.has("Panels"):
+		return true
+
+	# If we are here we have a valid existing configuration, so we can
+	# delete the first time launch helper
+	get_node("/root/Main/FirstTimeLaunch").queue_free()
+
 	_layout.from_dict(config["Layout"])
 	for panel in config["Panels"]:
 		var panel_instance: LayoutPanel = _layout_panel.instantiate()
 		panel_instance.deserialize(panel)
 		add_child(panel_instance)
 
+	return true
+
 
 func add_panel(panel_config: Dictionary):
+	# When the first panel gets added here we can delete the first time launch helper
+	if get_node("/root/Main/FirstTimeLaunch"):
+		get_node("/root/Main/FirstTimeLaunch").queue_free()
+
 	var panel_instance: LayoutPanel = _layout_panel.instantiate()
 	add_child(panel_instance)
 	panel_instance.deserialize(panel_config)
-	layout.move_node_to_leaf(panel_instance, _new_panel_leaf, _new_panel_leaf.get_names().size())
+	if _new_panel_leaf:
+		layout.move_node_to_leaf(panel_instance, _new_panel_leaf, _new_panel_leaf.get_names().size())
 
 	save()
 
