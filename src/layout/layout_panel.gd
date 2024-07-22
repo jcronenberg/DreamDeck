@@ -1,14 +1,12 @@
 class_name LayoutPanel
 extends Control
 
-
 var plugin: String
 var scene: String
 var uuid: String
 var panel_name: String
 
-# TODO type to PluginSceneBase?
-var _plugin_instance
+var _plugin_instance: PluginSceneBase
 
 
 func _ready():
@@ -32,6 +30,13 @@ func add_plugin_scene(plugin_name: String, scene_dict: Dictionary):
 			custom_minimum_size.x = 200
 
 
+## If [param plugin_name] and [param scene_name] match with
+## [member plugin] and [member scene] respectively the current scene is freed.
+func remove_plugin_scene(plugin_name: String, scene_name: String):
+	if plugin == plugin_name and scene == scene_name and _plugin_instance:
+		_plugin_instance.queue_free()
+
+
 func serialize() -> Dictionary:
 	return {"Plugin": plugin, "Scene": scene, "UUID": uuid, "Panel Name": panel_name}
 
@@ -43,7 +48,16 @@ func deserialize(config: Dictionary):
 	plugin = config["Plugin"]
 	panel_name = config["Panel Name"]
 
-	PluginCoordinator.load_plugin_scene(plugin, scene)
+	load_scene()
+
+
+## If the panel doesn't currently have it's scene instantiated this function
+## instructs `PluginCoordinator` to load the scene, which triggers [method add_plugin_scene].
+## This can also be used at any time if the panel doesn't have it's scene, because
+## of e.g. a not activated plugin.
+func load_scene():
+	if not _plugin_instance:
+		PluginCoordinator.load_plugin_scene(plugin, scene)
 
 
 func get_plugin_instance():

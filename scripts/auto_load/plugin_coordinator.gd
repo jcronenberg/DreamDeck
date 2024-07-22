@@ -71,7 +71,7 @@ func change_activated_plugins(new_data):
 	activated_plugins.save()
 
 	handle_activated_plugins()
-	get_node("/root/Main/Layout").load_scenes()
+	get_tree().call_group("layout_panels", "load_scene")
 
 
 func handle_activated_plugins():
