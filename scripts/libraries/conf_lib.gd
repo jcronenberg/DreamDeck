@@ -28,13 +28,13 @@ static func load_config(path) -> Dictionary:
 
 
 ## Save [param new_data] as json at [param path].
-static func save_config(path: String, new_data) -> bool:
+static func save_config(path: String, new_data: Variant) -> bool:
 	var config_file: FileAccess
 
 	# Save new_data
 	config_file = FileAccess.open(path, FileAccess.WRITE)
 	if not config_file:
-		push_error(FileAccess.get_open_error())
+		push_error("Failed to open file ", path, ": " , str(FileAccess.get_open_error()))
 		return false
 	config_file.store_string(JSON.stringify(new_data, "\t"))
 
