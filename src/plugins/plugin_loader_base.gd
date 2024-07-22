@@ -47,7 +47,8 @@ extends Node
 # var _loaded := false
 ## Instance of [member scene] when loaded.
 # var _instance = null
-var _load_queue: Array
+var _load_queue: Array = []
+var _controllers: Array = []
 
 
 ## Continuous checking if a scene in [member _load_queue] is loaded.
@@ -92,11 +93,25 @@ func plugin_unload():
 	for scene in scenes:
 		PluginCoordinator.call_deferred("remove_scene", plugin_name, scene)
 
+	for controller in _controllers:
+		controller.queue_free()
+
 
 ## Function called when asynchronous loading of [param scene] is finished.
 func add_scene(scene: String, resource):
 	if resource is GDScript:
-		add_child(resource.new())
+		var new_controller: PluginControllerBase = resource.new()
+		_controllers.append(new_controller)
+		new_controller.init()
+		add_child(new_controller)
 	elif resource is PackedScene:
 		var scene_name = scenes.find_key(scene)
 		PluginCoordinator.call_deferred("add_scene", plugin_name, {scene_name: resource})
+
+
+## If the plugin has a controller this function can be used to get a reference to it.
+func get_controller(index: int = 0) -> PluginControllerBase:
+	if _controllers.size() > index:
+		return _controllers[index]
+
+	return null
