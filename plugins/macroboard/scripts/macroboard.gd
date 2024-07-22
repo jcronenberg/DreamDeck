@@ -51,7 +51,7 @@ var tmp_button_position: int = -1
 
 
 func _init():
-	_config_proto = CONFIG_PROTO
+	config_proto = CONFIG_PROTO
 
 
 func _ready():

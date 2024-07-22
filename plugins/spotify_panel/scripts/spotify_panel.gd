@@ -105,7 +105,7 @@ const CREDENTIALS_PROTO: Array[Dictionary] = [{"TYPE": "STRING", "KEY": "refresh
 
 
 func _init():
-	_config_proto = CONFIG_PROTO
+	config_proto = CONFIG_PROTO
 
 
 func _ready():
