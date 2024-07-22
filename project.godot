@@ -54,7 +54,7 @@ run/main_run_args="--confdir=local_config"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/ReorderableContainer/plugin.cfg", "res://addons/dockable_container/plugin.cfg", "res://addons/tnowe_extra_controls/plugin.cfg")
+enabled=PackedStringArray("res://addons/dockable_container/plugin.cfg")
 
 [filesystem]
 
