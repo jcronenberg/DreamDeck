@@ -167,9 +167,6 @@ func load_plugin_scene(plugin_name: String, scene: String):
 	# If cached in _scenes directly use it
 	if _scenes.has(plugin_name) and _scenes[plugin_name].has(scene):
 		get_tree().call_group("layout_panels", "add_plugin_scene", plugin_name, {scene: _scenes[plugin_name][scene]})
-		# FIXME remove debug
-		print("used cached")
-		print(scene)
 		return
 
 	var loader = get_plugin_loader(plugin_name)
