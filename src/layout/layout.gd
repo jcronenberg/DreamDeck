@@ -81,7 +81,7 @@ func load_layout() -> bool:
 
 func add_panel(panel_config: Dictionary):
 	# When the first panel gets added here we can delete the first time launch helper
-	if get_node("/root/Main/FirstTimeLaunch"):
+	if get_node_or_null("/root/Main/FirstTimeLaunch"):
 		get_node("/root/Main/FirstTimeLaunch").queue_free()
 
 	var panel_instance: LayoutPanel = _layout_panel.instantiate()
