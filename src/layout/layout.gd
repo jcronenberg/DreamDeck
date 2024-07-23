@@ -11,10 +11,15 @@ const _layout_panel = preload("res://src/layout/layout_panel.tscn")
 
 func _ready():
 	super()
+
 	if not load_layout():
 		get_tree().quit(1)
+
+	set_split_handles_visibility(false)
+
 	# TODO is this necessary?
 	PluginCoordinator.set_layout_setup_finished(true)
+
 	GlobalSignals.connect("exited_edit_mode", _on_edit_mode_exited)
 	GlobalSignals.connect("entered_edit_mode", _on_edit_mode_entered)
 
@@ -92,10 +97,16 @@ func set_new_panel_leaf(leaf: DockableLayoutPanel):
 	_new_panel_leaf = leaf
 
 
+func set_split_handles_visibility(visibility: bool):
+	_split_container.visible = visibility
+
+
 func _on_edit_mode_entered():
 	self.tabs_visible = true
+	set_split_handles_visibility(true)
 
 
 func _on_edit_mode_exited():
 	self.tabs_visible = false
+	set_split_handles_visibility(false)
 	save()
