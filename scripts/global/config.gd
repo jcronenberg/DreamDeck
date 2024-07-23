@@ -29,7 +29,9 @@ func load_config():
 
 	ConfLib.ensure_dir_exists(path)
 	# ConfLib.conf_merge(config, ConfLib.load_config(path + filename).duplicate(true))
-	var loaded_config = ConfLib.load_config(path + filename)
+	var loaded_config: Variant = ConfLib.load_config(path + filename)
+	if not loaded_config:
+		loaded_config = {}
 	apply_dict(loaded_config)
 
 

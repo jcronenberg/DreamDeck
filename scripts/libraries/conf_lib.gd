@@ -3,9 +3,9 @@ class_name ConfLib
 ## Helper class for [Config] and custom configs
 
 ## Load config at [param path]. If it doesn't exist a new config is created.
-static func load_config(path) -> Dictionary:
+static func load_config(path: String) -> Variant:
 	var config_file: FileAccess
-	var config_data := {}
+	var config_data: Variant = null
 
 	if FileAccess.file_exists(path):
 		config_file = FileAccess.open(path, FileAccess.READ)
@@ -19,10 +19,8 @@ static func load_config(path) -> Dictionary:
 			return {}
 		config_data = json.data
 	else:
-		config_data = {}
 		if not save_config(path, config_data):
 			push_error("Couldn't create config at " + path)
-			return {}
 
 	return config_data
 
@@ -42,7 +40,7 @@ static func save_config(path: String, new_data: Variant) -> bool:
 
 
 ## Checks if a directory exists, if not it creates it recursively.
-static func ensure_dir_exists(path):
+static func ensure_dir_exists(path: String):
 	var dir := DirAccess.open(path)
 	if not dir:
 		if DirAccess.make_dir_recursive_absolute(path) != OK:

@@ -7,7 +7,7 @@ var path: String
 var filename: String
 
 
-func _init(initial_config, initial_path):
+func _init(initial_config: Dictionary, initial_path: String):
 	config = initial_config.duplicate(true)
 	path = initial_path.get_base_dir() + "/"
 	filename = initial_path.trim_prefix(path)
@@ -15,7 +15,10 @@ func _init(initial_config, initial_path):
 
 func load_config():
 	ConfLib.ensure_dir_exists(path)
-	ConfLib.conf_merge(config, ConfLib.load_config(path + filename).duplicate(true))
+	var config_data: Variant = ConfLib.load_config(path + filename)
+	if not config_data:
+		config_data = {}
+	ConfLib.conf_merge(config, config_data.duplicate(true))
 
 
 func save() -> bool:
