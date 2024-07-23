@@ -19,7 +19,7 @@ var config_proto: Array[Dictionary]
 var _scene_uuid: String
 
 
-## Called by PluginCoordinator when being initialized.
+## Called by the plugin loader when being initialized.
 func init(init_scene_id: String):
 	GlobalSignals.connect("entered_edit_mode", _on_entered_edit_mode)
 	GlobalSignals.connect("exited_edit_mode", _on_exited_edit_mode)

@@ -28,14 +28,6 @@ var max_buttons: Vector2
 ## Minimum size for all [ShellButton]s.
 var button_min_size: Vector2
 
-# Page0 hardcoded for now, because we don't support multiple pages yet.
-## [SimpleConfig] that handles layout saving and loading.
-var layout_config: SimpleConfig
-
-## Array that contains the [b]information[/b] of all buttons.
-## FIXME currently not an array, but a dict with an Array at "Page0"
-var layout: Dictionary
-
 ## Array that contains the [b]instances[/b] of all buttons.
 var layout_instances: Array = []
 
@@ -49,17 +41,28 @@ var tmp_button
 ## Is -1 when [member tmp_button] doesn't exist.
 var tmp_button_position: int = -1
 
+## Path where layout is stored.
+@onready var layout_path: String = conf_dir + "layout.json"
+
 
 func _init():
 	config_proto = CONFIG_PROTO
 
 
 func _ready():
-	# Init layout_config
-	layout_config = SimpleConfig.new({"Page0": []}, conf_dir + "layout.json")
-	layout_config.load_config()
-
 	super()
+
+
+func load_layout() -> Array:
+	var layout_config: Variant = ConfLib.load_config(layout_path)
+	if not layout_config:
+		layout_config = []
+	elif typeof(layout_config) != TYPE_ARRAY:
+		push_error(layout_path, " is not the correct type.")
+		queue_free()
+		return []
+
+	return layout_config as Array
 
 
 ## Function to be called when an existing button is pressed in edit mode.[br]
@@ -84,7 +87,7 @@ func add_or_edit_button(button, button_dict: Dictionary):
 	_edit_button_keys(button, button_dict)
 	button.apply_change()
 
-	layout["Page0"] = _merge_layout_array(layout["Page0"], _create_layout_array())
+	_save()
 
 
 ## "Deletes" [param button] [b]instance[/b] by replacing it with a [NoButton] [b]instance[/b].
@@ -96,13 +99,13 @@ func delete_button(button):
 	# Because we are guaranteed currently in edit mode
 	new_no_button.toggle_add_button()
 
+	_save()
+
 
 ## Saves [Macroboard] config via [member plugin_coordinator] and saves [member layout] via [member layout_config].[br]
 ## Note: This doesn't update [member layout] so before calling [member layout] must contain the latest changes.
 func _save():
-	layout["Page0"] = _merge_layout_array(layout["Page0"], _create_layout_array())
-	layout_config.change_config(layout)
-	layout_config.save()
+	ConfLib.save_config(layout_path, _create_layout_array())
 
 
 ## Frees all current rows.
@@ -114,11 +117,8 @@ func _free_rows():
 # TODO there is some performance optimization here where we could compare what is different
 #      compared to just always creating from scratch.
 ## Loads [member layout] from [member layout_config] and then creates all [ShellButton]s accordingly.
-func _load_buttons():
+func _create_buttons(layout: Array):
 	_free_rows()
-
-	if not layout:
-		layout = layout_config.get_config()
 
 	layout_instances = []
 	var button_iterator := 0
@@ -127,9 +127,9 @@ func _load_buttons():
 			var new_button
 
 			# Only if an entry exists at this position we add it
-			if layout["Page0"].size() > button_iterator and layout["Page0"][button_iterator]:
+			if layout.size() > button_iterator and layout[button_iterator]:
 				new_button = shell_button.instantiate()
-				_edit_button_keys(new_button, layout["Page0"][button_iterator])
+				_edit_button_keys(new_button, layout[button_iterator])
 			else:
 				new_button = no_button.instantiate()
 
@@ -175,7 +175,7 @@ func _replace_button(original_button, new_button):
 	row.move_child(new_button, pos)
 
 	layout_instances[layout_instances.find(original_button)] = new_button
-	original_button.queue_free()
+	original_button.free()
 
 
 ## Toggles all [NoButton]s.
@@ -272,6 +272,8 @@ func _place_button(button):
 	# when button is from a different macroboard it's size may need to be adjusted
 	_resize_buttons()
 
+	_save()
+
 
 ## Applies [member button_min_size] to all buttons.
 func _resize_buttons():
@@ -289,7 +291,6 @@ func _on_size_changed():
 
 
 ## Load the saved [Macroboard] configuration from disk.[br]
-## Note: Doesn't load [member layout].
 func handle_config():
 	var data = config.get_as_dict()
 
@@ -300,7 +301,7 @@ func handle_config():
 
 	# Apply settings
 	_on_size_changed()
-	_load_buttons()
+	_create_buttons(load_layout())
 
 
 ## Create a layout array from all existing nodes inside this [Macroboard].

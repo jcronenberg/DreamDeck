@@ -1,24 +1,10 @@
-[gd_scene load_steps=10 format=3 uid="uid://boyndkd14akrp"]
+[gd_scene load_steps=6 format=3 uid="uid://boyndkd14akrp"]
 
 [ext_resource type="Theme" uid="uid://duea6v8sw5cfx" path="res://themes/main_theme.tres" id="1_3kin1"]
 [ext_resource type="Script" path="res://src/layout/layout.gd" id="2_m1k14"]
-[ext_resource type="Script" path="res://addons/dockable_container/layout_panel.gd" id="3_368hc"]
 [ext_resource type="PackedScene" uid="uid://cmqfrusykgypy" path="res://scenes/main_menu/main_menu.tscn" id="3_exqbc"]
 [ext_resource type="PackedScene" uid="uid://caoqgnvp6nf64" path="res://src/layout/layout_popup.tscn" id="3_ie8rr"]
-[ext_resource type="Script" path="res://addons/dockable_container/layout.gd" id="4_bewy3"]
 [ext_resource type="PackedScene" uid="uid://bi32uf4eygli6" path="res://src/layout/first_time_launch.tscn" id="6_ekbmi"]
-
-[sub_resource type="Resource" id="Resource_bybmn"]
-resource_name = "Tabs"
-script = ExtResource("3_368hc")
-names = PackedStringArray()
-current_tab = -1
-
-[sub_resource type="Resource" id="Resource_178gm"]
-resource_name = "Layout"
-script = ExtResource("4_bewy3")
-root = SubResource("Resource_bybmn")
-hidden_tabs = {}
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -38,8 +24,8 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("2_m1k14")
 tab_alignment = 0
+use_hidden_tabs_for_min_size = true
 tabs_visible = false
-layout = SubResource("Resource_178gm")
 
 [node name="LayoutPopup" parent="." instance=ExtResource("3_ie8rr")]
 
