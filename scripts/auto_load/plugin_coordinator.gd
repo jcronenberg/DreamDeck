@@ -186,7 +186,7 @@ func remove_scene(plugin_name: String, scene: String):
 
 
 func edit_panel(panel: LayoutPanel):
-	get_node("/root/Main/LayoutPopup").show_config(panel.get_plugin_instance().edit_config())
+	get_node("/root/Main/LayoutPopup").show_config(panel.get_plugin_instance().edit_config(), panel.panel_name)
 
 
 func generate_plugins_enum() -> Dictionary:
