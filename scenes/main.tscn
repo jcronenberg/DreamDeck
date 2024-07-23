@@ -32,13 +32,6 @@ tabs_visible = false
 [node name="FirstTimeLaunch" parent="." instance=ExtResource("6_ekbmi")]
 layout_mode = 1
 
-[node name="InputCenterContainer" type="CenterContainer" parent="."]
-editor_description = "This is where SpotifyPanel is showing it's popup. This was necessary in godot3 to center the popup. FIXME delete when SpotifyPanel's popup has been reworked."
-layout_mode = 0
-anchor_right = 1.0
-anchor_bottom = 1.0
-mouse_filter = 2
-
 [node name="MainMenu" parent="." instance=ExtResource("3_exqbc")]
 layout_mode = 1
 

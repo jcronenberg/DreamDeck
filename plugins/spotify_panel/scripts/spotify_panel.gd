@@ -170,7 +170,7 @@ func load_credentials():
 # Creates the first dialog and connects the functions
 func create_config():
 	input_scene = load("res://scenes/user_input_popup.tscn").instantiate()
-	get_node("/root/Main/InputCenterContainer").add_child(input_scene)
+	get_node("/root/Main").add_child(input_scene)
 	input_scene.create_dialog(config_stage1_text, "Client ID")
 	input_scene.connect("apply_text", Callable(self, "_on_text_config"))
 	input_scene.connect("canceled", Callable(self, "_on_config_cancel"))
@@ -200,8 +200,8 @@ func _on_text_config(text):
 		client_secret = text
 		encoded_client = Marshalls.utf8_to_base64(client_id + ":" + client_secret)
 		input_scene.create_dialog(config_stage3_text(), \
-								  "Press confirm once you gave authorization in the browser")
-		input_stage = 2
+								  "Continue in browser")
+		input_stage = -1
 
 		http_server = HttpServer.new()
 		http_server.set("bind_address", "127.0.0.1")
@@ -209,19 +209,16 @@ func _on_text_config(text):
 		http_server.register_router("/callback", self)
 		add_child(http_server)
 		http_server.start()
-	elif input_stage == 2:
-		input_scene.hide_popup()
-		input_scene.disconnect("apply_text", Callable(self, "_on_text_config"))
-		input_scene.disconnect("canceled", Callable(self, "_on_config_cancel"))
 
 
 func handle_get(request, response):
 	if request.query.has("code"):
 		authorization_code = request.query["code"]
-		response.send(200, "You can now close this tab and continue in DreamDeck (press confirm)")
+		response.send(200, "You can now close this tab and continue in DreamDeck")
 		request_authorization()
 		config_completed = true
 		http_server.queue_free()
+		input_scene.queue_free()
 	else:
 		response.send(200, "Something went wrong, failed to extract authorization code from request url")
 
