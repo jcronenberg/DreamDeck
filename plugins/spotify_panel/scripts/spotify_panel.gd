@@ -123,9 +123,9 @@ func _ready():
 
 	# Setup for requests
 # warning-ignore:return_value_discarded
-	http_get.connect("request_completed", Callable(self, "_on_get_request_completed"))
+	http_get.connect("request_completed", _on_get_request_completed)
 # warning-ignore:return_value_discarded
-	http_get_devices.connect("request_completed", Callable(self, "_on_get_request_completed"))
+	http_get_devices.connect("request_completed", _on_get_request_completed)
 
 	# Initial state request, because otherwise it would take a pretty long time on first load
 	# This will likely first just establish access_token, but makes startup still a lot faster
@@ -172,8 +172,8 @@ func create_config():
 	input_scene = load("res://scenes/user_input_popup.tscn").instantiate()
 	get_node("/root/Main").add_child(input_scene)
 	input_scene.create_dialog(config_stage1_text, "Client ID")
-	input_scene.connect("apply_text", Callable(self, "_on_text_config"))
-	input_scene.connect("canceled", Callable(self, "_on_config_cancel"))
+	input_scene.connect("apply_text", _on_text_config)
+	input_scene.connect("canceled", _on_config_cancel)
 
 
 # If the user prematurely cancels we delete the object
@@ -251,7 +251,7 @@ func generate_device_list(data):
 		device_list.append(d)
 
 	# Sort device_list as otherwise the order changes constantly
-	device_list.sort_custom(Callable(DeviceSorter, "sort_by_name"))
+	device_list.sort_custom(DeviceSorter.sort_by_name)
 
 	# Set DeviceOptions properties
 	# Clear

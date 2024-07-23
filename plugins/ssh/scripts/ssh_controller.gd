@@ -137,5 +137,5 @@ func exec_on_client(client_name: String, cmd: String):
 		return
 
 	var thread := Thread.new()
-	thread.start(Callable(ssh_client, "exec").bind(cmd))
+	thread.start(ssh_client.exec.bind(cmd))
 	thread_pool.append(thread)

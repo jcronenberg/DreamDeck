@@ -101,9 +101,9 @@ func _on_AppButton_pressed():
 
 	elif ConfigLoader.get_config()["Debug"]:
 		var process = ProcessNode.new()
-		process.connect("stdout", Callable(self, "_on_process_stdout"))
-		process.connect("stderr", Callable(self, "_on_process_stderr"))
-		process.connect("finished", Callable(self, "_on_process_finished"))
+		process.connect("stdout", _on_process_stdout)
+		process.connect("stderr", _on_process_stderr)
+		process.connect("finished", _on_process_finished)
 		process.set("cmd", _text_to_args(command)[0])
 		var args = _text_to_args(command)
 		args.remove_at(0)

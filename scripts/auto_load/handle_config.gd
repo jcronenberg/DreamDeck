@@ -3,8 +3,8 @@ extends Node
 
 func _ready():
 	handle_config()
-	GlobalSignals.connect("global_config_changed", Callable(self, "_on_global_config_changed"))
-	get_window().connect("size_changed", Callable(self, "_on_size_changed"))
+	GlobalSignals.connect("global_config_changed", _on_global_config_changed)
+	get_window().connect("size_changed", _on_size_changed)
 
 
 func _on_global_config_changed():
