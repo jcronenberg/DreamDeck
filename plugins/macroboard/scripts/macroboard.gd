@@ -2,7 +2,7 @@ class_name Macroboard
 extends PluginSceneBase
 ## A board that contains [ShellButton]s which can execute all kind of functions.
 
-const PLUGIN_NAME = "macroboard"
+const PLUGIN_NAME = "Macroboard"
 
 ## Note setting this doesn't actually change the gap currently.
 ## This is just used for calculating the size the [ShellButton]s can have.

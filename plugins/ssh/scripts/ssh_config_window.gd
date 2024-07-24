@@ -2,7 +2,7 @@ extends Window
 
 @onready var client_config_stage = $MarginContainer/SSHClientConfigStage
 @onready var client_list_stage = $MarginContainer/SSHClientListStage
-var ssh_controller = PluginCoordinator.get_plugin_loader("ssh").get_controller()
+var ssh_controller = PluginCoordinator.get_plugin_loader("SSH").get_controller("SSHController")
 
 
 func _ready():

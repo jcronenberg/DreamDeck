@@ -1,7 +1,7 @@
 extends PluginSceneBase
 
 # Plugin
-const PLUGIN_NAME = "spotify_panel"
+const PLUGIN_NAME = "Spotify Panel"
 
 # DOWNLOADER instance
 var downloader: Downloader

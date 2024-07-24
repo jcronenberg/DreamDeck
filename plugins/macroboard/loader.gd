@@ -2,5 +2,5 @@ class_name MacroboardPluginLoader
 extends PluginLoaderBase
 
 func _init():
-	plugin_name = "macroboard"
+	plugin_name = "Macroboard"
 	scenes = {"Macroboard": "res://plugins/macroboard/scenes/macroboard.tscn"}

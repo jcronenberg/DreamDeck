@@ -1,7 +1,7 @@
 class_name Touch
 extends PluginSceneBase
 
-@onready var _controller: TouchController = PluginCoordinator.get_plugin_loader("touch").get_controller()
+@onready var _controller: TouchController = PluginCoordinator.get_plugin_loader("Touch").get_controller("TouchController")
 
 
 func _on_reconnect_button_pressed():

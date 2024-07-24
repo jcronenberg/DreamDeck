@@ -1,7 +1,7 @@
 class_name SSHController
 extends PluginControllerBase
 
-const PLUGIN_NAME = "ssh"
+const PLUGIN_NAME = "SSH"
 const EMPTY_CLIENT = {
 	"name": "",
 	"ip": "",

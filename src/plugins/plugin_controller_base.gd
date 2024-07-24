@@ -20,7 +20,7 @@ var plugin_name: String
 
 ## Called by PluginCoordinator when being initialized.
 func init():
-	conf_dir = PluginCoordinator.get_conf_dir(plugin_name)
+	conf_dir = PluginCoordinator.get_conf_dir(plugin_name.to_snake_case())
 	_init_config()
 
 

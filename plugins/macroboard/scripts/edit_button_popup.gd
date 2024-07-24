@@ -16,7 +16,7 @@ func show_popup(button):
 	if "ssh" in PluginCoordinator.get_activated_plugins():
 		$MarginContainer/Rows/SSHClients.visible = true
 		fill_ssh_client_list(
-			PluginCoordinator.get_plugin_loader("ssh").get_controller().get_client_list()
+			PluginCoordinator.get_plugin_loader("SSH").get_controller("SSHController").get_client_list()
 			)
 	else:
 		$MarginContainer/Rows/SSHClients.visible = false

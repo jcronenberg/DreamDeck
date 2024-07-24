@@ -2,7 +2,7 @@ class_name TouchController
 extends PluginControllerBase
 # TODO separate into a plugin scene and a plugin controller to make the plugin scene optional
 
-const PLUGIN_NAME = "touch"
+const PLUGIN_NAME = "Touch"
 
 # Vars
 var x_changed: bool = false

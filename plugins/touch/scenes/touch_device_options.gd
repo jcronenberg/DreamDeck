@@ -4,7 +4,7 @@ extends OptionButton
 ## List of all available valid touch devices.
 var device_list: Array
 
-@onready var _controller: TouchController = PluginCoordinator.get_plugin_loader("touch").get_controller()
+@onready var _controller: TouchController = PluginCoordinator.get_plugin_loader("Touch").get_controller("TouchController")
 
 
 func _ready():
