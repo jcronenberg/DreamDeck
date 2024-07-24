@@ -3,7 +3,7 @@ extends PluginSceneBase
 # Plugin
 const PLUGIN_NAME = "Spotify Panel"
 
-# DOWNLOADER instance
+# Downloader instance
 var downloader: Downloader
 
 # Plugin state
@@ -114,7 +114,7 @@ func _ready():
 	# Ensure prerequisites exist
 	ConfLib.ensure_dir_exists(cache_dir_path)
 
-	# Load configs
+	# Load credentials
 	credentials = Config.new(CREDENTIALS_PROTO, conf_dir + "credentials.json")
 	load_credentials()
 
@@ -148,7 +148,7 @@ func _physics_process(delta):
 
 
 func handle_config():
-	var data = config.get_as_dict()
+	var data: Dictionary = config.get_as_dict()
 
 	metadata_refresh = data["Refresh Interval"]
 	# We don't need to refresh devices as often

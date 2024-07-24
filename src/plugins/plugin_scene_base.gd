@@ -46,7 +46,7 @@ func _init_config():
 ## Overwrite this function and handle your data e.g.
 ## [codeblock]
 ## func handle_config():
-##    var data = config.get_as_dict()
+##    var data: Dictionary = config.get_as_dict()
 ##
 ##    setting1 = data["setting1"]
 ##    setting2 = data["setting2"]

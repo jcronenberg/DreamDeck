@@ -26,6 +26,7 @@ var no_button: PackedScene = load("res://plugins/macroboard/scenes/no_button.tsc
 var max_buttons: Vector2
 
 ## Minimum size for all [ShellButton]s.
+## This is the actual size because they get added to box containers.
 var button_min_size: Vector2
 
 ## Array that contains the [b]instances[/b] of all buttons.
@@ -121,7 +122,7 @@ func _create_buttons(layout: Array):
 	_free_rows()
 
 	layout_instances = []
-	var button_iterator := 0
+	var button_iterator: int = 0
 	for row in max_buttons.y:
 		for button in max_buttons.x:
 			var new_button
@@ -292,10 +293,9 @@ func _on_size_changed():
 
 ## Load the saved [Macroboard] configuration from disk.[br]
 func handle_config():
-	var data = config.get_as_dict()
+	var data: Dictionary = config.get_as_dict()
 
 	# Load button settings
-	# button_min_size = Vector2(data["Button Settings"]["Height"], data["Button Settings"]["Width"])
 	max_buttons = Vector2(data["Columns"], data["Rows"])
 	keep_buttons_square = data["Square buttons"]
 
