@@ -38,7 +38,7 @@ pub struct GrabTouchDevice {
     /// Flag to try and grab the device for set amount of time
     try_grab: bool,
     /// Name of the currently selected device
-    device_name: GString,
+    device_name: Option<GString>,
     /// Current /dev/input dir, used to detect input device changes
     input_dir: GString,
     /// The maximum absolute x axis value of current device
@@ -87,7 +87,11 @@ impl GrabTouchDevice {
         }
 
         // Get id from device_list by matching name
-        let id: usize = *match self.device_list.as_ref().unwrap().get(&self.device_name) {
+	let device_name: &GString = match &self.device_name {
+	    Some(device_name) => &device_name,
+	    None => return Err("No device name set".into()),
+	};
+        let id: usize = *match self.device_list.as_ref().unwrap().get(device_name) {
             Some(id) => id,
             None => return Err("Device not found".into()),
         };
@@ -126,7 +130,7 @@ impl GrabTouchDevice {
     fn set_device(&mut self, name: GString) -> Variant {
         self._get_devices();
 
-        self.device_name = name;
+        self.device_name = Some(name);
 
         if let Err(e) = self._set_device() {
             return e.to_string().to_variant();
@@ -139,7 +143,9 @@ impl GrabTouchDevice {
     /// This is for a manual call by the handler
     #[func]
     fn reconnect_device(&mut self) {
-        self.set_device(self.device_name.clone());
+	if let Some(device_name) = &self.device_name {
+	    self.set_device(device_name.clone());
+	}
     }
 
     /// Internal function that populates self.device_list
@@ -169,7 +175,7 @@ impl GrabTouchDevice {
         self._get_devices();
 
         let mut device_list_string: Vec<GString> = Vec::new();
-        if let Some(device_list) = self.device_list.as_mut() {
+        if let Some(device_list) = &self.device_list {
             for n in device_list.keys() {
                 device_list_string.push(format!("{}", n).into());
             }
@@ -222,7 +228,7 @@ impl INode for GrabTouchDevice {
             grabbed: false,
             retry_device: 0.0,
             try_grab: false,
-            device_name: GString::new(),
+            device_name: None,
             input_dir: GString::new(),
             device_max_abs_x: 0,
             device_max_abs_y: 0,
@@ -234,14 +240,14 @@ impl INode for GrabTouchDevice {
     /// Godot _physics_process function
     fn physics_process(&mut self, delta: f64) {
         // If not connected, retry to connect
-        if !self.grabbed {
+        if !self.grabbed && self.device_name.is_some() {
             // Store delta
             self.retry_device += delta;
 
             // Try grabbing the device multiple times when a new device is connected
             // as sometimes it won't immediately grab the device
             if self.try_grab && self.retry_device <= RETRY_TIMER / 2.0 {
-                self.set_device(self.device_name.clone());
+                self.set_device(self.device_name.as_ref().unwrap().clone());
             } else if self.try_grab {
                 self.try_grab = false;
             }
@@ -251,7 +257,7 @@ impl INode for GrabTouchDevice {
                 if self._compare_input_dir() {
                     self.try_grab = true;
                     // Try to connect to device
-                    self.set_device(self.device_name.clone());
+                    self.set_device(self.device_name.as_ref().unwrap().clone());
                 }
 
                 // Reset timer
