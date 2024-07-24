@@ -74,4 +74,5 @@ func request_deletion():
 
 
 func _on_confirm_deletion():
-	queue_free()
+	_plugin_instance.delete_config()
+	get_node("/root/Main/Layout").call_deferred("delete_panel", self)

@@ -93,6 +93,11 @@ func add_panel(panel_config: Dictionary):
 	save()
 
 
+func delete_panel(panel: LayoutPanel):
+	panel.free()
+	save()
+
+
 func set_new_panel_leaf(leaf: DockableLayoutPanel):
 	_new_panel_leaf = leaf
 

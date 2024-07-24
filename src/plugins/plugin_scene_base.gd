@@ -104,3 +104,13 @@ func scene_show():
 ## [/codeblock]
 func scene_hide():
 	self.visible = false
+
+
+## Called when the scene gets deleted.
+func delete_config():
+	var files: Array = ConfLib.list_files_in_dir(conf_dir)
+	files.append(conf_dir)
+	for file in files:
+		var error: Error = DirAccess.remove_absolute(file)
+		if error != OK:
+			push_error("Failed to delete ", file, ": ", error)
