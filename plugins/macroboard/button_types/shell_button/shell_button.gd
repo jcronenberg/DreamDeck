@@ -8,7 +8,7 @@ extends MacroButton
 @export var ssh_client: String = ""
 
 # Global nodes
-var ssh_controller
+var ssh_controller: SSHController
 
 #func _init():
 # 	button_type = "shell_button"
@@ -121,9 +121,9 @@ func _on_AppButton_pressed():
 
 
 func _load_ssh_controller():
-	ssh_controller = PluginCoordinator.get_plugin_loader("ssh")
-	if ssh_controller:
-		ssh_controller = ssh_controller.get_controller()
+	var ssh_loader: SSHPluginLoader = PluginCoordinator.get_plugin_loader("SSH")
+	if ssh_loader:
+		ssh_controller = ssh_loader.get_controller("SSHController")
 
 
 # TODO will probably be replaced in the future by some sort of custom logger

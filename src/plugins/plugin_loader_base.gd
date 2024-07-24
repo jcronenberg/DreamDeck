@@ -2,17 +2,19 @@ class_name PluginLoaderBase
 extends Node
 ## The default plugin loader.
 ##
-## It loads [member scene] asynchronously and
-## adds it to the scene tree (FIXME currently hardcoded to [member parent]).[br]
+## Loads [member scenes] and [member controllers] asynchronously.
+## The loader gets added as a child of PluginCoordinator.
+## Scenes can be added by the user to their layout.
+## Controllers are automatically loaded and added as a child of this loader.[br]
 ## Example usage:
 ##
 ## [codeblock]
 ## extends PluginLoader
 ##
 ## func _init():
-##     plugin_name = "Touch"
-##     scene = "res://plugins/touch/scenes/touch.tscn"
-##     parent = "/root/Main/VSeparator/MarginContainer/ControlsSeparator"
+##     plugin_name = "PluginName"
+##     scenes = {"Scene Name": "res://plugins/your_plugin/scenes/default_scene.tscn"}
+##     controllers = {"PluginController": "res://plugins/your_plugin/controller.gd"}
 ##     allow_os = ["Linux"]
 ## [/codeblock]
 ##
@@ -31,24 +33,29 @@ extends Node
 ## See [method OS.get_name] for what the possible values to whitelist.[br]
 ## Empty/default allows all OSes.
 @export var allow_os: Array = []
+
 ## Your plugin's name.[br]
 ## [b]FIXME[/b] currently not utilised.
 @export var plugin_name: String
-## The scene your plugin wants to have loaded.[br]
-## Example: [code]"res://plugins/your_plugin/scenes/default_scene.tscn"[/code]
-# e.g. {"Scene1": "res://plugins/your_plugin/scene1.tscn", "Scene2": "res://plugins/your_plugin/scene2.tscn"}
-@export var scenes: Dictionary
-# e.g. {"Script1": "res://plugins/your_plugin/script1.gd", "Script2": "res://plugins/your_plugin/script2.gd"}
-@export var scripts: Dictionary
-## [b]FIXME[/b] temporary, will be removed in the future when this isn't "hardcoded" anymore.
-@export var parent: String
 
-## Stores if plugin is loaded.
-# var _loaded := false
-## Instance of [member scene] when loaded.
-# var _instance = null
-var _load_queue: Array = []
-var _controllers: Array = []
+## The scenes your plugin makes available to users.[br]
+## Example: [code]{"Scene Name": "res://plugins/your_plugin/scenes/default_scene.tscn"}[/code]
+@export var scenes: Dictionary
+
+## The controllers for your plugin.
+## Controllers get loaded always when a plugin is active.
+## They will be put into the scene tree as a child of this loader.
+## If you need to access them get the loader via PluginCoordinator
+## and then use [method get_controller].[br]
+## Example: [code]{"PluginController": "res://plugins/your_plugin/controller.gd"}[/code]
+@export var controllers: Dictionary
+
+
+# Used to store all resources that are supposed to be loaded
+var _load_queue: Array[String] = []
+
+# Stores all controllers for better access via [method get_controller]
+var _controllers: Dictionary = {}
 
 
 ## Continuous checking if a scene in [member _load_queue] is loaded.
@@ -56,7 +63,7 @@ func _process(_delta):
 	for load_item in _load_queue:
 		var load_status = ResourceLoader.load_threaded_get_status(load_item)
 		if load_status == ResourceLoader.THREAD_LOAD_LOADED:
-			add_scene(load_item, ResourceLoader.load_threaded_get(load_item))
+			add_resource(load_item, ResourceLoader.load_threaded_get(load_item))
 		elif load_status == ResourceLoader.THREAD_LOAD_FAILED:
 			push_error("Error loading %s" % load_item)
 
@@ -65,9 +72,9 @@ func _process(_delta):
 
 
 func plugin_load():
-	for script in scripts:
-		ResourceLoader.load_threaded_request(scripts[script])
-		_load_queue.append(scripts[script])
+	for controller in controllers:
+		ResourceLoader.load_threaded_request(controllers[controller])
+		_load_queue.append(controllers[controller])
 	set_process(true)
 
 
@@ -93,25 +100,22 @@ func plugin_unload():
 	for scene in scenes:
 		PluginCoordinator.call_deferred("remove_scene", plugin_name, scene)
 
-	for controller in _controllers:
-		controller.queue_free()
-
 
 ## Function called when asynchronous loading of [param scene] is finished.
-func add_scene(scene: String, resource):
+func add_resource(resource_name: String, resource):
 	if resource is GDScript:
-		var new_controller: PluginControllerBase = resource.new()
-		_controllers.append(new_controller)
-		new_controller.init()
-		add_child(new_controller)
+		var controller_name = controllers.find_key(resource_name)
+		_controllers[controller_name] = resource.new()
+		_controllers[controller_name].init()
+		add_child(_controllers[controller_name])
 	elif resource is PackedScene:
-		var scene_name = scenes.find_key(scene)
+		var scene_name: String = scenes.find_key(resource_name)
 		PluginCoordinator.call_deferred("add_scene", plugin_name, {scene_name: resource})
 
 
 ## If the plugin has a controller this function can be used to get a reference to it.
-func get_controller(index: int = 0) -> PluginControllerBase:
-	if _controllers.size() > index:
-		return _controllers[index]
+func get_controller(controller_name: String) -> PluginControllerBase:
+	if _controllers.has(controller_name):
+		return _controllers[controller_name]
 
 	return null
