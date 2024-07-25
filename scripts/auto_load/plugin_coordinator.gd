@@ -102,7 +102,7 @@ func load_activated_plugins():
 
 
 func get_conf_dir(plugin_name: String) -> String:
-	# TODO should probably move this to a separate place
+	# This ability to just get _conf_dir should maybe be moved to somewhere else in the future
 	if plugin_name == "":
 		return _conf_dir
 
@@ -147,7 +147,10 @@ func get_plugin_loader(plugin_name: String) -> PluginLoaderBase:
 
 func set_layout_setup_finished(value: bool):
 	layout_setup_finished = value
-	# TODO handle already loaded plugins
+
+	# If there are already scenes loaded handle them here
+	for plugin_name in _scenes:
+		_add_scenes_to_panels(plugin_name, _scenes[plugin_name])
 
 
 ## Should be called when a scene of a plugin has loaded and should now be added to the layout.[br]
@@ -159,11 +162,15 @@ func add_scene(plugin_name: String, scene_dict: Dictionary):
 	else:
 		_scenes[plugin_name] = scene_dict
 
-	# If layout setup isn't yet finished, move to later (TODO)
+	# If layout setup isn't yet finished, scene will be added once
+	# layout sets layout_setup_finished
 	if not layout_setup_finished:
 		return
 
-	# Add scene to layout
+	_add_scenes_to_panels(plugin_name, scene_dict)
+
+
+func _add_scenes_to_panels(plugin_name: String, scene_dict: Dictionary):
 	get_tree().call_group("layout_panels", "add_plugin_scene", plugin_name, scene_dict)
 
 

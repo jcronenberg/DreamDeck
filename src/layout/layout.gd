@@ -17,7 +17,6 @@ func _ready():
 
 	set_split_handles_visibility(false)
 
-	# TODO is this necessary?
 	PluginCoordinator.set_layout_setup_finished(true)
 
 	GlobalSignals.connect("exited_edit_mode", _on_edit_mode_exited)
