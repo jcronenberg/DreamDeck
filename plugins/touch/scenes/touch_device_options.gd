@@ -26,6 +26,7 @@ func set_default_device(default_device):
 		populate_devices()
 
 	if default_device == "":
+		self.select(-1)
 		return
 
 	# This is a hack to enable setting the default_device even if it is not connected
