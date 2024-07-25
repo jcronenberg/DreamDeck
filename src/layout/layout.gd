@@ -24,12 +24,7 @@ func _ready():
 
 
 func save():
-	var save_file = FileAccess.open(_conf_dir + SAVE_FILENAME, FileAccess.WRITE)
-	if not save_file:
-		push_error(FileAccess.get_open_error())
-		return
-
-	save_file.store_string(JSON.stringify(serialize(), "\t"))
+	ConfLib.save_config(_conf_path, serialize())
 
 
 func serialize() -> Dictionary:
@@ -41,23 +36,17 @@ func serialize() -> Dictionary:
 
 
 func load_layout() -> bool:
-	var save_file: FileAccess = FileAccess.open(_conf_dir + SAVE_FILENAME, FileAccess.READ)
-	if not save_file:
-		if FileAccess.get_open_error() == ERR_FILE_NOT_FOUND:
-			# We don't have any data, so we exit here even if successful
-			# And the first time launch helper does the rest
-			return ConfLib.save_config(_conf_dir + SAVE_FILENAME, {})
-		else:
-			push_error("Failed to open layout config file "
-				, _conf_dir, SAVE_FILENAME, ": ", str(FileAccess.get_open_error()))
-			return false
+	# Just return true when config doesn't yet exist
+	# as then first time launch helper does the rest
+	if not FileAccess.file_exists(_conf_path):
+		return true
 
-	var json: JSON = JSON.new()
-	if json.parse(save_file.get_as_text()) != OK:
-		push_error("Failed to parse loadout: ", json.get_error_message())
+	var config: Variant = ConfLib.load_config(_conf_path)
+	if not config:
 		return false
-
-	var config: Dictionary = json.data
+	elif typeof(config) != TYPE_DICTIONARY:
+		push_error("Failed to parse %s: Wrong type" % _conf_path)
+		return false
 
 	# Check for invalid layout
 	# We don't error out here because this can happen if e.g. the user
@@ -69,6 +58,7 @@ func load_layout() -> bool:
 	# delete the first time launch helper
 	get_node("/root/Main/FirstTimeLaunch").queue_free()
 
+	# Layout setup from config
 	_layout.from_dict(config["Layout"])
 	for panel in config["Panels"]:
 		var panel_instance: LayoutPanel = _layout_panel.instantiate()
