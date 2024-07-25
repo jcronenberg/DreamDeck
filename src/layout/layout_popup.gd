@@ -1,6 +1,5 @@
 class_name LayoutPopup
 extends Window
-## TODO
 
 
 func show_config(editor: Config.ConfigEditor, panel_name: String):
