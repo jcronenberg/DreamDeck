@@ -22,13 +22,13 @@ var window_area_min: Vector2 = Vector2(0, 0)
 var window_area_max: Vector2 = Vector2(0, 0)
 
 # Config
-const CONFIG_PROTO: Array[Dictionary] = [{"TYPE": "STRING", "KEY": "Default Device", "DEFAULT_VALUE": ""}]
+const CONFIG_DEFINITION: Array[Dictionary] = [{"TYPE": "STRING", "KEY": "Default Device", "DEFAULT_VALUE": ""}]
 
 var _default_device: String
 
 
 func _init():
-	config_proto = CONFIG_PROTO
+	config_definition = CONFIG_DEFINITION
 	plugin_name = PLUGIN_NAME
 
 

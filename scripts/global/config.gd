@@ -1,40 +1,82 @@
 extends Resource
 class_name Config
-# TODO add an array type
-# _config = Config.new([{"TYPE": "BOOL", "KEY": "Test Bool", "DEFAULT_VALUE": false, "DESCRIPTION": "[code]Testing code[/code]\n[indent]testing next indent level[/indent]\ntesting"},
-# 	{"TYPE": "INT", "KEY": "Test Int", "DEFAULT_VALUE": 4, "DESCRIPTION": "multiple\nlines"},
-# 	{"TYPE": "STRING", "KEY": "Test String", "DEFAULT_VALUE": "testing", "DESCRIPTION": "[color=green]testing color[/color]"},
-# 	{"TYPE": "ENUM", "KEY": "Test Enum: Default -1", "DEFAULT_VALUE": -1, "ENUM": test},
-# 	{"TYPE": "ENUM", "KEY": "Test Enum: Default test1", "DEFAULT_VALUE": test.test1, "ENUM": test, "DESCRIPTION": "[b]testing bold[/b]\n[i]testing italics[/i]\n[b][i]testing bold italics[/i][/b]\n[s]testing strikethrough[/s]"},
-# 	{"TYPE": "FLOAT", "KEY": "Test Float", "DEFAULT_VALUE": 4}], "local_config/test.json")
+## A helper class for configs.
+##
+## Includes several helper functions and also the ability to automatically generate
+## a default editor for the config.[br]
+## [br]
+## It requires a definition of what the config is supposed to look like.
+## [br]
+## Definitions are an [Array] of [Dictionary] and the dictionaries need to contain certain
+## keys.[br]
+## [br]
+## All entries need to contain at least:[br]
+## "TYPE": The type of the entry, e.g. "BOOL"[br]
+## "KEY": What name the entry should have.[br]
+## "DEFAULT_VALUE": The default value of the entry.[br]
+## [br]
+## Optionally they can contain these:[br]
+## "DESCRIPTION": A description that get's added below the name.
+## This accepts bbcode formatted text.[br]
+## [br]
+## Here is a list of all available types:
+##
+## [codeblock]
+## "BOOL": No additional properties.
+## "INT": No additional properties.
+## "FLOAT": No additional properties.
+## "STRING": No additional properties.
+## "ENUM":
+##     "ENUM": The dictionary of the enum.
+##             (You don't have to generate this dict, it is built into gdscript, see example)
+## [/codeblock]
+##
+## Example:
+##
+## [codeblock]
+## Config.new([
+##     {"TYPE": "BOOL", "KEY": "Example Bool", "DEFAULT_VALUE": false, "DESCRIPTION": "[code]Example code[/code]\n[b]Another line[/b]"},
+##     {"TYPE": "STRING", "KEY": "Example String", "DEFAULT_VALUE": "Example value"},
+## ])
+##
+## # For enums
+## enum Example {ENUM_VALUE1, ENUM_VALUE2}
+## Config.new([{"TYPE": "ENUM", "KEY": "Example Enum", "DEFAULT_VALUE": Example.ENUM_VALUE1, "ENUM": Example}])
+##
+## # If you want to have the config saved to disk you must provide a path
+## Config.new(DEFINITION, "your/path/")
+## [/codeblock]
 
+## Emitted when the config changed
 signal config_changed
 
+var _path: String
 var _config: Array[ConfigObject]
-var path: String
-var filename: String
 
 
-func _init(base_config: Array[Dictionary], initial_path: String = ""):
-	_config = _generate_objects(base_config)
-	if initial_path == "":
+func _init(config_definition: Array[Dictionary], path: String = ""):
+	_config = _generate_objects(config_definition)
+	if path == "":
 		return
-	path = initial_path.get_base_dir() + "/"
-	filename = initial_path.trim_prefix(path)
+	_path = path
 
 
+## Loads the config from disk.
+## If no path was provided at initialization, it doesn't do anything.
 func load_config():
-	if not path:
+	if not _path:
 		return
 
-	ConfLib.ensure_dir_exists(path)
-	# ConfLib.conf_merge(config, ConfLib.load_config(path + filename).duplicate(true))
-	var loaded_config: Variant = ConfLib.load_config(path + filename)
+	ConfLib.ensure_dir_exists(_path.get_base_dir())
+	var loaded_config: Variant = ConfLib.load_config(_path)
 	if not loaded_config:
 		loaded_config = {}
 	apply_dict(loaded_config)
 
 
+## Applies a simple key value [Dictionary] to the config.[br]
+## [param dict] should be for example:
+## [code]{"Example Int": -1, "Example String": "Foo"}[/code].
 func apply_dict(dict: Dictionary):
 	for item in dict:
 		var object = _get_object(item)
@@ -44,14 +86,20 @@ func apply_dict(dict: Dictionary):
 	emit_signal("config_changed")
 
 
+## Saves the config to the specified path. Returns false if saving failed.
+## If no path was provided it simply returns false.
 func save() -> bool:
-	if not path:
+	if not _path:
 		return false
 
-	ConfLib.ensure_dir_exists(path)
-	return ConfLib.save_config(path + filename, get_as_dict())
+	ConfLib.ensure_dir_exists(_path.get_base_dir())
+	return ConfLib.save_config(_path, get_as_dict())
 
 
+## Returns the config as a [Dictionary].
+## Note that this is not the definition dictionary but a simple dict
+## containing just the key and value.[br]
+## Example return value: [code]{"Example Int": -1, "Example String": "Foo"}[/code].
 func get_as_dict() -> Dictionary:
 	var ret_dict: Dictionary = {}
 	for object in _config:
@@ -60,7 +108,11 @@ func get_as_dict() -> Dictionary:
 	return ret_dict
 
 
-# TODO private?
+## Generates and returns a [Config.ConfigEditor] for this config.
+func generate_editor() -> ConfigEditor:
+	return ConfigEditor.new(self)
+
+
 func _get_object(key: String) -> ConfigObject:
 	for object in _config:
 		if object.get_key() == key:
@@ -87,37 +139,44 @@ func _generate_objects(config: Array[Dictionary]) -> Array[ConfigObject]:
 	return objects
 
 
-func generate_editor() -> ConfigEditor:
-	return ConfigEditor.new(self)
-
-
 class ConfigObject:
-	var _key: String
-	var _description: String
+	var _key: String:
+		get = get_key, set = set_key
+	var _description: String:
+		get = get_description, set = set_description
+
 
 	func _init(dict: Dictionary):
 		deserialize(dict)
 
+
 	func get_key():
 		return _key
+
 
 	func set_key(value):
 		_key = value
 
+
 	func get_description():
 		return _description
+
 
 	func set_description(value):
 		_description = value
 
+
 	func get_value():
 		pass
+
 
 	func set_value(_value):
 		pass
 
+
 	func serialize() -> Dictionary:
 		return {}
+
 
 	func deserialize(dict: Dictionary):
 		_key = dict["KEY"]
@@ -126,16 +185,21 @@ class ConfigObject:
 
 
 class BoolObject extends ConfigObject:
-	var _value: bool
+	var _value: bool:
+		set = set_value, get = get_value
+
 
 	func get_value() -> bool:
 		return _value
 
+
 	func set_value(value: bool):
 		_value = value
 
+
 	func serialize() -> Dictionary:
 		return {_key: _value}
+
 
 	func deserialize(dict: Dictionary):
 		super(dict)
@@ -143,16 +207,21 @@ class BoolObject extends ConfigObject:
 
 
 class IntObject extends ConfigObject:
-	var _value: int
+	var _value: int:
+		set = set_value, get = get_value
+
 
 	func get_value() -> int:
 		return _value
 
+
 	func set_value(value: int):
 		_value = value
 
+
 	func serialize() -> Dictionary:
 		return {_key: _value}
+
 
 	func deserialize(dict: Dictionary):
 		super(dict)
@@ -160,16 +229,21 @@ class IntObject extends ConfigObject:
 
 
 class FloatObject extends ConfigObject:
-	var _value: float
+	var _value: float:
+		set = set_value, get = get_value
+
 
 	func get_value() -> float:
 		return _value
 
+
 	func set_value(value: float):
 		_value = value
 
+
 	func serialize() -> Dictionary:
 		return {_key: _value}
+
 
 	func deserialize(dict: Dictionary):
 		super(dict)
@@ -177,16 +251,21 @@ class FloatObject extends ConfigObject:
 
 
 class StringObject extends ConfigObject:
-	var _value: String
+	var _value: String:
+		set = set_value, get = get_value
+
 
 	func get_value() -> String:
 		return _value
 
+
 	func set_value(value: String):
 		_value = value
 
+
 	func serialize() -> Dictionary:
 		return {_key: _value}
+
 
 	func deserialize(dict: Dictionary):
 		super(dict)
@@ -194,8 +273,11 @@ class StringObject extends ConfigObject:
 
 
 class EnumObject extends ConfigObject:
-	var _value: int
-	var _enum_dict: Dictionary
+	var _value: int:
+		set = set_value, get = get_value
+	var _enum_dict: Dictionary:
+		get = get_enum_dict
+
 
 	func _init(dict: Dictionary):
 		super(dict)
@@ -203,24 +285,35 @@ class EnumObject extends ConfigObject:
 		_enum_dict = dict["ENUM"]
 		_value = dict["DEFAULT_VALUE"]
 
+
 	func get_value() -> int:
 		return _value
+
 
 	func set_value(value: int):
 		_value = value
 
+
 	func get_enum_dict() -> Dictionary:
 		return _enum_dict
 
+
 	func serialize() -> Dictionary:
 		return {_key: _value}
+
 
 	func deserialize(dict: Dictionary):
 		super(dict)
 		_value = dict["DEFAULT_VALUE"]
 
 
+## An editor for a [Config]
+##
+## The editor is a [VBoxContainer] that contains a row for each object
+## inside a [Config]. Each row allows a user to edit the values for the objects.[br]
+## A editor is always linked to a [Config].
 class ConfigEditor extends VBoxContainer:
+
 	var _config_ref: Config
 	var _object_editors: Array[VariantEditor] = []
 
@@ -246,10 +339,12 @@ class ConfigEditor extends VBoxContainer:
 			add_child(editor)
 
 
+	## Applies the current values to the config via [method Config.apply_dict].
 	func apply():
 		_config_ref.apply_dict(serialize())
 
 
+	## Returns a key value [Dictionary] for the current values.
 	func serialize() -> Dictionary:
 		var save_dict: Dictionary = {}
 		for child in get_children():
@@ -258,11 +353,14 @@ class ConfigEditor extends VBoxContainer:
 		return save_dict
 
 
-	# TODO save on apply?
+	## Saves the config via [method Config.save].
 	func save():
 		_config_ref.save()
 
 
+	## Get a specific editor by [param key].
+	## Useful if you e.g. need to change some values for a editor after
+	## the the editor was already initialized.
 	func get_editor(key: String) -> VariantEditor:
 		for editor in _object_editors:
 			if key == editor.get_key():
@@ -318,6 +416,7 @@ class VariantEditor extends HBoxContainer:
 class BoolEditor extends VariantEditor:
 	var _value_editor: CheckBox
 
+
 	func _init(object: BoolObject):
 		super(object)
 
@@ -338,6 +437,7 @@ class BoolEditor extends VariantEditor:
 
 class IntEditor extends VariantEditor:
 	var _value_editor: SpinBox
+
 
 	func _init(object: IntObject):
 		super(object)
@@ -361,6 +461,7 @@ class IntEditor extends VariantEditor:
 class FloatEditor extends VariantEditor:
 	var _value_editor: SpinBox
 
+
 	func _init(object: FloatObject):
 		super(object)
 
@@ -383,6 +484,7 @@ class FloatEditor extends VariantEditor:
 class StringEditor extends VariantEditor:
 	var _value_editor: LineEdit
 
+
 	func _init(object: StringObject):
 		super(object)
 
@@ -404,6 +506,7 @@ class StringEditor extends VariantEditor:
 class EnumEditor extends VariantEditor:
 	var _value_editor: OptionButton
 	var _enum_dict: Dictionary
+
 
 	func _init(object: EnumObject):
 		super(object)

@@ -6,16 +6,19 @@ var scene: String
 var uuid: String
 var panel_name: String
 
-var _plugin_instance: PluginSceneBase
+var _plugin_instance: PluginSceneBase:
+	get = get_plugin_instance
 
 
 func _ready():
 	add_to_group("layout_panels")
 
 
-# scene_dict is {"scene_name": resource}
+# scene_dict is e.g. {"scene_name": resource}
+## If [param plugin_name] matches [member plugin] and [param scene_dict]
+## contains the [member scene] as a key, the scene will be added.
 func add_plugin_scene(plugin_name: String, scene_dict: Dictionary):
-	if $MarginContainer.get_child_count() > 0 or not plugin == plugin_name:
+	if _plugin_instance or not plugin == plugin_name:
 		return
 
 	if scene_dict.keys()[0] == scene:
@@ -64,6 +67,8 @@ func get_plugin_instance():
 	return _plugin_instance
 
 
+## Function called when a user presses the delete key in edit mode for this panel.
+## It constructs a [ConfirmationDialog] to make sure it isn't deleted accidentally.
 func request_deletion():
 	var confirm_dialog = ConfirmationDialog.new()
 	confirm_dialog.dialog_text = "Do you really want to delete " + panel_name + "?"

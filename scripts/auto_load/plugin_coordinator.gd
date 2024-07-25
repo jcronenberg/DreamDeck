@@ -6,11 +6,11 @@ const DEFAULT_ACTIVATED_PLUGINS := {
 }
 
 var _conf_dir: String = OS.get_user_data_dir() + "/"
-var _conf_path: String
+var _conf_path: String # Path for plugins.json
 var _plugins: Array[Plugin] = []
-# The loaded scenes
-# e.g. {"SpotifyPanel": {"SpotifyPanel1": scene, "SpotifyPanel2": scene}, "Macroboard": {"Macroboard": scene}}
-var _scenes: Dictionary
+# _scenes example:
+# {"Spotify Panel": {"Spotify Panel1": scene, "Spotify Panel2": scene}, "Macroboard": {"Macroboard": scene}}
+var _scenes: Dictionary # The already loaded scenes
 
 
 @export var layout_setup_finished: bool = false:
@@ -32,6 +32,8 @@ func _ready():
 	load_activated_plugins()
 
 
+## Discovers all plugins at `res://plugins` and adds them to [member _plugins].
+## It also loads all files in [member _conf_dir]/plugins as resource packs.
 func discover_plugins():
 	_runtime_load_plugins()
 
@@ -175,7 +177,7 @@ func _add_scenes_to_panels(plugin_name: String, scene_dict: Dictionary):
 
 
 ## Loads a plugin scene.
-# Tries to use cached resources in [member _scenes].
+## Tries to use cached resources in [member _scenes].
 func load_plugin_scene(plugin_name: String, scene: String):
 	# If cached in _scenes directly use it
 	if _scenes.has(plugin_name) and _scenes[plugin_name].has(scene):

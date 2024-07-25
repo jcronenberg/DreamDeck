@@ -9,7 +9,7 @@ const PLUGIN_NAME = "Macroboard"
 ## It is supposed to match what is set in [b]MacroRow[/b] in [i]theme_override_constants/separation[/i].
 const BUTTON_GAP = 10
 
-const CONFIG_PROTO: Array[Dictionary] = [{"TYPE": "INT", "KEY": "Columns", "DEFAULT_VALUE": 8},
+const CONFIG_DEFINITION: Array[Dictionary] = [{"TYPE": "INT", "KEY": "Columns", "DEFAULT_VALUE": 8},
 	{"TYPE": "INT", "KEY": "Rows", "DEFAULT_VALUE": 5},
 	{"TYPE": "BOOL", "KEY": "Square buttons", "DEFAULT_VALUE": false}]
 
@@ -47,7 +47,7 @@ var tmp_button_position: int = -1
 
 
 func _init():
-	config_proto = CONFIG_PROTO
+	config_definition = CONFIG_DEFINITION
 
 
 func _ready():

@@ -1,19 +1,29 @@
 class_name PluginSceneBase
 extends Control
-
+## The base for a plugin scene
+##
+## A plugin scene is a node that can get added by the user as panel to the layout.[br]
+## Example usage:
+##
+## [codeblock]
+## extends PluginSceneBase
+## ...
+## [/codeblock]
+##
+## If you want to do additional custom things you can overwrite the functions.
 
 ## The config dir for this scene. If you also need to store additional info, beyond [member config]
 ## please do so in this directory.
 var conf_dir: String
 
 ## The config for the scene.
-## Requires setting [member config_proto] to work by default.
+## Requires setting [member config_definition] to work by default.
 var config: Config
 
-## The [class Dictionary] from which [member config] gets created.[br]
-## Look at [class Config] for the info what this is supposed to look like.
+## The [Dictionary] from which [member config] gets created.[br]
+## Look at [Config] for the info what this is supposed to look like.
 ## Not setting this disables the default [member config] initialization.
-var config_proto: Array[Dictionary]
+var config_definition: Array[Dictionary]
 
 # The unique id of the scene.
 var _scene_uuid: String
@@ -35,10 +45,10 @@ func _ready():
 
 ## Initializes [member config] and loads it from disk.
 func _init_config():
-	if not config_proto:
+	if not config_definition:
 		return
 
-	config = Config.new(config_proto, conf_dir + "config.json")
+	config = Config.new(config_definition, conf_dir + "config.json")
 	config.load_config()
 	config.connect("config_changed", _on_config_changed)
 

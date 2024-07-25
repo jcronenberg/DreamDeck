@@ -21,13 +21,31 @@ func show_new_panel():
 		_config_editor.queue_free()
 
 	_new_panel = true
-	var new_plugin_config: Config = Config.new([{"TYPE": "STRING", "KEY": "Panel Name", "DEFAULT_VALUE": ""},
-	{"TYPE": "ENUM", "KEY": "Plugin", "DEFAULT_VALUE": -1, "ENUM": PluginCoordinator.generate_plugins_enum()},
-	{"TYPE": "ENUM", "KEY": "Scene", "DEFAULT_VALUE": -1, "ENUM": {}}])
+
+	# Generate a config and the editor for the new panel
+	var new_plugin_config: Config = Config.new([
+		{"TYPE": "STRING", "KEY": "Panel Name", "DEFAULT_VALUE": ""},
+		{"TYPE": "ENUM", "KEY": "Plugin", "DEFAULT_VALUE": -1, "ENUM": PluginCoordinator.generate_plugins_enum()},
+		{"TYPE": "ENUM", "KEY": "Scene", "DEFAULT_VALUE": -1, "ENUM": {}},
+	])
 	_config_editor = new_plugin_config.generate_editor()
+
+	# Connect the plugin enum editor here, because we need to populate
+	# the scene enum with the available scenes from the selected plugin
 	var plugins_editor: Config.EnumEditor = _config_editor.get_editor("Plugin")
 	plugins_editor.get_value_editor().connect("item_selected", _on_new_panel_plugin_selected)
+
 	add_child(_config_editor)
+
+
+func save() -> bool:
+	if _new_panel:
+		return _new_panel_save()
+	else:
+		_config_editor.apply()
+		_config_editor.save()
+
+	return true
 
 
 func _on_new_panel_plugin_selected(idx: int):
@@ -68,14 +86,4 @@ func _new_panel_save() -> bool:
 	new_panel_dict["Scene"] = _config_editor.get_editor("Scene").get_value_string()
 	new_panel_dict["Plugin"] = _config_editor.get_editor("Plugin").get_value_string()
 	get_node("/root/Main/Layout").add_panel(new_panel_dict)
-	return true
-
-
-func save() -> bool:
-	if _new_panel:
-		return _new_panel_save()
-	else:
-		_config_editor.apply()
-		_config_editor.save()
-
 	return true

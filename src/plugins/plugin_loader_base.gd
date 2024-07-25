@@ -12,7 +12,7 @@ extends Node
 ## extends PluginLoader
 ##
 ## func _init():
-##     plugin_name = "PluginName"
+##     plugin_name = "Plugin Name"
 ##     scenes = {"Scene Name": "res://plugins/your_plugin/scenes/default_scene.tscn"}
 ##     controllers = {"PluginController": "res://plugins/your_plugin/controller.gd"}
 ##     allow_os = ["Linux"]

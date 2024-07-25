@@ -1,5 +1,5 @@
-extends RefCounted
 class_name ConfLib
+extends RefCounted
 ## Helper class for [Config] and custom configs
 
 ## Load config at [param path]. If it doesn't exist a new config is created.

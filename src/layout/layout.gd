@@ -1,11 +1,11 @@
 class_name Layout
 extends DockableContainer
 
-@onready var _conf_dir: String = PluginCoordinator.get_conf_dir("")
 const SAVE_FILENAME = "layout.json"
 
-var _new_panel_leaf: DockableLayoutPanel
-
+@onready var _conf_path: String = PluginCoordinator.get_conf_dir("") + SAVE_FILENAME
+var _new_panel_leaf: DockableLayoutPanel: # Parent for new panel
+	set = set_new_panel_leaf
 const _layout_panel = preload("res://src/layout/layout_panel.tscn")
 
 

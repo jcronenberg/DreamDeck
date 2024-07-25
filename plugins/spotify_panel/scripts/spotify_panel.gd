@@ -99,13 +99,13 @@ var http_server
 # Configs
 var credentials: Config
 
-const CONFIG_PROTO: Array[Dictionary] = [{"TYPE": "FLOAT", "KEY": "Refresh Interval", "DEFAULT_VALUE": 5.0}]
+const CONFIG_DEFINITION: Array[Dictionary] = [{"TYPE": "FLOAT", "KEY": "Refresh Interval", "DEFAULT_VALUE": 5.0}]
 const CREDENTIALS_PROTO: Array[Dictionary] = [{"TYPE": "STRING", "KEY": "refresh_token", "DEFAULT_VALUE": ""},
 	{"TYPE": "STRING", "KEY": "encoded_client", "DEFAULT_VALUE": ""}]
 
 
 func _init():
-	config_proto = CONFIG_PROTO
+	config_definition = CONFIG_DEFINITION
 
 
 func _ready():
