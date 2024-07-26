@@ -36,6 +36,7 @@ anchor_top = 0.13
 anchor_right = 0.8
 anchor_bottom = 0.43
 expand_mode = 1
+stretch_mode = 5
 
 [node name="ScrollSideMargin" type="Control" parent="Background"]
 clip_contents = true
