@@ -1,6 +1,7 @@
-extends Control
+class_name TouchController
+extends PluginControllerBase
 
-const PLUGIN_NAME = "touch"
+const PLUGIN_NAME = "Touch"
 
 # Vars
 var x_changed: bool = false
@@ -15,34 +16,36 @@ var divide_y_by: float = 0.0
 
 # Nodes
 var grab_touch_devices_script
-@onready var device_options = get_node("ControlsSeparator/DeviceOptions")
-@onready var reconnect_button = get_node("ControlsSeparator/ReconnectButton")
-@onready var grab_check_button = get_node("ControlsSeparator/GrabCheckButton")
 
 # Non fullscreen functions
 var window_area_min: Vector2 = Vector2(0, 0)
 var window_area_max: Vector2 = Vector2(0, 0)
 
 # Config
-@onready var plugin_coordinator := get_node("/root/PluginCoordinator")
-const DEFAULT_CONFIG = {
-	"Default Device": ""
-}
+const CONFIG_DEFINITION: Array[Dictionary] = [{"TYPE": "STRING", "KEY": "Default Device", "DEFAULT_VALUE": ""}]
+
+var _default_device: String
+
+
+func _init():
+	config_definition = CONFIG_DEFINITION
+	plugin_name = PLUGIN_NAME
 
 
 func _ready():
 	grab_touch_devices_script = GrabTouchDevice.new()
 	add_child(grab_touch_devices_script)
 
-	get_tree().get_root().connect("size_changed", Callable(self, "_on_main_window_resized"))
+	get_tree().get_root().connect("size_changed", _on_main_window_resized)
 	# Need to trigger it once on ready to populate values on startup
 	_on_main_window_resized()
 
 	# Set event_lmb to left mouse button
 	event_lmb.button_index = 1
 
-	# Handle default device from plugin config
-	load_config()
+	# Because this requires device_options and thus needs to be _ready() we call handle_config
+	# here manually
+	handle_config()
 
 	if OS.has_feature("editor"):
 		get_node("/root/Main/DebugCursor").visible = true
@@ -55,8 +58,14 @@ func _on_main_window_resized():
 		calculate_window_area()
 
 
-func load_config():
-	device_options.set_default_device(plugin_coordinator.get_plugin_config(PLUGIN_NAME, DEFAULT_CONFIG)["Default Device"])
+func handle_config():
+	var data = config.get_as_dict()
+
+	_default_device = data["Default Device"]
+
+
+func get_default_device() -> String:
+	return _default_device
 
 
 func calculate_window_area():

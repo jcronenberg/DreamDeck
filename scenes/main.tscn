@@ -1,8 +1,10 @@
-[gd_scene load_steps=4 format=3 uid="uid://boyndkd14akrp"]
+[gd_scene load_steps=6 format=3 uid="uid://boyndkd14akrp"]
 
 [ext_resource type="Theme" uid="uid://duea6v8sw5cfx" path="res://themes/main_theme.tres" id="1_3kin1"]
-[ext_resource type="Script" path="res://scripts/main/quit_button.gd" id="2_i1jyx"]
+[ext_resource type="Script" path="res://src/layout/layout.gd" id="2_m1k14"]
 [ext_resource type="PackedScene" uid="uid://cmqfrusykgypy" path="res://scenes/main_menu/main_menu.tscn" id="3_exqbc"]
+[ext_resource type="PackedScene" uid="uid://caoqgnvp6nf64" path="res://src/layout/layout_popup.tscn" id="3_ie8rr"]
+[ext_resource type="PackedScene" uid="uid://bi32uf4eygli6" path="res://src/layout/first_time_launch.tscn" id="6_ekbmi"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -13,58 +15,22 @@ grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("1_3kin1")
 
-[node name="VSeparator" type="VBoxContainer" parent="."]
-layout_mode = 0
+[node name="Layout" type="Container" parent="."]
+layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_m1k14")
+tab_alignment = 0
+use_hidden_tabs_for_min_size = true
+tabs_visible = false
 
-[node name="MarginContainer" type="MarginContainer" parent="VSeparator"]
-editor_description = "Margin for Menu and Quit button."
-layout_mode = 2
-theme_override_constants/margin_left = 40
-theme_override_constants/margin_right = 40
+[node name="LayoutPopup" parent="." instance=ExtResource("3_ie8rr")]
 
-[node name="ControlsSeparator" type="HBoxContainer" parent="VSeparator/MarginContainer"]
-custom_minimum_size = Vector2(0, 100)
-layout_mode = 2
-size_flags_horizontal = 5
-size_flags_vertical = 0
-theme_override_constants/separation = 50
-
-[node name="MenuWhitespace" type="Control" parent="VSeparator/MarginContainer/ControlsSeparator"]
-custom_minimum_size = Vector2(60, 0)
-layout_mode = 2
-
-[node name="Placeholder" type="Control" parent="VSeparator/MarginContainer/ControlsSeparator"]
-editor_description = "Placeholder for Touch controls. Will be set to invisible when Touch controls are enabled"
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="QuitButton" type="Button" parent="VSeparator/MarginContainer/ControlsSeparator"]
-custom_minimum_size = Vector2(60, 40)
-layout_mode = 2
-size_flags_vertical = 4
-text = "Quit"
-script = ExtResource("2_i1jyx")
-
-[node name="ElementSeparator" type="HBoxContainer" parent="VSeparator"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="MacroMargin" type="MarginContainer" parent="VSeparator/ElementSeparator"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/margin_left = 50
-theme_override_constants/margin_top = 30
-theme_override_constants/margin_right = 50
-theme_override_constants/margin_bottom = 50
-
-[node name="InputCenterContainer" type="CenterContainer" parent="."]
-editor_description = "This is where SpotifyPanel is showing it's popup. This was necessary in godot3 to center the popup. FIXME delete when SpotifyPanel's popup has been reworked."
-layout_mode = 0
-anchor_right = 1.0
-anchor_bottom = 1.0
-mouse_filter = 2
+[node name="FirstTimeLaunch" parent="." instance=ExtResource("6_ekbmi")]
+layout_mode = 1
 
 [node name="MainMenu" parent="." instance=ExtResource("3_exqbc")]
 layout_mode = 1
@@ -76,5 +42,3 @@ layout_mode = 0
 offset_right = 5.0
 offset_bottom = 5.0
 mouse_filter = 2
-
-[connection signal="pressed" from="VSeparator/MarginContainer/ControlsSeparator/QuitButton" to="VSeparator/MarginContainer/ControlsSeparator/QuitButton" method="_on_QuitButton_pressed"]

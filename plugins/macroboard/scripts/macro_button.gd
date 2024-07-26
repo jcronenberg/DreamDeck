@@ -24,9 +24,6 @@ extends Button
 # If button is currently being dragged
 var _dragging = false
 
-# Global nodes
-@onready var _global_signals = get_node("/root/GlobalSignals")
-
 
 func _ready():
 	# Required for dragging to work
@@ -62,7 +59,7 @@ func _notification(notif: int) -> void:
 
 
 func _get_drag_data(_at_position):
-	if not _global_signals.get_edit_state():
+	if not GlobalSignals.get_edit_state():
 		return
 
 	var preview = Control.new()

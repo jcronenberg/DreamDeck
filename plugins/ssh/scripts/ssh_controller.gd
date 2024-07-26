@@ -1,9 +1,7 @@
-extends Node
-# TODO add a way to delete SSHClients
-
 class_name SSHController
+extends PluginControllerBase
 
-const PLUGIN_NAME = "ssh"
+const PLUGIN_NAME = "SSH"
 const EMPTY_CLIENT = {
 	"name": "",
 	"ip": "",
@@ -18,11 +16,14 @@ var thread_pool: Array
 var main_menu_button = null
 var config_window_scene = null
 
-@onready var plugin_coordinator := get_node("/root/PluginCoordinator")
-@onready var conf_dir = plugin_coordinator.get_conf_dir(PLUGIN_NAME)
-@onready var client_config = load("res://scripts/global/config.gd").new({"ssh_clients": []}, conf_dir + "clients.json")
-@onready var execute_function_button := load("res://scenes/main_menu/execute_function_button.tscn")
-@onready var config_window := load("res://plugins/ssh/scenes/ssh_config_window.tscn")
+@onready var client_config: SimpleConfig = SimpleConfig.new({"ssh_clients": []}, conf_dir + "clients.json")
+const execute_function_button = preload("res://scenes/main_menu/execute_function_button.tscn")
+const config_window = preload("res://plugins/ssh/scenes/ssh_config_window.tscn")
+
+
+func _init():
+	plugin_name = PLUGIN_NAME
+
 
 func _exit_tree():
 	if main_menu_button:
@@ -136,5 +137,5 @@ func exec_on_client(client_name: String, cmd: String):
 		return
 
 	var thread := Thread.new()
-	thread.start(Callable(ssh_client, "exec").bind(cmd))
+	thread.start(ssh_client.exec.bind(cmd))
 	thread_pool.append(thread)

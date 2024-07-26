@@ -1,13 +1,10 @@
 extends Node
 
 
-@onready var config_loader = get_node("/root/ConfigLoader")
-
-
 func _ready():
 	handle_config()
-	get_node("/root/GlobalSignals").connect("global_config_changed", Callable(self, "_on_global_config_changed"))
-	get_window().connect("size_changed", Callable(self, "_on_size_changed"))
+	GlobalSignals.connect("global_config_changed", _on_global_config_changed)
+	get_window().connect("size_changed", _on_size_changed)
 
 
 func _on_global_config_changed():
@@ -17,14 +14,14 @@ func _on_global_config_changed():
 func _on_size_changed():
 	if get_window().mode == Window.MODE_FULLSCREEN:
 		return
-	var config_data = config_loader.get_config()
+	var config_data = ConfigLoader.get_config()
 	config_data["Window Size"]["Width"] = get_window().get_size().x
 	config_data["Window Size"]["Height"] = get_window().get_size().y
-	config_loader.save_config()
+	ConfigLoader.save_config()
 
 
 func handle_config():
-	var config_data = config_loader.get_config()
+	var config_data = ConfigLoader.get_config()
 	apply_settings(config_data)
 
 

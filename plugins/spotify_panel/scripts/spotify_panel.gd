@@ -1,14 +1,10 @@
-extends Control
+extends PluginSceneBase
 
 # Plugin
-const PLUGIN_NAME = "spotify_panel"
+const PLUGIN_NAME = "Spotify Panel"
 
-const conf_lib := preload("res://scripts/libraries/conf_lib.gd")
-
-# Downloader
-const DOWNLOADER = preload("res://scripts/helper/downloader.gd")
-# DOWNLOADER instance
-var downloader: DOWNLOADER
+# Downloader instance
+var downloader: Downloader
 
 # Plugin state
 
@@ -93,41 +89,43 @@ func config_stage3_text() -> String:
 var http_server
 
 # Nodes
-@onready var plugin_coordinator := get_node("/root/PluginCoordinator")
 @onready var http_get := get_node("HTTPGet")
 @onready var http_post := get_node("HTTPPost")
 @onready var http_get_devices := get_node("HTTPGetDevices")
 
 # Download cache
-@onready var cache_dir_path: String = plugin_coordinator.get_cache_dir(PLUGIN_NAME)
+@onready var cache_dir_path: String = PluginCoordinator.get_cache_dir(PLUGIN_NAME)
 
 # Configs
-@onready var conf_dir = plugin_coordinator.get_conf_dir(PLUGIN_NAME)
-@onready var credentials = load("res://scripts/global/config.gd").new({"refresh_token": "", "encoded_client": ""}, conf_dir + "credentials.json")
+var credentials: Config
 
-const DEFAULT_CONFIG = {
-	"Refresh Interval": 5.0
-}
+const CONFIG_DEFINITION: Array[Dictionary] = [{"TYPE": "FLOAT", "KEY": "Refresh Interval", "DEFAULT_VALUE": 5.0}]
+const CREDENTIALS_PROTO: Array[Dictionary] = [{"TYPE": "STRING", "KEY": "refresh_token", "DEFAULT_VALUE": ""},
+	{"TYPE": "STRING", "KEY": "encoded_client", "DEFAULT_VALUE": ""}]
+
+
+func _init():
+	config_definition = CONFIG_DEFINITION
 
 
 func _ready():
-	# Ensure prerequisites exist
-	conf_lib.ensure_dir_exists(cache_dir_path)
+	super()
 
-	# Load configs
-	load_plugin_config()
+	# Ensure prerequisites exist
+	ConfLib.ensure_dir_exists(cache_dir_path)
+
+	# Load credentials
+	credentials = Config.new(CREDENTIALS_PROTO, conf_dir + "credentials.json")
 	load_credentials()
-	# Handle for settings changed event
-	get_node("/root/GlobalSignals").connect("plugin_configs_changed", Callable(self, "_on_plugin_configs_changed"))
 
 	# Clear cache dir to not fill the user dir with endless albumarts
 	clear_cache()
 
 	# Setup for requests
 # warning-ignore:return_value_discarded
-	http_get.connect("request_completed", Callable(self, "_on_get_request_completed"))
+	http_get.connect("request_completed", _on_get_request_completed)
 # warning-ignore:return_value_discarded
-	http_get_devices.connect("request_completed", Callable(self, "_on_get_request_completed"))
+	http_get_devices.connect("request_completed", _on_get_request_completed)
 
 	# Initial state request, because otherwise it would take a pretty long time on first load
 	# This will likely first just establish access_token, but makes startup still a lot faster
@@ -149,27 +147,19 @@ func _physics_process(delta):
 		devices_delta = 0.0
 
 
-func _on_plugin_configs_changed():
-	load_plugin_config()
+func handle_config():
+	var data: Dictionary = config.get_as_dict()
 
-
-# Load config from config_loader and apply the settings to local variables
-func load_plugin_config():
-	# Load global config
-	var config_data = plugin_coordinator.get_plugin_config(PLUGIN_NAME, DEFAULT_CONFIG)
-	if not config_data:
-		return
-
-	metadata_refresh = config_data["Refresh Interval"]
+	metadata_refresh = data["Refresh Interval"]
 	# We don't need to refresh devices as often
 	# Add + 0.1 to offset it a bit to metadata_refresh
-	devices_refresh = config_data["Refresh Interval"] * 3 + 0.1
+	devices_refresh = data["Refresh Interval"] * 3 + 0.1
 
 func load_credentials():
 	# Load plugin config
 	credentials.load_config()
-	var plugin_config = credentials.get_config()
-	if not plugin_config["refresh_token"]:
+	var plugin_config = credentials.get_as_dict()
+	if plugin_config["refresh_token"] == "":
 		create_config()
 	else:
 		refresh_token = plugin_config["refresh_token"]
@@ -180,10 +170,10 @@ func load_credentials():
 # Creates the first dialog and connects the functions
 func create_config():
 	input_scene = load("res://scenes/user_input_popup.tscn").instantiate()
-	get_node("/root/Main/InputCenterContainer").add_child(input_scene)
+	get_node("/root/Main").add_child(input_scene)
 	input_scene.create_dialog(config_stage1_text, "Client ID")
-	input_scene.connect("apply_text", Callable(self, "_on_text_config"))
-	input_scene.connect("canceled", Callable(self, "_on_config_cancel"))
+	input_scene.connect("apply_text", _on_text_config)
+	input_scene.connect("canceled", _on_config_cancel)
 
 
 # If the user prematurely cancels we delete the object
@@ -210,8 +200,8 @@ func _on_text_config(text):
 		client_secret = text
 		encoded_client = Marshalls.utf8_to_base64(client_id + ":" + client_secret)
 		input_scene.create_dialog(config_stage3_text(), \
-								  "Press confirm once you gave authorization in the browser")
-		input_stage = 2
+								  "Continue in browser")
+		input_stage = -1
 
 		http_server = HttpServer.new()
 		http_server.set("bind_address", "127.0.0.1")
@@ -219,19 +209,16 @@ func _on_text_config(text):
 		http_server.register_router("/callback", self)
 		add_child(http_server)
 		http_server.start()
-	elif input_stage == 2:
-		input_scene.hide_popup()
-		input_scene.disconnect("apply_text", Callable(self, "_on_text_config"))
-		input_scene.disconnect("canceled", Callable(self, "_on_config_cancel"))
 
 
 func handle_get(request, response):
 	if request.query.has("code"):
 		authorization_code = request.query["code"]
-		response.send(200, "You can now close this tab and continue in DreamDeck (press confirm)")
+		response.send(200, "You can now close this tab and continue in DreamDeck")
 		request_authorization()
 		config_completed = true
 		http_server.queue_free()
+		input_scene.queue_free()
 	else:
 		response.send(200, "Something went wrong, failed to extract authorization code from request url")
 
@@ -264,7 +251,7 @@ func generate_device_list(data):
 		device_list.append(d)
 
 	# Sort device_list as otherwise the order changes constantly
-	device_list.sort_custom(Callable(DeviceSorter, "sort_by_name"))
+	device_list.sort_custom(DeviceSorter.sort_by_name)
 
 	# Set DeviceOptions properties
 	# Clear
@@ -344,7 +331,7 @@ func _on_get_request_completed(_result, response_code, _headers, body):
 		refresh_token = json_result["refresh_token"]
 		access_token = json_result["access_token"]
 		# Save new credentials
-		credentials.change_config({"refresh_token": refresh_token, "encoded_client": encoded_client})
+		credentials.apply_dict({"refresh_token": refresh_token, "encoded_client": encoded_client})
 		credentials.save()
 	# POST /api/token refresh_token result
 	elif json_result.has("access_token"):
@@ -447,7 +434,7 @@ func download_cover():
 	var filename = art_url.right(art_url.rfind("/") + 1) + ".jpeg"
 
 	# Set up downloader
-	downloader = DOWNLOADER.new()
+	downloader = Downloader.new()
 
 	# Download and wait for completion
 	downloader.download(art_url, cache_dir_path + filename)

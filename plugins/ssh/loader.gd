@@ -1,11 +1,6 @@
 class_name SSHPluginLoader
-extends PluginLoader
+extends PluginLoaderBase
 
 func _init():
-	plugin_name = "ssh"
-	scene = "res://plugins/ssh/scripts/ssh_controller.gd"
-
-
-func get_controller():
-	if _loaded:
-		return _instance
+	plugin_name = "SSH"
+	controllers = {"SSHController": "res://plugins/ssh/scripts/ssh_controller.gd"}

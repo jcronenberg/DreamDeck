@@ -1,0 +1,33 @@
+[gd_scene load_steps=2 format=3 uid="uid://bi32uf4eygli6"]
+
+[ext_resource type="Script" path="res://src/layout/first_time_launch.gd" id="1_23js4"]
+
+[node name="FirstTimeLaunch" type="CenterContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_23js4")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Label" type="Label" parent="VBoxContainer"]
+custom_minimum_size = Vector2(600, 0)
+layout_mode = 2
+size_flags_vertical = 1
+text = "It looks like this is your first time launching DreamDeck.
+Click the button below to add your first panel.
+You will also be automatically put into 'Edit Mode'. You can toggle this by going to the menu in the top left."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Button" type="Button" parent="VBoxContainer"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Add Panel"
+
+[connection signal="pressed" from="VBoxContainer/Button" to="." method="_on_button_pressed"]

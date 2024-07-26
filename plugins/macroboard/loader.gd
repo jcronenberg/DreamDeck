@@ -1,7 +1,6 @@
 class_name MacroboardPluginLoader
-extends PluginLoader
+extends PluginLoaderBase
 
 func _init():
-	plugin_name = "macroboard"
-	scene = "res://plugins/macroboard/scenes/macroboard.tscn"
-	parent = "/root/Main/VSeparator/ElementSeparator/MacroMargin"
+	plugin_name = "Macroboard"
+	scenes = {"Macroboard": "res://plugins/macroboard/scenes/macroboard.tscn"}

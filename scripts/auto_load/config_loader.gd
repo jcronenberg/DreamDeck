@@ -12,11 +12,7 @@ const DEFAULT_CONFIG := {
 	}
 
 var conf_dir: String = OS.get_user_data_dir() + "/"
-
-const conf_lib := preload("res://scripts/libraries/conf_lib.gd")
-var config
-
-@onready var ArgumentParser := get_node("/root/ArgumentParser")
+var config: SimpleConfig
 
 
 func _ready():
@@ -31,7 +27,7 @@ func _ready():
 		# So in editor we don't overwrite logs in normal config
 		ProjectSettings.set_setting("application/config/use_custom_user_dir", false)
 
-	config = load("res://scripts/global/config.gd").new(DEFAULT_CONFIG, conf_dir + "config.json")
+	config = SimpleConfig.new(DEFAULT_CONFIG, conf_dir + "config.json")
 
 	# Now that path is set if it is changed we can load
 	config.load_config()
@@ -56,7 +52,7 @@ func change_config(new_data):
 
 func save_config():
 	config.save()
-	get_node("/root/GlobalSignals").emit_global_config_changed()
+	GlobalSignals.emit_global_config_changed()
 
 
 # Returns the directory of all configs, since this can be modified with arguments
@@ -66,4 +62,4 @@ func get_conf_dir():
 
 
 func on_config_changed():
-	get_node("/root/GlobalSignals").config_changed()
+	GlobalSignals.emit_config_changed()

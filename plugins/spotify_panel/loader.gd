@@ -1,7 +1,6 @@
 class_name SpotifyPanelPluginLoader
-extends PluginLoader
+extends PluginLoaderBase
 
 func _init():
-	plugin_name = "spotify_panel"
-	scene = "res://plugins/spotify_panel/scenes/spotify_panel.tscn"
-	parent = "/root/Main/VSeparator/ElementSeparator"
+	plugin_name = "Spotify Panel"
+	scenes = {"Spotify Panel": "res://plugins/spotify_panel/scenes/spotify_panel.tscn"}

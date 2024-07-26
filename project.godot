@@ -52,6 +52,10 @@ window/per_pixel_transparency/enabled=true
 
 run/main_run_args="--confdir=local_config"
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/dockable_container/plugin.cfg")
+
 [filesystem]
 
 import/blender/enabled=false
@@ -124,6 +128,7 @@ common/enable_pause_aware_picking=true
 [rendering]
 
 renderer/rendering_method="gl_compatibility"
+shader_compiler/shader_cache/enabled=false
 environment/defaults/default_clear_color=Color(0.0705882, 0.0705882, 0.0705882, 1)
 environment/defaults/default_environment="res://default_env.tres"
 threads/thread_model=2
