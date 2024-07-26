@@ -1,3 +1,6 @@
+// Original author: Ryan Leverenz
+// SPDX-License-Identifier: MPL-2.0
+// You can obtain a copy at http://mozilla.org/MPL/2.0/
 use std::io::{Read, Write};
 use std::process::Stdio;
 use std::process::{Child, Command};
