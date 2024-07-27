@@ -39,10 +39,8 @@ func discover_plugins():
 	# Thus runtime plugins don't work with the editor.
 	# If you need to test something export a debug build and test
 	# with that.
-	if OS.has_feature("editor"):
-		return
-
-	_runtime_load_plugins()
+	if not OS.has_feature("editor"):
+		_runtime_load_plugins()
 
 	var discovered_plugins := list_plugins()
 	for plugin_path in discovered_plugins:
