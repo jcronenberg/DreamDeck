@@ -87,10 +87,10 @@ impl GrabTouchDevice {
         }
 
         // Get id from device_list by matching name
-	let device_name: &GString = match &self.device_name {
-	    Some(device_name) => &device_name,
-	    None => return Err("No device name set".into()),
-	};
+        let device_name: &GString = match &self.device_name {
+            Some(device_name) => &device_name,
+            None => return Err("No device name set".into()),
+        };
         let id: usize = *match self.device_list.as_ref().unwrap().get(device_name) {
             Some(id) => id,
             None => return Err("Device not found".into()),
@@ -143,9 +143,9 @@ impl GrabTouchDevice {
     /// This is for a manual call by the handler
     #[func]
     fn reconnect_device(&mut self) {
-	if let Some(device_name) = &self.device_name {
-	    self.set_device(device_name.clone());
-	}
+        if let Some(device_name) = &self.device_name {
+            self.set_device(device_name.clone());
+        }
     }
 
     /// Internal function that populates self.device_list
