@@ -32,6 +32,10 @@ linux:
 	$(MAKE) rust
 	$(MAKE) _build-linux
 
+linux-debug:
+	$(MAKE) rust-debug
+	$(MAKE) _build-linux-debug
+
 _check-godot:
 ifndef GODOT_EXECUTABLE
 	$(error "Godot executable not found. Please make sure Godot4 is installed and in your system PATH.")
@@ -46,6 +50,9 @@ endif
 _build-linux: _check-godot
 	@$(GODOT_EXECUTABLE) --headless --export-release "Linux"
 
+_build-linux-debug: _check-godot
+	@$(GODOT_EXECUTABLE) --headless --export-release "Linux"
+
 _build-windows: _check-godot
 	@$(GODOT_EXECUTABLE) --headless --export-release "Windows Desktop"
 
@@ -54,6 +61,12 @@ ifndef CARGO
 	$(error "Cargo not installed, rust is required")
 endif
 	for dir in $(RUST_DIRS); do cargo build --manifest-path $${dir}/Cargo.toml --release; done
+
+rust-debug:
+ifndef CARGO
+	$(error "Cargo not installed, rust is required")
+endif
+	for dir in $(RUST_DIRS); do cargo build --manifest-path $${dir}/Cargo.toml; done
 
 clean: rust-clean
 	rm -f $(BUILD_DIR)/$(DREAMDECK_LINUX)
