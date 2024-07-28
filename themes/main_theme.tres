@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=31 format=3 uid="uid://duea6v8sw5cfx"]
+[gd_resource type="Theme" load_steps=32 format=3 uid="uid://duea6v8sw5cfx"]
 
 [ext_resource type="FontFile" uid="uid://dnvsausndgsb2" path="res://fonts/roboto/roboto_bold.ttf" id="1_dkosj"]
 [ext_resource type="FontFile" uid="uid://cbcdnmy2og275" path="res://fonts/roboto/roboto_regular.ttf" id="1_orbee"]
@@ -98,6 +98,8 @@ border_width_left = 8
 border_width_right = 8
 border_color = Color(1, 1, 1, 0.0941176)
 
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_wt6k8"]
+
 [sub_resource type="StyleBoxFlat" id="18"]
 content_margin_left = 20.0
 content_margin_right = 20.0
@@ -188,6 +190,8 @@ MyMenuButton/styles/focus = SubResource("29")
 MyMenuButton/styles/hover = SubResource("32")
 MyMenuButton/styles/normal = SubResource("29")
 MyMenuButton/styles/pressed = SubResource("29")
+NoButton/base_type = &"Button"
+NoButton/styles/disabled = SubResource("StyleBoxEmpty_wt6k8")
 OptionButton/icons/arrow = null
 OptionButton/styles/focus = SubResource("18")
 OptionButton/styles/hover = SubResource("16")
@@ -199,6 +203,8 @@ RichTextLabel/fonts/bold_font = ExtResource("1_dkosj")
 RichTextLabel/fonts/bold_italics_font = ExtResource("2_u3lia")
 RichTextLabel/fonts/italics_font = ExtResource("3_si0jc")
 RichTextLabel/fonts/mono_font = ExtResource("4_0ds26")
+SettingsTabContainer/base_type = &"TabContainer"
+SettingsTabContainer/constants/side_margin = 0
 SolidPanel/base_type = &"Panel"
 SolidPanel/styles/panel = SubResource("30")
 TabContainer/constants/side_margin = 80

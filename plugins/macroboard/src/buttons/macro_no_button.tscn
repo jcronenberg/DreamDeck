@@ -1,0 +1,28 @@
+[gd_scene load_steps=3 format=3 uid="uid://556d60vyew88"]
+
+[ext_resource type="Script" path="res://plugins/macroboard/src/buttons/macro_no_button.gd" id="1_078qk"]
+[ext_resource type="Texture2D" uid="uid://xrd5da3pj5cy" path="res://plugins/macroboard/icons/plus_line_icon.png" id="2_1ksk3"]
+
+[node name="MacroNoButton" type="Button"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 1
+theme_type_variation = &"NoButton"
+disabled = true
+script = ExtResource("1_078qk")
+
+[node name="Icon" type="TextureRect" parent="."]
+visible = false
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 30.0
+offset_top = 30.0
+offset_right = -30.0
+offset_bottom = -30.0
+texture = ExtResource("2_1ksk3")
+expand_mode = 1
+stretch_mode = 5
+
+[connection signal="pressed" from="." to="." method="_on_pressed"]

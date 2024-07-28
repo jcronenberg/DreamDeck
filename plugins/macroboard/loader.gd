@@ -3,4 +3,4 @@ extends PluginLoaderBase
 
 func _init():
 	plugin_name = "Macroboard"
-	scenes = {"Macroboard": "res://plugins/macroboard/scenes/macroboard.tscn"}
+	scenes = {"Macroboard": "res://plugins/macroboard/src/macroboard/macroboard.tscn"}

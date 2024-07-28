@@ -9,7 +9,7 @@ extends Node
 ## Example usage:
 ##
 ## [codeblock]
-## extends PluginLoader
+## extends PluginLoaderBase
 ##
 ## func _init():
 ##     plugin_name = "Plugin Name"
@@ -50,6 +50,8 @@ extends Node
 ## Example: [code]{"PluginController": "res://plugins/your_plugin/controller.gd"}[/code]
 @export var controllers: Dictionary
 
+# FIXME probably a class inside plugin coordinator in the future
+var actions: Array[PluginCoordinator.PluginActionDefinition] = []
 
 # Used to store all resources that are supposed to be loaded
 var _load_queue: Array[String] = []

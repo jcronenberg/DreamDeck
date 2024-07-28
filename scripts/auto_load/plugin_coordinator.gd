@@ -32,6 +32,8 @@ func _ready():
 	load_activated_plugins()
 
 
+
+# FIXME doesn't check if already there, so can't currently be called at runtime
 ## Discovers all plugins at `res://plugins` and adds them to [member _plugins].
 ## It also loads all files in [member _conf_dir]/plugins as resource packs.
 func discover_plugins():
@@ -228,6 +230,18 @@ func generate_scene_enum(plugin: String) -> Dictionary:
 	return ret_dict
 
 
+func get_plugin_actions() -> Array[PluginActionDefinition]:
+	var actions: Array[PluginActionDefinition] = []
+	for plugin in _plugins:
+		var loader: PluginLoaderBase = plugin.get_loader()
+		if loader:
+			actions.append_array(loader.actions)
+
+	actions.append_array(DreamdeckBuiltinActions.get_actions())
+
+	return actions
+
+
 func add_panel(leaf: DockableLayoutPanel):
 	get_node("/root/Main/Layout").set_new_panel_leaf(leaf)
 	get_node("/root/Main/LayoutPopup").new_panel()
@@ -269,3 +283,146 @@ class Plugin:
 
 	func deserialize(dict: Dictionary):
 		plugin_name = dict["plugin_name"]
+
+
+class PluginActionDefinition:
+	var name: String
+	# var description: String
+	var controller: String
+	var plugin: String
+	var func_name: String
+	var args: Config
+
+
+	# TODO Config for args?
+	func _init(_name: String, _func_name: String, _args: Config, _plugin: String, _controller: String):
+		name = _name
+		controller = _controller
+		plugin = _plugin
+		func_name = _func_name
+		args = _args
+
+
+class PluginActionSelector extends VBoxContainer:
+	var _plugin_selector: OptionButton = OptionButton.new()
+	var _name_selector: OptionButton = OptionButton.new()
+	var _plugin_actions: Array[PluginActionDefinition] = PluginCoordinator.get_plugin_actions()
+
+
+	func _init() -> void:
+		set_anchors_preset(PRESET_FULL_RECT)
+		set("theme_override_constants/separation", 20)
+
+		fill_plugins()
+		_plugin_selector.connect("item_selected", _on_plugin_selected)
+
+		var plugin_selector_hbox: HBoxContainer = HBoxContainer.new()
+		var plugin_label: Label = Label.new()
+		plugin_label.text = "Plugin"
+		plugin_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_plugin_selector.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		plugin_selector_hbox.add_child(plugin_label)
+		plugin_selector_hbox.add_child(_plugin_selector)
+		add_child(plugin_selector_hbox)
+
+		var name_selector_hbox: HBoxContainer = HBoxContainer.new()
+		var name_label: Label = Label.new()
+		name_label.text = "Action"
+		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_name_selector.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		name_selector_hbox.add_child(name_label)
+		name_selector_hbox.add_child(_name_selector)
+		add_child(name_selector_hbox)
+
+
+	func fill_plugins() -> void:
+		var plugins: Array[String] = []
+		for plugin_action in _plugin_actions:
+			if not plugins.has(plugin_action.plugin):
+				plugins.append(plugin_action.plugin)
+
+		_plugin_selector.clear()
+		for plugin in plugins:
+			_plugin_selector.add_item(plugin)
+
+		_plugin_selector.select(-1)
+
+
+	func get_selected_action() -> PluginActionDefinition:
+		if _plugin_selector.get_selected_id() == -1 or _name_selector.get_selected_id() == -1:
+			return null
+
+		var selected_plugin: String = _plugin_selector.get_item_text(_plugin_selector.get_selected_id())
+		var selected_name: String = _name_selector.get_item_text(_name_selector.get_selected_id())
+
+		for plugin_action in _plugin_actions:
+			if plugin_action.plugin == selected_plugin and plugin_action.name == selected_name:
+				return plugin_action
+
+		return null
+
+
+	func _get_actions_for_plugin(plugin: String) -> Array[String]:
+		var actions: Array[String] = []
+		for plugin_action in _plugin_actions:
+			if plugin_action.plugin == plugin:
+				actions.append(plugin_action.name)
+
+		return actions
+
+
+	func _on_plugin_selected(index: int) -> void:
+		var plugin: String = _plugin_selector.get_item_text(index)
+		_name_selector.clear()
+		for action in _get_actions_for_plugin(plugin):
+			_name_selector.add_item(action)
+
+
+class PluginAction:
+	var controller: String
+	var plugin: String
+	var func_name: String
+	var args: Array[Variant]
+	var blocking: bool
+
+
+	func deserialize(dict: Dictionary) -> void:
+		controller = dict["controller"]
+		plugin = dict["plugin"]
+		func_name = dict["func_name"]
+		args = dict["args"]
+		blocking = dict["blocking"]
+
+
+	func serialize() -> Dictionary:
+		return {"controller": controller, "plugin": plugin, "func_name": func_name, "args": args, "blocking": blocking}
+
+
+	# TODO maybe return bool and handle error message in button?
+	func execute() -> void:
+		var controller_instance: PluginControllerBase
+		if not controller == "" and not plugin == "":
+			var loader_instance: PluginLoaderBase = PluginCoordinator.get_plugin_loader(plugin)
+			if not loader_instance:
+				push_error("Failed to get plugin: %s" % plugin)
+				return
+			controller_instance = loader_instance.get_controller(controller)
+			if not controller_instance:
+				push_error("Failed to get controller: %s" % controller)
+				return
+
+		var ret: Variant
+		if blocking:
+			if plugin == "DreamDeck":
+				ret = await DreamdeckBuiltinActions.callv(func_name, args)
+			else:
+				ret = await controller_instance.callv(func_name, args)
+		else:
+			if plugin == "DreamDeck":
+				ret = DreamdeckBuiltinActions.callv(func_name, args)
+			else:
+				ret = controller_instance.callv(func_name, args)
+
+		if typeof(ret) == TYPE_BOOL:
+			if not ret:
+				push_warning("Action %s %s failed" % [func_name, args])

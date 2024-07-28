@@ -113,6 +113,10 @@ func generate_editor() -> ConfigEditor:
 	return ConfigEditor.new(self)
 
 
+func add_object(object_dict: Dictionary) -> void:
+	_config.append_array(_generate_objects([object_dict]))
+
+
 func _get_object(key: String) -> ConfigObject:
 	for object in _config:
 		if object.get_key() == key:
@@ -367,6 +371,22 @@ class ConfigEditor extends VBoxContainer:
 				return editor
 
 		return null
+
+
+	func set_values(values: Array[Variant]) -> void:
+		if values.size() > _object_editors.size():
+			push_error("Trying to set too many values for Config")
+			return
+		for i in values.size():
+			_object_editors[i].set_value(values[i])
+
+
+	func get_values() -> Array[Variant]:
+		var ret_arr: Array[Variant] = []
+		for object_editor in _object_editors:
+			ret_arr.append(object_editor.get_value())
+
+		return ret_arr
 
 
 class VariantEditor extends HBoxContainer:

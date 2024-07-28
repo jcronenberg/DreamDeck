@@ -33,6 +33,7 @@ GlobalSignals="*res://scripts/auto_load/global_signals.gd"
 HandleConfig="*res://scripts/auto_load/handle_config.gd"
 PluginCoordinator="*res://scripts/auto_load/plugin_coordinator.gd"
 PopupManager="*res://src/autoload/popup_manager.gd"
+DreamdeckBuiltinActions="*res://src/builtin_actions/dreamdeck_builtin_actions.gd"
 
 [debug]
 
@@ -55,7 +56,7 @@ run/main_run_args="--confdir=local_config"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/dockable_container/plugin.cfg")
+enabled=PackedStringArray("res://addons/ReorderableContainer/plugin.cfg", "res://addons/dockable_container/plugin.cfg")
 
 [filesystem]
 

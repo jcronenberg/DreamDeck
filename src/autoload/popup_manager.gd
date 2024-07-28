@@ -78,6 +78,12 @@ func get_current_popup() -> Control:
 	return _popup_stack[_popup_stack.size() - 1] if _popup_stack.size() > 0 else null
 
 
+## Closes the current popup and disconnects the caller's functions.
+func close_popup() -> void:
+	while _popup_stack.size() > 0:
+		pop_stack_item()
+
+
 func _set_current_popup(popup_window: Control) -> void:
 	if _popup_stack.size() > 0:
 		emit_signal("popup_cancelled", null)
@@ -126,19 +132,18 @@ class SimpleWindow extends Window:
 	signal confirmed
 	signal cancelled
 
-	@onready var _buttons_hbox: HBoxContainer = HBoxContainer.new()
-	@onready var _confirm_button: Button = Button.new()
-	@onready var _cancel_button: Button = Button.new()
-	var _margin: MarginContainer
-	var _vbox: VBoxContainer
-	var _control: Control
+	var _buttons_hbox: HBoxContainer = HBoxContainer.new()
+	var _confirm_button: Button = Button.new()
+	var _cancel_button: Button = Button.new()
+	var _margin: MarginContainer = MarginContainer.new()
+	var _vbox: VBoxContainer = VBoxContainer.new()
+	var _scene_parent: MarginContainer = MarginContainer.new()
 
 
 	func _init() -> void:
 		set_size(Vector2(800, 400))
 		set_initial_position(Window.WINDOW_INITIAL_POSITION_CENTER_PRIMARY_SCREEN)
 
-		_margin = MarginContainer.new()
 		_margin.set("theme_override_constants/margin_left", 20)
 		_margin.set("theme_override_constants/margin_right", 20)
 		_margin.set("theme_override_constants/margin_bottom", 20)
@@ -146,10 +151,8 @@ class SimpleWindow extends Window:
 		_margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 		add_child(_margin)
 
-		_vbox = VBoxContainer.new()
-		_control = Control.new()
-		_control.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		_vbox.add_child(_control)
+		_scene_parent.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		_vbox.add_child(_scene_parent)
 		_margin.add_child(_vbox)
 
 
@@ -168,12 +171,12 @@ class SimpleWindow extends Window:
 
 
 	func set_scene(node: Control) -> void:
-		if _control.get_child_count() > 0:
+		if _scene_parent.get_child_count() > 0:
 			# Should only ever be 1 but just to be sure
-			for child in _control.get_children():
-				_control.remove_child(child)
+			for child in _scene_parent.get_children():
+				_scene_parent.remove_child(child)
 
-		_control.add_child(node)
+		_scene_parent.add_child(node)
 
 
 	func set_cancel_text(text: String) -> void:
