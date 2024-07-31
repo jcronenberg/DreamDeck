@@ -32,6 +32,7 @@ ConfigLoader="*res://scripts/auto_load/config_loader.gd"
 GlobalSignals="*res://scripts/auto_load/global_signals.gd"
 HandleConfig="*res://scripts/auto_load/handle_config.gd"
 PluginCoordinator="*res://scripts/auto_load/plugin_coordinator.gd"
+PopupManager="*res://src/autoload/popup_manager.gd"
 
 [debug]
 
