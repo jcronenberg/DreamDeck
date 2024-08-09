@@ -48,16 +48,14 @@ func deserialize(dict: Dictionary) -> void:
 	_config.apply_dict(dict)
 	_button_label = dict["Button label"]
 	_icon_path = dict["Icon path"]
-	if dict.has("Show app name"):
-		_show_button_label = dict["Show app name"]
-	else:
-		_show_button_label = dict["Show button label"]
-	_actions = []
-	var dict_actions: Array = dict["actions"]
-	for action_dict in dict_actions:
-		var action: PluginCoordinator.PluginAction = PluginCoordinator.PluginAction.new()
-		action.deserialize(action_dict)
-		_actions.append(action)
+	_show_button_label = dict["Show button label"]
+	if dict.has("actions"):
+		_actions = []
+		var dict_actions: Array = dict["actions"]
+		for action_dict in dict_actions:
+			var action: PluginCoordinator.PluginAction = PluginCoordinator.PluginAction.new()
+			action.deserialize(action_dict)
+			_actions.append(action)
 
 
 func serialize() -> Dictionary:
@@ -112,6 +110,8 @@ func _on_popup_confirmed(popup_window: Control) -> void:
 
 	_actions = _actions_editor.deserialize()
 	_config_editor.apply()
+	deserialize(_config.get_as_dict())
+	apply_change()
 
 
 func _on_pressed() -> void:
