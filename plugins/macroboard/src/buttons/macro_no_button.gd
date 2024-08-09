@@ -11,7 +11,6 @@ func set_add_button(value: bool) -> void:
 	$Icon.visible = value
 
 
-# TODO rename
 func _on_pressed() -> void:
 	open_editor(true)
 

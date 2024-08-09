@@ -1,6 +1,7 @@
 extends Node
 
 
+## Returns all Dreamdeck builtin actions
 func get_actions() -> Array[PluginCoordinator.PluginActionDefinition]:
 	return [
 		PluginCoordinator.PluginActionDefinition.new("Execute command", "exec_cmd", Config.new([{"TYPE": "STRING", "KEY": "Command", "DEFAULT_VALUE": ""}]), "DreamDeck", ""),
@@ -8,11 +9,13 @@ func get_actions() -> Array[PluginCoordinator.PluginActionDefinition]:
 		]
 
 
+## Waits [param time]. Function for builtin action "Timer"
 func wait_time(time: float) -> void:
 	await get_tree().create_timer(time).timeout
 
 
 # TODO doesn't really work with blocking
+## Executes [param command]. Function for builtin action "Execute Command"
 func exec_cmd(command: String) -> bool:
 	# Platform specific
 	# If the os is windows we have to run commands like this:

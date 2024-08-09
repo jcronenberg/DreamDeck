@@ -287,14 +287,13 @@ class Plugin:
 
 class PluginActionDefinition:
 	var name: String
-	# var description: String
+	# var description: String TODO
 	var controller: String
 	var plugin: String
 	var func_name: String
 	var args: Config
 
 
-	# TODO Config for args?
 	func _init(_name: String, _func_name: String, _args: Config, _plugin: String, _controller: String):
 		name = _name
 		controller = _controller

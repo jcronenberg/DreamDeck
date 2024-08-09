@@ -6,7 +6,7 @@ var _config_editor: Config.ConfigEditor
 var _config: Config = Config.new([
 	{"TYPE": "STRING", "KEY": "Button label", "DEFAULT_VALUE": ""},
 	{"TYPE": "STRING", "KEY": "Icon path", "DEFAULT_VALUE": ""},
-	{"TYPE": "BOOL", "KEY": "Show button label", "DEFAULT_VALUE": false}, #TODO remove maybe?
+	{"TYPE": "BOOL", "KEY": "Show button label", "DEFAULT_VALUE": false},
 	])
 
 
@@ -50,7 +50,7 @@ func open_editor(new_button: bool = false) -> void:
 	PopupManager.init_popup(tab_container, _on_popup_confirmed, func not_required(__): pass)
 
 
-func _on_new_action_requested():
+func _on_new_action_requested() -> void:
 	PopupManager.add_stack_item(PluginCoordinator.PluginActionSelector.new())
 
 
@@ -74,7 +74,7 @@ func _on_delete_button_pressed() -> void:
 	confirm_dialog.connect("confirmed", _on_confirm_deletion)
 
 
-func _on_confirm_deletion():
+func _on_confirm_deletion() -> void:
 	PopupManager.close_popup()
 	var macroboard: Macroboard = get_macroboard()
 
@@ -113,7 +113,7 @@ class ActionsEditor extends VBoxContainer:
 		_reorder_vbox.add_child(action_editor)
 
 
-	func populate_actions(actions: Array[PluginCoordinator.PluginAction]):
+	func populate_actions(actions: Array[PluginCoordinator.PluginAction]) -> void:
 		for child in _reorder_vbox.get_children():
 			child.queue_free()
 
@@ -134,7 +134,7 @@ class ActionsEditor extends VBoxContainer:
 		return ret_array
 
 
-	func _on_add_button_pressed():
+	func _on_add_button_pressed() -> void:
 		emit_signal("new_action_requested")
 
 
@@ -174,7 +174,7 @@ class ActionEditor extends HBoxContainer:
 		_editor_vbox.add_child(_blocking_editor)
 
 
-	func _ready():
+	func _ready() -> void:
 		# Special cases
 		if plugin == "DreamDeck" and func_name == "wait_time":
 			_blocking_editor.queue_free()
@@ -192,6 +192,6 @@ class ActionEditor extends HBoxContainer:
 		return action
 
 
-	func set_blocking(value: bool):
+	func set_blocking(value: bool) -> void:
 		blocking = value
 		_blocking_editor.set_value(value)
