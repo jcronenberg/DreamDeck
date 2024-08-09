@@ -60,3 +60,4 @@ DreamDeck uses code from some Addons that awesome people made. Huge thanks to th
 * [Better Processes](https://gitlab.com/greenfox/better-processes)
 * [Godot UUID](https://github.com/binogure-studio/godot-uuid)
 * [Dockable Container](https://github.com/gilzoide/godot-dockable-container)
+* [ReorderableContainer](https://github.com/FoolLin/ReorderableContainer)
