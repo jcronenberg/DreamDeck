@@ -1,11 +1,10 @@
-[gd_scene load_steps=7 format=3 uid="uid://boyndkd14akrp"]
+[gd_scene load_steps=6 format=3 uid="uid://boyndkd14akrp"]
 
 [ext_resource type="Theme" uid="uid://duea6v8sw5cfx" path="res://themes/main_theme.tres" id="1_3kin1"]
 [ext_resource type="Script" path="res://src/layout/layout.gd" id="2_m1k14"]
 [ext_resource type="PackedScene" uid="uid://cmqfrusykgypy" path="res://scenes/main_menu/main_menu.tscn" id="3_exqbc"]
 [ext_resource type="PackedScene" uid="uid://caoqgnvp6nf64" path="res://src/layout/layout_popup.tscn" id="3_ie8rr"]
 [ext_resource type="PackedScene" uid="uid://bi32uf4eygli6" path="res://src/layout/first_time_launch.tscn" id="6_ekbmi"]
-[ext_resource type="Script" path="res://addons/ReorderableContainer/reorderable_vbox.gd" id="6_v61m2"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -43,53 +42,3 @@ layout_mode = 0
 offset_right = 5.0
 offset_bottom = 5.0
 mouse_filter = 2
-
-[node name="Control" type="Control" parent="."]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="ScrollContainer" type="ScrollContainer" parent="Control"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="VBoxContainer" type="Container" parent="Control/ScrollContainer" node_paths=PackedStringArray("scroll_container")]
-process_mode = 1
-custom_minimum_size = Vector2(0, 320)
-layout_mode = 2
-size_flags_horizontal = 3
-script = ExtResource("6_v61m2")
-is_vertical = true
-scroll_container = NodePath("..")
-
-[node name="ColorRect" type="ColorRect" parent="Control/ScrollContainer/VBoxContainer"]
-custom_minimum_size = Vector2(0, 100)
-layout_mode = 2
-mouse_filter = 1
-color = Color(0, 1, 0, 1)
-
-[node name="ColorRect2" type="ColorRect" parent="Control/ScrollContainer/VBoxContainer"]
-custom_minimum_size = Vector2(0, 100)
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-mouse_filter = 2
-color = Color(1, 0, 0, 1)
-
-[node name="ColorRect3" type="ColorRect" parent="Control/ScrollContainer/VBoxContainer"]
-custom_minimum_size = Vector2(0, 100)
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-mouse_filter = 1
-color = Color(0, 0, 1, 1)
-
-[connection signal="sort_children" from="Control/ScrollContainer/VBoxContainer" to="Control/ScrollContainer/VBoxContainer" method="_on_sort_children"]
