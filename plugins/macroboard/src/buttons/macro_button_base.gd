@@ -19,12 +19,8 @@ func get_macroboard() -> Macroboard:
 
 
 func open_editor(new_button: bool = false) -> void:
-	# Else open the editor
 	var tab_container: TabContainer = TabContainer.new()
 	tab_container.set_anchors_preset(Control.PRESET_FULL_RECT)
-	# TODO make the layout TabContainer a variation and remove this variation
-	# because the layout one is more a variation than the default
-	tab_container.theme_type_variation = "SettingsTabContainer"
 
 	var vbox: VBoxContainer = VBoxContainer.new()
 	var margin: MarginContainer = MarginContainer.new()

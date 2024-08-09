@@ -76,6 +76,8 @@ border_width_left = 2
 border_width_bottom = 2
 border_color = Color(1, 1, 1, 0.109804)
 
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_j0ya6"]
+
 [sub_resource type="StyleBoxFlat" id="24"]
 bg_color = Color(1, 1, 1, 0.164706)
 border_color = Color(1, 1, 1, 0)
@@ -133,8 +135,6 @@ corner_radius_bottom_left = 12
 [sub_resource type="StyleBoxFlat" id="30"]
 bg_color = Color(0.12549, 0.121569, 0.14902, 1)
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_mq2nh"]
-
 [sub_resource type="StyleBoxFlat" id="28"]
 bg_color = Color(0.270588, 0.266667, 0.290196, 1)
 border_width_left = 4
@@ -183,6 +183,9 @@ CheckButton/styles/pressed = SubResource("14")
 HSlider/styles/grabber_area = SubResource("StyleBoxFlat_mfpw8")
 HSlider/styles/grabber_area_highlight = SubResource("8")
 HSlider/styles/slider = SubResource("9")
+LayoutTabContainer/base_type = &"TabContainer"
+LayoutTabContainer/constants/side_margin = 80
+LayoutTabContainer/styles/panel = SubResource("StyleBoxEmpty_j0ya6")
 LineEdit/styles/focus = SubResource("24")
 LineEdit/styles/normal = SubResource("24")
 MyMenuButton/base_type = &"Button"
@@ -203,11 +206,7 @@ RichTextLabel/fonts/bold_font = ExtResource("1_dkosj")
 RichTextLabel/fonts/bold_italics_font = ExtResource("2_u3lia")
 RichTextLabel/fonts/italics_font = ExtResource("3_si0jc")
 RichTextLabel/fonts/mono_font = ExtResource("4_0ds26")
-SettingsTabContainer/base_type = &"TabContainer"
-SettingsTabContainer/constants/side_margin = 0
 SolidPanel/base_type = &"Panel"
 SolidPanel/styles/panel = SubResource("30")
-TabContainer/constants/side_margin = 80
-TabContainer/styles/panel = SubResource("StyleBoxEmpty_mq2nh")
 TooltipPanel/styles/panel = SubResource("28")
 Window/styles/embedded_border = SubResource("StyleBoxFlat_2ia3h")
