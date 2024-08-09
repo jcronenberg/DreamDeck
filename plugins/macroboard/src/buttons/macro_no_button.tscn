@@ -1,14 +1,16 @@
-[gd_scene load_steps=3 format=3 uid="uid://556d60vyew88"]
+[gd_scene load_steps=4 format=3 uid="uid://556d60vyew88"]
 
 [ext_resource type="Script" path="res://plugins/macroboard/src/buttons/macro_no_button.gd" id="1_078qk"]
 [ext_resource type="Texture2D" uid="uid://xrd5da3pj5cy" path="res://plugins/macroboard/icons/plus_line_icon.png" id="2_1ksk3"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_ii5sm"]
 
 [node name="MacroNoButton" type="Button"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 1
-theme_type_variation = &"NoButton"
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_ii5sm")
 disabled = true
 script = ExtResource("1_078qk")
 
