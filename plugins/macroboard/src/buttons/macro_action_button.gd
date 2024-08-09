@@ -114,7 +114,7 @@ func _on_popup_confirmed(popup_window: Control) -> void:
 	_config_editor.apply()
 
 
-func _on_AppButton_pressed() -> void:
+func _on_pressed() -> void:
 	# If not in edit mode execute all actions
 	if not GlobalSignals.get_edit_state():
 		for action in _actions:
