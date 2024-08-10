@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=31 format=3 uid="uid://duea6v8sw5cfx"]
+[gd_resource type="Theme" load_steps=32 format=3 uid="uid://duea6v8sw5cfx"]
 
 [ext_resource type="FontFile" uid="uid://dnvsausndgsb2" path="res://fonts/roboto/roboto_bold.ttf" id="1_dkosj"]
 [ext_resource type="FontFile" uid="uid://cbcdnmy2og275" path="res://fonts/roboto/roboto_regular.ttf" id="1_orbee"]
@@ -133,6 +133,8 @@ corner_radius_bottom_left = 12
 [sub_resource type="StyleBoxFlat" id="30"]
 bg_color = Color(0.12549, 0.121569, 0.14902, 1)
 
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_s8cd6"]
+
 [sub_resource type="StyleBoxFlat" id="28"]
 bg_color = Color(0.270588, 0.266667, 0.290196, 1)
 border_width_left = 4
@@ -204,5 +206,6 @@ RichTextLabel/fonts/italics_font = ExtResource("3_si0jc")
 RichTextLabel/fonts/mono_font = ExtResource("4_0ds26")
 SolidPanel/base_type = &"Panel"
 SolidPanel/styles/panel = SubResource("30")
+TabContainer/styles/panel = SubResource("StyleBoxEmpty_s8cd6")
 TooltipPanel/styles/panel = SubResource("28")
 Window/styles/embedded_border = SubResource("StyleBoxFlat_2ia3h")
