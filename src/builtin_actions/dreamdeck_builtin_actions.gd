@@ -8,8 +8,8 @@ func get_actions() -> Array[PluginCoordinator.PluginActionDefinition]:
 	var timer_args_config: Config = Config.new()
 	timer_args_config.add_float("Time", 1.0)
 	return [
-		PluginCoordinator.PluginActionDefinition.new("Execute command", "exec_cmd", exec_cmd_args_config, "DreamDeck", ""),
-		PluginCoordinator.PluginActionDefinition.new("Timer", "wait_time", timer_args_config, "DreamDeck", "")
+		PluginCoordinator.PluginActionDefinition.new("Execute command", "exec_cmd", "Execute a command on this device", exec_cmd_args_config, "DreamDeck", ""),
+		PluginCoordinator.PluginActionDefinition.new("Timer", "wait_time", "Delays the execution of the next action by configured time in seconds", timer_args_config, "DreamDeck", "")
 		]
 
 

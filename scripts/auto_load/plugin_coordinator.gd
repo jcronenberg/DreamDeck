@@ -287,16 +287,17 @@ class Plugin:
 
 class PluginActionDefinition:
 	var name: String
-	# var description: String TODO
+	var description: String
 	var controller: String
 	var plugin: String
 	var func_name: String
 	var args: Config
 
 
-	func _init(_name: String, _func_name: String, _args: Config, _plugin: String, _controller: String):
+	func _init(_name: String, _func_name: String, _description: String, _args: Config, _plugin: String, _controller: String):
 		name = _name
 		controller = _controller
+		description = _description
 		plugin = _plugin
 		func_name = _func_name
 		args = _args
@@ -304,7 +305,8 @@ class PluginActionDefinition:
 
 class PluginActionSelector extends VBoxContainer:
 	var _plugin_selector: OptionButton = OptionButton.new()
-	var _name_selector: OptionButton = OptionButton.new()
+	var _action_selector: OptionButton = OptionButton.new()
+	var _description_label: RichTextLabel = RichTextLabel.new()
 	var _plugin_actions: Array[PluginActionDefinition] = PluginCoordinator.get_plugin_actions()
 
 
@@ -314,6 +316,7 @@ class PluginActionSelector extends VBoxContainer:
 
 		fill_plugins()
 		_plugin_selector.connect("item_selected", _on_plugin_selected)
+		_action_selector.connect("item_selected", _on_action_selected)
 
 		var plugin_selector_hbox: HBoxContainer = HBoxContainer.new()
 		var plugin_label: Label = Label.new()
@@ -328,10 +331,17 @@ class PluginActionSelector extends VBoxContainer:
 		var name_label: Label = Label.new()
 		name_label.text = "Action"
 		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		_name_selector.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_action_selector.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_selector_hbox.add_child(name_label)
-		name_selector_hbox.add_child(_name_selector)
+		name_selector_hbox.add_child(_action_selector)
 		add_child(name_selector_hbox)
+
+		var description_name_label: Label = Label.new()
+		description_name_label.text = "Description:"
+		add_child(description_name_label)
+		_description_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		_description_label.bbcode_enabled = true
+		add_child(_description_label)
 
 
 	func fill_plugins() -> void:
@@ -348,11 +358,11 @@ class PluginActionSelector extends VBoxContainer:
 
 
 	func get_selected_action() -> PluginActionDefinition:
-		if _plugin_selector.get_selected_id() == -1 or _name_selector.get_selected_id() == -1:
+		if _plugin_selector.get_selected_id() == -1 or _action_selector.get_selected_id() == -1:
 			return null
 
 		var selected_plugin: String = _plugin_selector.get_item_text(_plugin_selector.get_selected_id())
-		var selected_name: String = _name_selector.get_item_text(_name_selector.get_selected_id())
+		var selected_name: String = _action_selector.get_item_text(_action_selector.get_selected_id())
 
 		for plugin_action in _plugin_actions:
 			if plugin_action.plugin == selected_plugin and plugin_action.name == selected_name:
@@ -372,9 +382,19 @@ class PluginActionSelector extends VBoxContainer:
 
 	func _on_plugin_selected(index: int) -> void:
 		var plugin: String = _plugin_selector.get_item_text(index)
-		_name_selector.clear()
+		_action_selector.clear()
 		for action in _get_actions_for_plugin(plugin):
-			_name_selector.add_item(action)
+			_action_selector.add_item(action)
+
+		_on_action_selected()
+
+
+	func _on_action_selected(_index: int = -1) -> void:
+		var action: PluginActionDefinition = get_selected_action()
+		if action == null:
+			return
+
+		_description_label.text = action.description
 
 
 class PluginAction:
