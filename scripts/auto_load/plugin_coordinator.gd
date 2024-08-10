@@ -417,7 +417,6 @@ class PluginAction:
 		return {"controller": controller, "plugin": plugin, "func_name": func_name, "args": args, "blocking": blocking}
 
 
-	# TODO maybe return bool and handle error message in button?
 	func execute() -> void:
 		var controller_instance: PluginControllerBase
 		if not controller == "" and not plugin == "":
