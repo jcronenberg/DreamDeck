@@ -3,9 +3,13 @@ extends Node
 
 ## Returns all Dreamdeck builtin actions
 func get_actions() -> Array[PluginCoordinator.PluginActionDefinition]:
+	var exec_cmd_args_config: Config = Config.new()
+	exec_cmd_args_config.add_string("Command", "")
+	var timer_args_config: Config = Config.new()
+	timer_args_config.add_float("Time", 1.0)
 	return [
-		PluginCoordinator.PluginActionDefinition.new("Execute command", "exec_cmd", Config.new([{"TYPE": "STRING", "KEY": "Command", "DEFAULT_VALUE": ""}]), "DreamDeck", ""),
-		PluginCoordinator.PluginActionDefinition.new("Timer", "wait_time", Config.new([{"TYPE": "FLOAT", "KEY": "Time", "DEFAULT_VALUE": 1.0}]), "DreamDeck", "")
+		PluginCoordinator.PluginActionDefinition.new("Execute command", "exec_cmd", exec_cmd_args_config, "DreamDeck", ""),
+		PluginCoordinator.PluginActionDefinition.new("Timer", "wait_time", timer_args_config, "DreamDeck", "")
 		]
 
 

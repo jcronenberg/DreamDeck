@@ -97,15 +97,11 @@ var http_server
 @onready var cache_dir_path: String = PluginCoordinator.get_cache_dir(PLUGIN_NAME)
 
 # Configs
-var credentials: Config
-
-const CONFIG_DEFINITION: Array[Dictionary] = [{"TYPE": "FLOAT", "KEY": "Refresh Interval", "DEFAULT_VALUE": 5.0}]
-const CREDENTIALS_PROTO: Array[Dictionary] = [{"TYPE": "STRING", "KEY": "refresh_token", "DEFAULT_VALUE": ""},
-	{"TYPE": "STRING", "KEY": "encoded_client", "DEFAULT_VALUE": ""}]
+var credentials: Config = Config.new()
 
 
 func _init():
-	config_definition = CONFIG_DEFINITION
+	config.add_float("Refresh Interval", 5.0)
 
 
 func _ready():
@@ -115,7 +111,9 @@ func _ready():
 	ConfLib.ensure_dir_exists(cache_dir_path)
 
 	# Load credentials
-	credentials = Config.new(CREDENTIALS_PROTO, conf_dir + "credentials.json")
+	credentials.set_config_path(conf_dir + "credentials.json")
+	credentials.add_string("refresh_token", "")
+	credentials.add_string("encoded_client", "")
 	load_credentials()
 
 	# Clear cache dir to not fill the user dir with endless albumarts

@@ -23,11 +23,10 @@ func show_new_panel():
 	_new_panel = true
 
 	# Generate a config and the editor for the new panel
-	var new_plugin_config: Config = Config.new([
-		{"TYPE": "STRING", "KEY": "Panel Name", "DEFAULT_VALUE": ""},
-		{"TYPE": "ENUM", "KEY": "Plugin", "DEFAULT_VALUE": -1, "ENUM": PluginCoordinator.generate_plugins_enum()},
-		{"TYPE": "ENUM", "KEY": "Scene", "DEFAULT_VALUE": -1, "ENUM": {}},
-	])
+	var new_plugin_config: Config = Config.new()
+	new_plugin_config.add_string("Panel Name", "")
+	new_plugin_config.add_enum("Plugin", -1, PluginCoordinator.generate_plugins_enum())
+	new_plugin_config.add_enum("Scene", -1, {})
 	_config_editor = new_plugin_config.generate_editor()
 
 	# Connect the plugin enum editor here, because we need to populate

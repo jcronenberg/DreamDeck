@@ -11,6 +11,9 @@ extends Node
 ##
 ## func _init():
 ##     plugin_name = "Plugin Name"
+##     config.add_bool("Your config setting", false)
+##
+## ...
 ## [/codeblock]
 ##
 ## If you want to do additional custom things you can overwrite the functions.
@@ -20,13 +23,7 @@ extends Node
 var conf_dir: String
 
 ## The config for the controller.
-## Requires setting [member config_definition] to work by default.
-var config: Config
-
-## The [Dictionary] from which [member config] gets created.[br]
-## Look at [Config] for the info what this is supposed to look like.
-## Not setting this disables the default [member config] initialization.
-var config_definition: Array[Dictionary]
+var config: Config = Config.new()
 
 ## The name of the plugin. This used as the name of the directory where [member config] is saved.
 var plugin_name: String
@@ -42,12 +39,12 @@ func init():
 	_init_config()
 
 
-## Initializes [member config] and loads it from disk.
+## Loads [member config] from disk.
 func _init_config():
-	if not config_definition:
+	if config.get_objects().size() <= 0:
 		return
 
-	config = Config.new(config_definition, conf_dir + "config.json")
+	config.set_config_path(conf_dir + "config.json")
 	config.load_config()
 	config.connect("config_changed", _on_config_changed)
 

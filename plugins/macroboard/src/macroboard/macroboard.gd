@@ -6,10 +6,6 @@ extends PluginSceneBase
 ## The gap between buttons
 const BUTTON_GAP = 10
 
-const CONFIG_DEFINITION: Array[Dictionary] = [{"TYPE": "INT", "KEY": "Columns", "DEFAULT_VALUE": 8},
-	{"TYPE": "INT", "KEY": "Rows", "DEFAULT_VALUE": 5},
-	{"TYPE": "BOOL", "KEY": "Square buttons", "DEFAULT_VALUE": false}]
-
 var _action_button: PackedScene = load("res://plugins/macroboard/src/buttons/macro_action_button.tscn")
 var _no_button: PackedScene = load("res://plugins/macroboard/src/buttons/macro_no_button.tscn")
 
@@ -38,7 +34,9 @@ var _tmp_button_position: int = -1
 
 
 func _init() -> void:
-	config_definition = CONFIG_DEFINITION
+	config.add_int("Columns", 8)
+	config.add_int("Rows", 3)
+	config.add_bool("Square buttons", false)
 
 
 func _ready() -> void:

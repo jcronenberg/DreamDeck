@@ -7,6 +7,11 @@ extends Control
 ##
 ## [codeblock]
 ## extends PluginSceneBase
+##
+##
+## func _init() -> void:
+##     config.add_bool("Your config setting", false)
+##
 ## ...
 ## [/codeblock]
 ##
@@ -17,16 +22,14 @@ extends Control
 var conf_dir: String
 
 ## The config for the scene.
-## Requires setting [member config_definition] to work by default.
-var config: Config
-
-## The [Dictionary] from which [member config] gets created.[br]
-## Look at [Config] for the info what this is supposed to look like.
-## Not setting this disables the default [member config] initialization.
-var config_definition: Array[Dictionary]
+var config: Config = Config.new()
 
 # The unique id of the scene.
 var _scene_uuid: String
+
+
+func _ready():
+	handle_config()
 
 
 ## Called by the plugin loader when being initialized.
@@ -39,16 +42,12 @@ func init(init_scene_id: String):
 	_init_config()
 
 
-func _ready():
-	handle_config()
-
-
-## Initializes [member config] and loads it from disk.
+## Loads [member config] from disk.
 func _init_config():
-	if not config_definition:
+	if config.get_objects().size() <= 0:
 		return
 
-	config = Config.new(config_definition, conf_dir + "config.json")
+	config.set_config_path(conf_dir + "config.json")
 	config.load_config()
 	config.connect("config_changed", _on_config_changed)
 

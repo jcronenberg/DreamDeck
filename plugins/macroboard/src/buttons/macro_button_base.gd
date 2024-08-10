@@ -3,11 +3,13 @@ extends Button
 
 var _actions_editor: ActionsEditor
 var _config_editor: Config.ConfigEditor
-var _config: Config = Config.new([
-	{"TYPE": "STRING", "KEY": "Button label", "DEFAULT_VALUE": ""},
-	{"TYPE": "STRING", "KEY": "Icon path", "DEFAULT_VALUE": ""},
-	{"TYPE": "BOOL", "KEY": "Show button label", "DEFAULT_VALUE": false},
-	])
+var _config: Config = Config.new()
+
+
+func _init():
+	_config.add_string("Button label", "")
+	_config.add_string("Icon path", "")
+	_config.add_bool("Show button label", false)
 
 
 func get_macroboard() -> Macroboard:
@@ -170,7 +172,7 @@ class ActionEditor extends HBoxContainer:
 		args_editor.mouse_filter = Control.MOUSE_FILTER_STOP
 		_editor_vbox.add_child(args_editor)
 
-		_blocking_editor = Config.BoolEditor.new(Config.BoolObject.new({"KEY": "Wait to finish", "DEFAULT_VALUE": false}))
+		_blocking_editor = Config.BoolEditor.new(Config.BoolObject.new("Wait to finish", false))
 		_editor_vbox.add_child(_blocking_editor)
 
 
