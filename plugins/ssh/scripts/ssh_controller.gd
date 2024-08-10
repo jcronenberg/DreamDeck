@@ -98,6 +98,14 @@ func add_client(client_dict: Dictionary):
 	ssh_client.name = client_dict["name"]
 	add_child(ssh_client)
 	edit_client_config(get_child_count() - 1, client_dict)
+	update_loader_client_list()
+
+
+func update_loader_client_list() -> void:
+	var clients: Array[String] = []
+	for client in client_list:
+		clients.append(client["name"])
+	PluginCoordinator.get_plugin_loader("SSH").set_client_config(clients)
 
 
 ## edits also in client_list
