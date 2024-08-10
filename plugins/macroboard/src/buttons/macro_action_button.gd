@@ -100,7 +100,7 @@ func _action_config_migration(dict: Dictionary) -> void:
 		action.deserialize({"controller": "", "plugin": "DreamDeck", "func_name": "exec_cmd", "args": [dict["command"]], "blocking": false})
 		_actions = [action]
 
-	_config.apply_dict({"Button label": dict["app_name"], "Icon path": dict["icon_path"], "Show app name": dict["show_app_name"]})
+	_config.apply_dict({"Button label": dict["app_name"], "Icon path": dict["icon_path"], "Show button label": dict["show_app_name"]})
 	_button_label = dict["app_name"]
 	_icon_path = dict["icon_path"]
 	_show_button_label = dict["show_app_name"]
