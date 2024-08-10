@@ -126,6 +126,16 @@ func add_enum(key: String, value: int, enum_dict: Dictionary, description: Strin
 	_config.append(EnumObject.new(key, value, enum_dict, description))
 
 
+## Adds a string array object.[br]
+## This is useful if you want to store a string that can only be predetermined values.
+## [param key]: Key string for the object (Will be the label in [Config.ConfigEditor])[br]
+## [param value]: Default value[br]
+## [param string_array]: All available values to pick from.[br]
+## [param description](Optional): Description for what this config object does.[br]
+func add_string_array(key: String, value: String, string_array: Array[String], description: String = "") -> void:
+	_config.append(StringArrayObject.new(key, value, string_array, description))
+
+
 ## Clears the config of all objects.
 func clear_objects() -> void:
 	_config = []
@@ -308,6 +318,40 @@ class EnumObject extends ConfigObject:
 		return {_key: _value}
 
 
+class StringArrayObject extends ConfigObject:
+	var _value: String:
+		set = set_value, get = get_value
+	var _string_array: Array[String]:
+		set = set_string_array, get = get_string_array
+
+
+	func _init(key: String, value: String, string_array: Array[String], description: String = ""):
+		super(key, description)
+		_value = value
+		_string_array = string_array
+
+
+	func get_value() -> String:
+		return _value
+
+
+	func set_value(value: String):
+		if value in _string_array:
+			_value = value
+
+
+	func get_string_array() -> Array[String]:
+		return _string_array
+
+
+	func set_string_array(array: Array[String]) -> void:
+		_string_array = array
+
+
+	func serialize() -> Dictionary:
+		return {_key: _value}
+
+
 ## An editor for a [Config]
 ##
 ## The editor is a [VBoxContainer] that contains a row for each object
@@ -335,6 +379,8 @@ class ConfigEditor extends VBoxContainer:
 				_object_editors.append(StringEditor.new(object))
 			elif object is EnumObject:
 				_object_editors.append(EnumEditor.new(object))
+			elif object is StringArrayObject:
+				_object_editors.append(StringArrayEditor.new(object))
 
 		for editor in _object_editors:
 			add_child(editor)
@@ -601,4 +647,64 @@ class EnumEditor extends VariantEditor:
 
 
 	func _on_clear_button_pressed():
+		_value_editor.select(-1)
+
+
+class StringArrayEditor extends VariantEditor:
+	var _value_editor: OptionButton
+	var _string_array: Array[String]
+
+
+	func _init(object: StringArrayObject) -> void:
+		super(object)
+
+		_string_array = object.get_string_array()
+		_value_editor = OptionButton.new()
+		_value_editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_value_editor.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		add_child(_value_editor)
+
+		var clear_button = Button.new()
+		clear_button.text = "X"
+		clear_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		add_child(clear_button)
+		clear_button.connect("pressed", _on_clear_button_pressed)
+
+		setup_value_editor()
+		set_value(object.get_value())
+
+
+	func setup_value_editor() -> void:
+		_value_editor.clear()
+		for string in _string_array:
+			_value_editor.add_item(string)
+
+
+	func set_value(value: String) -> void:
+		if not value in _string_array:
+			_value_editor.select(-1)
+			return
+
+		for i in _value_editor.get_item_count():
+			if _value_editor.get_item_text(i) == value:
+				_value_editor.select(i)
+
+
+	func set_string_array(array: Array[String]) -> void:
+		_string_array = array
+		setup_value_editor()
+
+
+	func get_value_editor() -> OptionButton:
+		return _value_editor
+
+
+	func get_value() -> String:
+		if _value_editor.get_selected_id() == -1:
+			return ""
+
+		return _value_editor.get_item_text(_value_editor.get_selected_id())
+
+
+	func _on_clear_button_pressed() -> void:
 		_value_editor.select(-1)
