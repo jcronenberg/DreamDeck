@@ -12,6 +12,7 @@ var _plugin_instance: PluginSceneBase:
 
 func _ready():
 	add_to_group("layout_panels")
+	connect("visibility_changed", _on_visibility_changed)
 
 
 # scene_dict is e.g. {"scene_name": resource}
@@ -81,3 +82,12 @@ func request_deletion():
 func _on_confirm_deletion():
 	_plugin_instance.delete_config()
 	get_node("/root/Main/Layout").call_deferred("delete_panel", self)
+
+
+func _on_visibility_changed() -> void:
+	if not _plugin_instance:
+		return
+	if visible:
+		_plugin_instance.scene_show()
+	else:
+		_plugin_instance.scene_hide()

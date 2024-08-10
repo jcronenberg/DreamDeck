@@ -88,31 +88,21 @@ func edit_config():
 	return null
 
 
-## Called when the scene gets shown again after it was hidden.
-## Note: It doesn't get called when the scene is the default scene
-## and shown from app start. So e.g. background status updates should already be
-## set up without this method.
-## [codeblock]
-## func scene_show():
-##     super()
-##     # disable background checks
-##     set_process(true)
-## [/codeblock]
+## Called when the scene gets shown.
+## By default it enables [code]func _process():[/code] and [code]func _physics_process():[/code].
+## If you don't want this or want to do additional things override this function.
 func scene_show():
-	self.visible = true
+	set_process(true)
+	set_physics_process(true)
 
 
 ## Called when the scene gets hidden.
-## If you e.g. do background status updates you should probably overwrite this function
-## and disable them until [method scene_show] is called again.
-## [codeblock]
-## func scene_hide():
-##     super()
-##     # disable background checks
-##     set_process(false)
-## [/codeblock]
+## By default it disables [code]func _process():[/code] and [code]func _physics_process():[/code]
+## until the scene gets shown again. If you don't want this or want to do additional things override
+## this function.
 func scene_hide():
-	self.visible = false
+	set_process(false)
+	set_physics_process(false)
 
 
 ## Called when the scene gets deleted.

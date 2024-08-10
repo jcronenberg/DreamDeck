@@ -1,5 +1,7 @@
 extends Node
 
+@onready var _layout: Layout = get_node("/root/Main/Layout")
+
 
 ## Returns all Dreamdeck builtin actions
 func get_actions() -> Array[PluginCoordinator.PluginActionDefinition]:
@@ -7,9 +9,13 @@ func get_actions() -> Array[PluginCoordinator.PluginActionDefinition]:
 	exec_cmd_args_config.add_string("Command", "")
 	var timer_args_config: Config = Config.new()
 	timer_args_config.add_float("Time", 1.0)
+	var switch_panel_config: Config = Config.new()
+	switch_panel_config.add_string("Panel name", "")
+
 	return [
 		PluginCoordinator.PluginActionDefinition.new("Execute command", "exec_cmd", "Execute a command on this device", exec_cmd_args_config, "DreamDeck", ""),
-		PluginCoordinator.PluginActionDefinition.new("Timer", "wait_time", "Delays the execution of the next action by configured time in seconds", timer_args_config, "DreamDeck", "")
+		PluginCoordinator.PluginActionDefinition.new("Timer", "wait_time", "Delays the execution of the next action by configured time in seconds", timer_args_config, "DreamDeck", ""),
+		PluginCoordinator.PluginActionDefinition.new("Switch panel", "switch_panel", "Show the panel with the configured name", switch_panel_config, "DreamDeck", "")
 		]
 
 
@@ -48,6 +54,10 @@ func exec_cmd(command: String) -> bool:
 		return OS.create_process(_text_to_args(command)[0], args) != -1
 
 	return true
+
+
+func switch_panel(panel_name: String) -> bool:
+	return _layout.show_panel_by_name(panel_name)
 
 
 # TODO will probably be replaced in the future by some sort of custom logger

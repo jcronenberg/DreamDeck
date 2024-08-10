@@ -95,6 +95,17 @@ func set_split_handles_visibility(visibility: bool):
 	_split_container.visible = visibility
 
 
+func show_panel_by_name(panel_name: String) -> bool:
+	for tab in get_tabs():
+		if not tab is LayoutPanel:
+			continue
+		if tab.panel_name == panel_name:
+			set_control_as_current_tab(tab)
+			return true
+
+	return false
+
+
 func _on_edit_mode_entered():
 	self.tabs_visible = true
 	set_split_handles_visibility(true)
