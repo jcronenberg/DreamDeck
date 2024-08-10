@@ -1,22 +1,17 @@
 extends Node
 
 @onready var _layout: Layout = get_node("/root/Main/Layout")
+var _switch_panel_config: Config = Config.new()
+var _available_panels: Array[String] = []
+var _actions: Array[PluginCoordinator.PluginActionDefinition]
 
 
 ## Returns all Dreamdeck builtin actions
 func get_actions() -> Array[PluginCoordinator.PluginActionDefinition]:
-	var exec_cmd_args_config: Config = Config.new()
-	exec_cmd_args_config.add_string("Command", "")
-	var timer_args_config: Config = Config.new()
-	timer_args_config.add_float("Time", 1.0)
-	var switch_panel_config: Config = Config.new()
-	switch_panel_config.add_string("Panel name", "")
+	if not _actions:
+		_setup_actions()
 
-	return [
-		PluginCoordinator.PluginActionDefinition.new("Execute command", "exec_cmd", "Execute a command on this device", exec_cmd_args_config, "DreamDeck", ""),
-		PluginCoordinator.PluginActionDefinition.new("Timer", "wait_time", "Delays the execution of the next action by configured time in seconds", timer_args_config, "DreamDeck", ""),
-		PluginCoordinator.PluginActionDefinition.new("Switch panel", "switch_panel", "Show the panel with the configured name", switch_panel_config, "DreamDeck", "")
-		]
+	return _actions
 
 
 ## Waits [param time]. Function for builtin action "Timer"
@@ -58,6 +53,27 @@ func exec_cmd(command: String) -> bool:
 
 func switch_panel(panel_name: String) -> bool:
 	return _layout.show_panel_by_name(panel_name)
+
+
+func update_available_panels(panels: Array[String]) -> void:
+	_available_panels = panels
+	var panel_object: Config.StringArrayObject = _switch_panel_config.get_object("Panel name")
+	if panel_object:
+		panel_object.set_string_array(panels)
+
+
+func _setup_actions() -> void:
+	var exec_cmd_args_config: Config = Config.new()
+	exec_cmd_args_config.add_string("Command", "")
+	var timer_args_config: Config = Config.new()
+	timer_args_config.add_float("Time", 1.0)
+	_switch_panel_config.add_string_array("Panel name", "", _available_panels)
+
+	_actions = [
+		PluginCoordinator.PluginActionDefinition.new("Execute command", "exec_cmd", "Execute a command on this device", exec_cmd_args_config, "DreamDeck", ""),
+		PluginCoordinator.PluginActionDefinition.new("Timer", "wait_time", "Delays the execution of the next action by configured time in seconds", timer_args_config, "DreamDeck", ""),
+		PluginCoordinator.PluginActionDefinition.new("Switch panel", "switch_panel", "Show the panel with the configured name", _switch_panel_config, "DreamDeck", "")
+		]
 
 
 # TODO will probably be replaced in the future by some sort of custom logger
