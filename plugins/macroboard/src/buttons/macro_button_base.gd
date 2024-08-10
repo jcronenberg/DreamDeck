@@ -152,6 +152,7 @@ class ActionEditor extends HBoxContainer:
 	var _reorder_icon_png: CompressedTexture2D = preload("res://resources/icons/hamburger_menu.png")
 	var _editor_vbox: VBoxContainer = VBoxContainer.new()
 	var _blocking_editor: Config.BoolEditor
+	var _delete_button: Button = Button.new()
 
 
 	func _init(editor: Config.ConfigEditor) -> void:
@@ -175,6 +176,10 @@ class ActionEditor extends HBoxContainer:
 		_blocking_editor = Config.BoolEditor.new(Config.BoolObject.new("Wait to finish", false))
 		_editor_vbox.add_child(_blocking_editor)
 
+		_delete_button.text = "X"
+		_delete_button.connect("pressed", _on_delete_button_pressed)
+		add_child(_delete_button)
+
 
 	func _ready() -> void:
 		# Special cases
@@ -197,3 +202,7 @@ class ActionEditor extends HBoxContainer:
 	func set_blocking(value: bool) -> void:
 		blocking = value
 		_blocking_editor.set_value(value)
+
+
+	func _on_delete_button_pressed() -> void:
+		self.queue_free()
