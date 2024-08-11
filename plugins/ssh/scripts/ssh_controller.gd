@@ -37,6 +37,9 @@ func _ready():
 		main_menu_button.init("SSH Config", "/" + get_path().get_concatenated_names(), "show_config")
 		get_node("/root/Main/MainMenu").add_custom_button(main_menu_button)
 
+	# FIXME config label migration, delete in the future
+	GlobalSignals.connect("exited_edit_mode", _on_exited_edit_mode)
+
 
 func _process(_delta):
 	# Thread cleanup
@@ -147,3 +150,7 @@ func exec_on_client(client_name: String, cmd: String):
 	var thread := Thread.new()
 	thread.start(ssh_client.exec.bind(cmd))
 	thread_pool.append(thread)
+
+
+func _on_exited_edit_mode() -> void:
+	config.save()

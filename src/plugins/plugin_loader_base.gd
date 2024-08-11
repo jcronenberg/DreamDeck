@@ -55,8 +55,8 @@ extends Node
 ## [codeblock]
 ## func _init():
 ##     var _arguments_config: Config = Config.new()
-##     _arguments_config.add_string("Example argument 1", "Default value")
-##     _arguments_config.add_float("Example argument 2", 2.0)
+##     _arguments_config.add_string("Example argument 1", "example_arg1", "Default value")
+##     _arguments_config.add_float("Example argument 2", "example_arg2", 2.0)
 ##     actions = [PluginCoordinator.PluginActionDefinition.new("Example action", "example_func", "A description of what this action does", _arguments_config, "Example plugin", "ExampleController")]
 ## [/codeblock]
 ## The action calls the function in your specified controller and the arguments will be the ones you

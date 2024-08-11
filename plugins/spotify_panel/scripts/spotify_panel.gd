@@ -101,7 +101,7 @@ var credentials: Config = Config.new()
 
 
 func _init():
-	config.add_float("Refresh Interval", 5.0)
+	config.add_float("Refresh Interval", "refresh_interval", 5.0)
 
 
 func _ready():
@@ -112,8 +112,8 @@ func _ready():
 
 	# Load credentials
 	credentials.set_config_path(conf_dir + "credentials.json")
-	credentials.add_string("refresh_token", "")
-	credentials.add_string("encoded_client", "")
+	credentials.add_string("Refresh token", "refresh_token", "")
+	credentials.add_string("Encoded client", "encoded_client", "")
 	load_credentials()
 
 	# Clear cache dir to not fill the user dir with endless albumarts
@@ -148,10 +148,10 @@ func _physics_process(delta):
 func handle_config():
 	var data: Dictionary = config.get_as_dict()
 
-	metadata_refresh = data["Refresh Interval"]
+	metadata_refresh = data["refresh_interval"]
 	# We don't need to refresh devices as often
 	# Add + 0.1 to offset it a bit to metadata_refresh
-	devices_refresh = data["Refresh Interval"] * 3 + 0.1
+	devices_refresh = metadata_refresh * 3 + 0.1
 
 func load_credentials():
 	# Load plugin config
@@ -524,3 +524,7 @@ func _on_VolumeUpButton_pressed():
 	else:
 		volume_state += 5
 	send_command("/me/player/volume?volume_percent=" + str(volume_state), 3)
+
+
+func _on_exited_edit_mode():
+	config.save()

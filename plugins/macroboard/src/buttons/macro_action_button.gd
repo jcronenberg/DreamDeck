@@ -32,9 +32,16 @@ func deserialize(dict: Dictionary) -> void:
 		return
 
 	_config.apply_dict(dict)
-	_button_label = dict["Button label"]
-	_icon_path = dict["Icon path"]
-	_show_button_label = dict["Show button label"]
+	# FIXME config label migration, delete in the future
+	if dict.has("Button label"):
+		_button_label = dict["Button label"]
+		_icon_path = dict["Icon path"]
+		_show_button_label = dict["Show button label"]
+	else:
+		_button_label = dict["button_label"]
+		_icon_path = dict["icon_path"]
+		_show_button_label = dict["show_button_label"]
+
 	if dict.has("actions"):
 		_actions = []
 		var dict_actions: Array = dict["actions"]

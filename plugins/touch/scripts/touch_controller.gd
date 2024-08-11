@@ -25,8 +25,11 @@ var _default_device: String
 
 
 func _init():
-	config.add_string("Default Device", "")
+	config.add_string("Default Device", "default_device", "")
 	plugin_name = PLUGIN_NAME
+
+	# FIXME config label migration, delete in the future
+	GlobalSignals.connect("exited_edit_mode", _on_exited_edit_mode)
 
 
 func _ready():
@@ -58,7 +61,7 @@ func _on_main_window_resized():
 func handle_config():
 	var data = config.get_as_dict()
 
-	_default_device = data["Default Device"]
+	_default_device = data["default_device"]
 
 
 func get_default_device() -> String:
@@ -139,3 +142,7 @@ func handle_event():
 		Input.parse_input_event(mod_event)
 		if OS.has_feature("editor"):
 			get_node("/root/Main/DebugCursor").position = mod_event.position
+
+
+func _on_exited_edit_mode() -> void:
+	config.save()

@@ -57,17 +57,17 @@ func switch_panel(panel_name: String) -> bool:
 
 func update_available_panels(panels: Array[String]) -> void:
 	_available_panels = panels
-	var panel_object: Config.StringArrayObject = _switch_panel_config.get_object("Panel name")
+	var panel_object: Config.StringArrayObject = _switch_panel_config.get_object("panel_name")
 	if panel_object:
 		panel_object.set_string_array(panels)
 
 
 func _setup_actions() -> void:
 	var exec_cmd_args_config: Config = Config.new()
-	exec_cmd_args_config.add_string("Command", "")
+	exec_cmd_args_config.add_string("Command", "command", "")
 	var timer_args_config: Config = Config.new()
-	timer_args_config.add_float("Time", 1.0)
-	_switch_panel_config.add_string_array("Panel name", "", _available_panels)
+	timer_args_config.add_float("Time", "time", 1.0)
+	_switch_panel_config.add_string_array("Panel name", "panel_name", "", _available_panels)
 
 	_actions = [
 		PluginCoordinator.PluginActionDefinition.new("Execute command", "exec_cmd", "Execute a command on this device", exec_cmd_args_config, "DreamDeck", ""),
