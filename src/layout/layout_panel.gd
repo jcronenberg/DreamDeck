@@ -42,15 +42,25 @@ func remove_plugin_scene(plugin_name: String, scene_name: String):
 
 
 func serialize() -> Dictionary:
-	return {"Plugin": plugin, "Scene": scene, "UUID": uuid, "Panel Name": panel_name}
+	return {"plugin": plugin, "scene": scene, "UUID": uuid, "panel_name": panel_name}
 
 
 func deserialize(config: Dictionary):
+	# FIXME config label migration, delete in the future
+	if config.has("Scene"):
+		uuid = config["UUID"]
+		name = uuid
+		scene = config["Scene"]
+		plugin = config["Plugin"]
+		panel_name = config["Panel Name"]
+		load_scene()
+		return
+
 	uuid = config["UUID"]
 	name = uuid
-	scene = config["Scene"]
-	plugin = config["Plugin"]
-	panel_name = config["Panel Name"]
+	scene = config["scene"]
+	plugin = config["plugin"]
+	panel_name = config["panel_name"]
 
 	load_scene()
 

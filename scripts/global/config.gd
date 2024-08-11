@@ -9,8 +9,8 @@ class_name Config
 ##
 ## [codeblock]
 ## config: Config = Config.new()
-## config.add_bool("Example bool", false, "[code]Example code[/code]\n[b]Another line[/b]")
-## config.add_string("Example string", "Example default value")
+## config.add_bool("Example bool", "example_bool", false, "[code]Example code[/code]\n[b]Another line[/b]")
+## config.add_string("Example string", "example string", "Example default value")
 ## [/codeblock]
 
 ## Emitted when the config changed
@@ -41,6 +41,14 @@ func load_config():
 func apply_dict(dict: Dictionary):
 	for item in dict:
 		var object = get_object(item)
+
+		# FIXME temporary migration for config label
+		if not object:
+			for config_object in _config:
+				if config_object.get_label() == item:
+					object = config_object
+					break
+
 		if object:
 			object.set_value(dict[item])
 
@@ -80,60 +88,72 @@ func add_object(object: ConfigObject) -> void:
 
 
 ## Adds a bool object.[br]
-## [param key]: Key string for the object (Will be the label in [Config.ConfigEditor])[br]
+## [param label]: User facing name of this object when editing[br]
+## [param key]: Key string for the object (Will be what it is saved as on disk and also what you
+## get when running [method get_as_dict])[br]
 ## [param value]: Default value[br]
-## [param description](Optional): Description for what this config object does.
-func add_bool(key: String, value: bool, description: String = "") -> void:
-	_config.append(BoolObject.new(key, value, description))
+## [param description](Optional): Description for what this config object does
+func add_bool(label: String, key: String, value: bool, description: String = "") -> void:
+	_config.append(BoolObject.new(label, key, value, description))
 
 
 ## Adds a int object.[br]
-## [param key]: Key string for the object (Will be the label in [Config.ConfigEditor])[br]
+## [param label]: User facing name of this object when editing[br]
+## [param key]: Key string for the object (Will be what it is saved as on disk and also what you
+## get when running [method get_as_dict])[br]
 ## [param value]: Default value[br]
-## [param description](Optional): Description for what this config object does.
-func add_int(key: String, value: int, description: String = "") -> void:
-	_config.append(IntObject.new(key, value, description))
+## [param description](Optional): Description for what this config object does
+func add_int(label: String, key: String, value: int, description: String = "") -> void:
+	_config.append(IntObject.new(label, key, value, description))
 
 
 ## Adds a float object.[br]
-## [param key]: Key string for the object (Will be the label in [Config.ConfigEditor])[br]
+## [param label]: User facing name of this object when editing[br]
+## [param key]: Key string for the object (Will be what it is saved as on disk and also what you
+## get when running [method get_as_dict])[br]
 ## [param value]: Default value[br]
-## [param description](Optional): Description for what this config object does.
-func add_float(key: String, value: float, description: String = "") -> void:
-	_config.append(FloatObject.new(key, value, description))
+## [param description](Optional): Description for what this config object does
+func add_float(label: String, key: String, value: float, description: String = "") -> void:
+	_config.append(FloatObject.new(label, key, value, description))
 
 
 ## Adds a string object.[br]
-## [param key]: Key string for the object (Will be the label in [Config.ConfigEditor])[br]
+## [param label]: User facing name of this object when editing[br]
+## [param key]: Key string for the object (Will be what it is saved as on disk and also what you
+## get when running [method get_as_dict])[br]
 ## [param value]: Default value[br]
-## [param description](Optional): Description for what this config object does.
-func add_string(key: String, value: String, description: String = "") -> void:
-	_config.append(StringObject.new(key, value, description))
+## [param description](Optional): Description for what this config object does
+func add_string(label: String, key: String, value: String, description: String = "") -> void:
+	_config.append(StringObject.new(label, key, value, description))
 
 
 ## Adds a enum object.[br]
-## [param key]: Key string for the object (Will be the label in [Config.ConfigEditor])[br]
+## [param label]: User facing name of this object when editing[br]
+## [param key]: Key string for the object (Will be what it is saved as on disk and also what you
+## get when running [method get_as_dict])[br]
 ## [param value]: Default value[br]
 ## [param enum_dict]: All available values for the enum in a [Dictionary].[br]
 ## Gdscript's [code]enum[/code] automatically generates this enum. See example below.[br]
-## [param description](Optional): Description for what this config object does.[br]
+## [param description](Optional): Description for what this config object does[br]
 ## Example:
 ## [codeblock]
 ## enum Example {ENUM_VALUE1, ENUM_VALUE2}
 ## config.add_enum("Example Enum", Example.ENUM_VALUE1, Example)
 ## [/codeblock]
-func add_enum(key: String, value: int, enum_dict: Dictionary, description: String = "") -> void:
-	_config.append(EnumObject.new(key, value, enum_dict, description))
+func add_enum(label: String, key: String, value: int, enum_dict: Dictionary, description: String = "") -> void:
+	_config.append(EnumObject.new(label, key, value, enum_dict, description))
 
 
 ## Adds a string array object.[br]
 ## This is useful if you want to store a string that can only be predetermined values.
-## [param key]: Key string for the object (Will be the label in [Config.ConfigEditor])[br]
+## [param label]: User facing name of this object when editing[br]
+## [param key]: Key string for the object (Will be what it is saved as on disk and also what you
+## get when running [method get_as_dict])[br]
 ## [param value]: Default value[br]
-## [param string_array]: All available values to pick from.[br]
-## [param description](Optional): Description for what this config object does.[br]
-func add_string_array(key: String, value: String, string_array: Array[String], description: String = "") -> void:
-	_config.append(StringArrayObject.new(key, value, string_array, description))
+## [param string_array]: All available values to pick from[br]
+## [param description](Optional): Description for what this config object does[br]
+func add_string_array(label: String, key: String, value: String, string_array: Array[String], description: String = "") -> void:
+	_config.append(StringArrayObject.new(label, key, value, string_array, description))
 
 
 ## Clears the config of all objects.
@@ -161,39 +181,50 @@ func set_config_path(path: String) -> void:
 
 
 class ConfigObject:
+	var _label: String:
+		get = get_label, set = set_label
 	var _key: String:
 		get = get_key, set = set_key
 	var _description: String:
 		get = get_description, set = set_description
 
 
-	func _init(key: String, description: String = ""):
+	func _init(label: String, key: String, description: String = ""):
+		_label = label
 		_key = key
 		if description != "":
 			_description = description
 
 
-	func get_key():
+	func get_label() -> String:
+		return _label
+
+
+	func set_label(value: String) -> void:
+		_label = value
+
+
+	func get_key() -> String:
 		return _key
 
 
-	func set_key(value):
+	func set_key(value: String) -> void:
 		_key = value
 
 
-	func get_description():
+	func get_description() -> String:
 		return _description
 
 
-	func set_description(value):
+	func set_description(value: String) -> void:
 		_description = value
 
 
-	func get_value():
-		pass
+	func get_value() -> Variant:
+		return null
 
 
-	func set_value(_value):
+	func set_value(_value) -> void:
 		pass
 
 
@@ -206,8 +237,8 @@ class BoolObject extends ConfigObject:
 		set = set_value, get = get_value
 
 
-	func _init(key: String, value: bool, description: String = ""):
-		super(key, description)
+	func _init(label: String, key: String, value: bool, description: String = ""):
+		super(label, key, description)
 		_value = value
 
 
@@ -228,8 +259,8 @@ class IntObject extends ConfigObject:
 		set = set_value, get = get_value
 
 
-	func _init(key: String, value: int, description: String = ""):
-		super(key, description)
+	func _init(label: String, key: String, value: int, description: String = ""):
+		super(label, key, description)
 		_value = value
 
 
@@ -237,7 +268,7 @@ class IntObject extends ConfigObject:
 		return _value
 
 
-	func set_value(value: int):
+	func set_value(value: int) -> void:
 		_value = value
 
 
@@ -250,8 +281,8 @@ class FloatObject extends ConfigObject:
 		set = set_value, get = get_value
 
 
-	func _init(key: String, value: float, description: String = ""):
-		super(key, description)
+	func _init(label: String, key: String, value: float, description: String = ""):
+		super(label, key, description)
 		_value = value
 
 
@@ -272,8 +303,8 @@ class StringObject extends ConfigObject:
 		set = set_value, get = get_value
 
 
-	func _init(key: String, value: String, description: String = ""):
-		super(key, description)
+	func _init(label: String, key: String, value: String, description: String = ""):
+		super(label, key, description)
 		_value = value
 
 
@@ -296,8 +327,8 @@ class EnumObject extends ConfigObject:
 		get = get_enum_dict
 
 
-	func _init(key: String, value: int, enum_dict: Dictionary, description: String = ""):
-		super(key, description)
+	func _init(label: String, key: String, value: int, enum_dict: Dictionary, description: String = ""):
+		super(label, key, description)
 		_value = value
 		_enum_dict = enum_dict
 
@@ -325,8 +356,8 @@ class StringArrayObject extends ConfigObject:
 		set = set_string_array, get = get_string_array
 
 
-	func _init(key: String, value: String, string_array: Array[String], description: String = ""):
-		super(key, description)
+	func _init(label: String, key: String, value: String, string_array: Array[String], description: String = ""):
+		super(label, key, description)
 		_value = value
 		_string_array = string_array
 
@@ -433,17 +464,19 @@ class ConfigEditor extends VBoxContainer:
 
 
 class VariantEditor extends HBoxContainer:
-	var _key_label: Label
+	var _key: String
+	var _name_label: Label = Label.new()
 	var _description_label: RichTextLabel
 
 
 	func _init(object: ConfigObject):
+		_key = object.get_key()
+
 		var vbox: VBoxContainer = VBoxContainer.new()
 		vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
-		_key_label = Label.new()
-		vbox.add_child(_key_label)
-		set_key(object.get_key())
+		vbox.add_child(_name_label)
+		set_label(object.get_label())
 
 		_description_label = RichTextLabel.new()
 		_description_label.fit_content = true
@@ -460,12 +493,12 @@ class VariantEditor extends HBoxContainer:
 		_description_label.text = "[indent]" + description + "[/indent]"
 
 
-	func set_key(value: String):
-		_key_label.text = value
+	func set_label(value: String):
+		_name_label.text = value
 
 
 	func get_key() -> String:
-		return _key_label.text
+		return _key
 
 
 	func set_value(_value):

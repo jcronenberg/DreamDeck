@@ -11,7 +11,7 @@ extends Node
 ##
 ## func _init():
 ##     plugin_name = "Plugin Name"
-##     config.add_bool("Your config setting", false)
+##     config.add_bool("Your config setting", "config_setting", false)
 ##
 ## ...
 ## [/codeblock]

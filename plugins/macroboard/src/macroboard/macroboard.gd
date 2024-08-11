@@ -34,9 +34,9 @@ var _tmp_button_position: int = -1
 
 
 func _init() -> void:
-	config.add_int("Columns", 8)
-	config.add_int("Rows", 3)
-	config.add_bool("Square buttons", false)
+	config.add_int("Columns", "columns", 8)
+	config.add_int("Rows", "rows", 3)
+	config.add_bool("Square buttons", "square_buttons", false)
 
 
 func _ready() -> void:
@@ -89,8 +89,8 @@ func handle_config() -> void:
 	var data: Dictionary = config.get_as_dict()
 
 	# Load button settings
-	_max_buttons = Vector2(data["Columns"], data["Rows"])
-	_keep_buttons_square = data["Square buttons"]
+	_max_buttons = Vector2(data["columns"], data["rows"])
+	_keep_buttons_square = data["square_buttons"]
 
 	# Apply settings
 	_on_size_changed()
@@ -287,3 +287,4 @@ func _on_exited_edit_mode() -> void:
 	_toggle_add_buttons()
 
 	_save_layout()
+	config.save()

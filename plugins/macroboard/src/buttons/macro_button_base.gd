@@ -7,9 +7,9 @@ var _config: Config = Config.new()
 
 
 func _init():
-	_config.add_string("Button label", "")
-	_config.add_string("Icon path", "")
-	_config.add_bool("Show button label", false)
+	_config.add_string("Button label", "button_label", "")
+	_config.add_string("Icon path", "icon_path", "")
+	_config.add_bool("Show button label", "show_button_label", false)
 
 
 func get_macroboard() -> Macroboard:
@@ -173,7 +173,7 @@ class ActionEditor extends HBoxContainer:
 		args_editor.mouse_filter = Control.MOUSE_FILTER_STOP
 		_editor_vbox.add_child(args_editor)
 
-		_blocking_editor = Config.BoolEditor.new(Config.BoolObject.new("Wait to finish", false))
+		_blocking_editor = Config.BoolEditor.new(Config.BoolObject.new("Wait to finish", "blocking", false))
 		_editor_vbox.add_child(_blocking_editor)
 
 		_delete_button.text = "X"
