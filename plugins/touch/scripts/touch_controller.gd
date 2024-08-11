@@ -21,14 +21,11 @@ var grab_touch_devices_script
 var window_area_min: Vector2 = Vector2(0, 0)
 var window_area_max: Vector2 = Vector2(0, 0)
 
-# Config
-const CONFIG_DEFINITION: Array[Dictionary] = [{"TYPE": "STRING", "KEY": "Default Device", "DEFAULT_VALUE": ""}]
-
 var _default_device: String
 
 
 func _init():
-	config_definition = CONFIG_DEFINITION
+	config.add_string("Default Device", "")
 	plugin_name = PLUGIN_NAME
 
 

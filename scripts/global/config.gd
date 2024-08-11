@@ -5,64 +5,25 @@ class_name Config
 ## Includes several helper functions and also the ability to automatically generate
 ## a default editor for the config.[br]
 ## [br]
-## It requires a definition of what the config is supposed to look like.
-## [br]
-## Definitions are an [Array] of [Dictionary] and the dictionaries need to contain certain
-## keys.[br]
-## [br]
-## All entries need to contain at least:[br]
-## "TYPE": The type of the entry, e.g. "BOOL"[br]
-## "KEY": What name the entry should have.[br]
-## "DEFAULT_VALUE": The default value of the entry.[br]
-## [br]
-## Optionally they can contain these:[br]
-## "DESCRIPTION": A description that get's added below the name.
-## This accepts bbcode formatted text.[br]
-## [br]
-## Here is a list of all available types:
+## Example usage:
 ##
 ## [codeblock]
-## "BOOL": No additional properties.
-## "INT": No additional properties.
-## "FLOAT": No additional properties.
-## "STRING": No additional properties.
-## "ENUM":
-##     "ENUM": The dictionary of the enum.
-##             (You don't have to generate this dict, it is built into gdscript, see example)
-## [/codeblock]
-##
-## Example:
-##
-## [codeblock]
-## Config.new([
-##     {"TYPE": "BOOL", "KEY": "Example Bool", "DEFAULT_VALUE": false, "DESCRIPTION": "[code]Example code[/code]\n[b]Another line[/b]"},
-##     {"TYPE": "STRING", "KEY": "Example String", "DEFAULT_VALUE": "Example value"},
-## ])
-##
-## # For enums
-## enum Example {ENUM_VALUE1, ENUM_VALUE2}
-## Config.new([{"TYPE": "ENUM", "KEY": "Example Enum", "DEFAULT_VALUE": Example.ENUM_VALUE1, "ENUM": Example}])
-##
-## # If you want to have the config saved to disk you must provide a path
-## Config.new(DEFINITION, "your/path/")
+## config: Config = Config.new()
+## config.add_bool("Example bool", false, "[code]Example code[/code]\n[b]Another line[/b]")
+## config.add_string("Example string", "Example default value")
 ## [/codeblock]
 
 ## Emitted when the config changed
 signal config_changed
 
-var _path: String
-var _config: Array[ConfigObject]
-
-
-func _init(config_definition: Array[Dictionary], path: String = ""):
-	_config = _generate_objects(config_definition)
-	if path == "":
-		return
-	_path = path
+var _path: String:
+	set = set_config_path
+var _config: Array[ConfigObject]:
+	get = get_objects
 
 
 ## Loads the config from disk.
-## If no path was provided at initialization, it doesn't do anything.
+## If no path was set, it doesn't do anything.
 func load_config():
 	if not _path:
 		return
@@ -79,7 +40,7 @@ func load_config():
 ## [code]{"Example Int": -1, "Example String": "Foo"}[/code].
 func apply_dict(dict: Dictionary):
 	for item in dict:
-		var object = _get_object(item)
+		var object = get_object(item)
 		if object:
 			object.set_value(dict[item])
 
@@ -113,7 +74,75 @@ func generate_editor() -> ConfigEditor:
 	return ConfigEditor.new(self)
 
 
-func _get_object(key: String) -> ConfigObject:
+## Add a object.
+func add_object(object: ConfigObject) -> void:
+	_config.append(object)
+
+
+## Adds a bool object.[br]
+## [param key]: Key string for the object (Will be the label in [Config.ConfigEditor])[br]
+## [param value]: Default value[br]
+## [param description](Optional): Description for what this config object does.
+func add_bool(key: String, value: bool, description: String = "") -> void:
+	_config.append(BoolObject.new(key, value, description))
+
+
+## Adds a int object.[br]
+## [param key]: Key string for the object (Will be the label in [Config.ConfigEditor])[br]
+## [param value]: Default value[br]
+## [param description](Optional): Description for what this config object does.
+func add_int(key: String, value: int, description: String = "") -> void:
+	_config.append(IntObject.new(key, value, description))
+
+
+## Adds a float object.[br]
+## [param key]: Key string for the object (Will be the label in [Config.ConfigEditor])[br]
+## [param value]: Default value[br]
+## [param description](Optional): Description for what this config object does.
+func add_float(key: String, value: float, description: String = "") -> void:
+	_config.append(FloatObject.new(key, value, description))
+
+
+## Adds a string object.[br]
+## [param key]: Key string for the object (Will be the label in [Config.ConfigEditor])[br]
+## [param value]: Default value[br]
+## [param description](Optional): Description for what this config object does.
+func add_string(key: String, value: String, description: String = "") -> void:
+	_config.append(StringObject.new(key, value, description))
+
+
+## Adds a enum object.[br]
+## [param key]: Key string for the object (Will be the label in [Config.ConfigEditor])[br]
+## [param value]: Default value[br]
+## [param enum_dict]: All available values for the enum in a [Dictionary].[br]
+## Gdscript's [code]enum[/code] automatically generates this enum. See example below.[br]
+## [param description](Optional): Description for what this config object does.[br]
+## Example:
+## [codeblock]
+## enum Example {ENUM_VALUE1, ENUM_VALUE2}
+## config.add_enum("Example Enum", Example.ENUM_VALUE1, Example)
+## [/codeblock]
+func add_enum(key: String, value: int, enum_dict: Dictionary, description: String = "") -> void:
+	_config.append(EnumObject.new(key, value, enum_dict, description))
+
+
+## Adds a string array object.[br]
+## This is useful if you want to store a string that can only be predetermined values.
+## [param key]: Key string for the object (Will be the label in [Config.ConfigEditor])[br]
+## [param value]: Default value[br]
+## [param string_array]: All available values to pick from.[br]
+## [param description](Optional): Description for what this config object does.[br]
+func add_string_array(key: String, value: String, string_array: Array[String], description: String = "") -> void:
+	_config.append(StringArrayObject.new(key, value, string_array, description))
+
+
+## Clears the config of all objects.
+func clear_objects() -> void:
+	_config = []
+
+
+## Get a [Config.ConfigObject] by [param key].
+func get_object(key: String) -> ConfigObject:
 	for object in _config:
 		if object.get_key() == key:
 			return object
@@ -121,22 +150,14 @@ func _get_object(key: String) -> ConfigObject:
 	return null
 
 
-func _generate_objects(config: Array[Dictionary]) -> Array[ConfigObject]:
-	var objects: Array[ConfigObject] = []
-	for item in config:
-		match item["TYPE"]:
-			"BOOL":
-				objects.append(BoolObject.new(item))
-			"INT":
-				objects.append(IntObject.new(item))
-			"FLOAT":
-				objects.append(FloatObject.new(item))
-			"STRING":
-				objects.append(StringObject.new(item))
-			"ENUM":
-				objects.append(EnumObject.new(item))
+## Get all objects of the config.
+func get_objects() -> Array[ConfigObject]:
+	return _config
 
-	return objects
+
+## Set the path of the config.
+func set_config_path(path: String) -> void:
+	_path = path
 
 
 class ConfigObject:
@@ -146,8 +167,10 @@ class ConfigObject:
 		get = get_description, set = set_description
 
 
-	func _init(dict: Dictionary):
-		deserialize(dict)
+	func _init(key: String, description: String = ""):
+		_key = key
+		if description != "":
+			_description = description
 
 
 	func get_key():
@@ -178,15 +201,14 @@ class ConfigObject:
 		return {}
 
 
-	func deserialize(dict: Dictionary):
-		_key = dict["KEY"]
-		if dict.has("DESCRIPTION"):
-			_description = dict["DESCRIPTION"]
-
-
 class BoolObject extends ConfigObject:
 	var _value: bool:
 		set = set_value, get = get_value
+
+
+	func _init(key: String, value: bool, description: String = ""):
+		super(key, description)
+		_value = value
 
 
 	func get_value() -> bool:
@@ -201,14 +223,14 @@ class BoolObject extends ConfigObject:
 		return {_key: _value}
 
 
-	func deserialize(dict: Dictionary):
-		super(dict)
-		_value = dict["DEFAULT_VALUE"]
-
-
 class IntObject extends ConfigObject:
 	var _value: int:
 		set = set_value, get = get_value
+
+
+	func _init(key: String, value: int, description: String = ""):
+		super(key, description)
+		_value = value
 
 
 	func get_value() -> int:
@@ -223,14 +245,14 @@ class IntObject extends ConfigObject:
 		return {_key: _value}
 
 
-	func deserialize(dict: Dictionary):
-		super(dict)
-		_value = dict["DEFAULT_VALUE"]
-
-
 class FloatObject extends ConfigObject:
 	var _value: float:
 		set = set_value, get = get_value
+
+
+	func _init(key: String, value: float, description: String = ""):
+		super(key, description)
+		_value = value
 
 
 	func get_value() -> float:
@@ -245,14 +267,14 @@ class FloatObject extends ConfigObject:
 		return {_key: _value}
 
 
-	func deserialize(dict: Dictionary):
-		super(dict)
-		_value = dict["DEFAULT_VALUE"]
-
-
 class StringObject extends ConfigObject:
 	var _value: String:
 		set = set_value, get = get_value
+
+
+	func _init(key: String, value: String, description: String = ""):
+		super(key, description)
+		_value = value
 
 
 	func get_value() -> String:
@@ -267,11 +289,6 @@ class StringObject extends ConfigObject:
 		return {_key: _value}
 
 
-	func deserialize(dict: Dictionary):
-		super(dict)
-		_value = dict["DEFAULT_VALUE"]
-
-
 class EnumObject extends ConfigObject:
 	var _value: int:
 		set = set_value, get = get_value
@@ -279,11 +296,10 @@ class EnumObject extends ConfigObject:
 		get = get_enum_dict
 
 
-	func _init(dict: Dictionary):
-		super(dict)
-
-		_enum_dict = dict["ENUM"]
-		_value = dict["DEFAULT_VALUE"]
+	func _init(key: String, value: int, enum_dict: Dictionary, description: String = ""):
+		super(key, description)
+		_value = value
+		_enum_dict = enum_dict
 
 
 	func get_value() -> int:
@@ -302,9 +318,38 @@ class EnumObject extends ConfigObject:
 		return {_key: _value}
 
 
-	func deserialize(dict: Dictionary):
-		super(dict)
-		_value = dict["DEFAULT_VALUE"]
+class StringArrayObject extends ConfigObject:
+	var _value: String:
+		set = set_value, get = get_value
+	var _string_array: Array[String]:
+		set = set_string_array, get = get_string_array
+
+
+	func _init(key: String, value: String, string_array: Array[String], description: String = ""):
+		super(key, description)
+		_value = value
+		_string_array = string_array
+
+
+	func get_value() -> String:
+		return _value
+
+
+	func set_value(value: String):
+		if value in _string_array:
+			_value = value
+
+
+	func get_string_array() -> Array[String]:
+		return _string_array
+
+
+	func set_string_array(array: Array[String]) -> void:
+		_string_array = array
+
+
+	func serialize() -> Dictionary:
+		return {_key: _value}
 
 
 ## An editor for a [Config]
@@ -334,6 +379,8 @@ class ConfigEditor extends VBoxContainer:
 				_object_editors.append(StringEditor.new(object))
 			elif object is EnumObject:
 				_object_editors.append(EnumEditor.new(object))
+			elif object is StringArrayObject:
+				_object_editors.append(StringArrayEditor.new(object))
 
 		for editor in _object_editors:
 			add_child(editor)
@@ -367,6 +414,22 @@ class ConfigEditor extends VBoxContainer:
 				return editor
 
 		return null
+
+
+	func set_values(values: Array[Variant]) -> void:
+		if values.size() > _object_editors.size():
+			push_error("Trying to set too many values for Config")
+			return
+		for i in values.size():
+			_object_editors[i].set_value(values[i])
+
+
+	func get_values() -> Array[Variant]:
+		var ret_arr: Array[Variant] = []
+		for object_editor in _object_editors:
+			ret_arr.append(object_editor.get_value())
+
+		return ret_arr
 
 
 class VariantEditor extends HBoxContainer:
@@ -584,4 +647,64 @@ class EnumEditor extends VariantEditor:
 
 
 	func _on_clear_button_pressed():
+		_value_editor.select(-1)
+
+
+class StringArrayEditor extends VariantEditor:
+	var _value_editor: OptionButton
+	var _string_array: Array[String]
+
+
+	func _init(object: StringArrayObject) -> void:
+		super(object)
+
+		_string_array = object.get_string_array()
+		_value_editor = OptionButton.new()
+		_value_editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_value_editor.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		add_child(_value_editor)
+
+		var clear_button = Button.new()
+		clear_button.text = "X"
+		clear_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		add_child(clear_button)
+		clear_button.connect("pressed", _on_clear_button_pressed)
+
+		setup_value_editor()
+		set_value(object.get_value())
+
+
+	func setup_value_editor() -> void:
+		_value_editor.clear()
+		for string in _string_array:
+			_value_editor.add_item(string)
+
+
+	func set_value(value: String) -> void:
+		if not value in _string_array:
+			_value_editor.select(-1)
+			return
+
+		for i in _value_editor.get_item_count():
+			if _value_editor.get_item_text(i) == value:
+				_value_editor.select(i)
+
+
+	func set_string_array(array: Array[String]) -> void:
+		_string_array = array
+		setup_value_editor()
+
+
+	func get_value_editor() -> OptionButton:
+		return _value_editor
+
+
+	func get_value() -> String:
+		if _value_editor.get_selected_id() == -1:
+			return ""
+
+		return _value_editor.get_item_text(_value_editor.get_selected_id())
+
+
+	func _on_clear_button_pressed() -> void:
 		_value_editor.select(-1)

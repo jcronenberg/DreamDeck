@@ -9,7 +9,7 @@ extends Node
 ## Example usage:
 ##
 ## [codeblock]
-## extends PluginLoader
+## extends PluginLoaderBase
 ##
 ## func _init():
 ##     plugin_name = "Plugin Name"
@@ -50,6 +50,23 @@ extends Node
 ## Example: [code]{"PluginController": "res://plugins/your_plugin/controller.gd"}[/code]
 @export var controllers: Dictionary
 
+## The actions of your plugin.[br]
+## Example:
+## [codeblock]
+## func _init():
+##     var _arguments_config: Config = Config.new()
+##     _arguments_config.add_string("Example argument 1", "Default value")
+##     _arguments_config.add_float("Example argument 2", 2.0)
+##     actions = [PluginCoordinator.PluginActionDefinition.new("Example action", "example_func", "A description of what this action does", _arguments_config, "Example plugin", "ExampleController")]
+## [/codeblock]
+## The action calls the function in your specified controller and the arguments will be the ones you
+## specified in the [code]args_config[/code] in the order the objects were added.[br]
+## So in the above case your function would have to look like this:
+## [codeblock]
+## func example_func(example_argument1: String, example_argument2: float) -> bool:
+## [/codeblock]
+## (The bool return is optional, but with it you can indicate if the action was successfully executed or not)
+var actions: Array[PluginCoordinator.PluginActionDefinition] = []
 
 # Used to store all resources that are supposed to be loaded
 var _load_queue: Array[String] = []

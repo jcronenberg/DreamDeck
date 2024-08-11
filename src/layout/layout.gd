@@ -65,6 +65,7 @@ func load_layout() -> bool:
 		panel_instance.deserialize(panel)
 		add_child(panel_instance)
 
+	DreamdeckBuiltinActions.update_available_panels(get_panel_names())
 	return true
 
 
@@ -80,6 +81,7 @@ func add_panel(panel_config: Dictionary):
 		layout.move_node_to_leaf(panel_instance, _new_panel_leaf, _new_panel_leaf.get_names().size())
 
 	save()
+	DreamdeckBuiltinActions.update_available_panels(get_panel_names())
 
 
 func delete_panel(panel: LayoutPanel):
@@ -93,6 +95,27 @@ func set_new_panel_leaf(leaf: DockableLayoutPanel):
 
 func set_split_handles_visibility(visibility: bool):
 	_split_container.visible = visibility
+
+
+func get_panel_names() -> Array[String]:
+	var panel_names: Array[String] = []
+	for tab in get_tabs():
+		if not tab is LayoutPanel:
+			continue
+		panel_names.append(tab.panel_name)
+
+	return panel_names
+
+
+func show_panel_by_name(panel_name: String) -> bool:
+	for tab in get_tabs():
+		if not tab is LayoutPanel:
+			continue
+		if tab.panel_name == panel_name:
+			set_control_as_current_tab(tab)
+			return true
+
+	return false
 
 
 func _on_edit_mode_entered():

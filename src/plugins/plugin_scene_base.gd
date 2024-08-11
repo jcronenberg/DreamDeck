@@ -7,6 +7,11 @@ extends Control
 ##
 ## [codeblock]
 ## extends PluginSceneBase
+##
+##
+## func _init() -> void:
+##     config.add_bool("Your config setting", false)
+##
 ## ...
 ## [/codeblock]
 ##
@@ -17,16 +22,14 @@ extends Control
 var conf_dir: String
 
 ## The config for the scene.
-## Requires setting [member config_definition] to work by default.
-var config: Config
-
-## The [Dictionary] from which [member config] gets created.[br]
-## Look at [Config] for the info what this is supposed to look like.
-## Not setting this disables the default [member config] initialization.
-var config_definition: Array[Dictionary]
+var config: Config = Config.new()
 
 # The unique id of the scene.
 var _scene_uuid: String
+
+
+func _ready():
+	handle_config()
 
 
 ## Called by the plugin loader when being initialized.
@@ -39,16 +42,12 @@ func init(init_scene_id: String):
 	_init_config()
 
 
-func _ready():
-	handle_config()
-
-
-## Initializes [member config] and loads it from disk.
+## Loads [member config] from disk.
 func _init_config():
-	if not config_definition:
+	if config.get_objects().size() <= 0:
 		return
 
-	config = Config.new(config_definition, conf_dir + "config.json")
+	config.set_config_path(conf_dir + "config.json")
 	config.load_config()
 	config.connect("config_changed", _on_config_changed)
 
@@ -89,31 +88,21 @@ func edit_config():
 	return null
 
 
-## Called when the scene gets shown again after it was hidden.
-## Note: It doesn't get called when the scene is the default scene
-## and shown from app start. So e.g. background status updates should already be
-## set up without this method.
-## [codeblock]
-## func scene_show():
-##     super()
-##     # disable background checks
-##     set_process(true)
-## [/codeblock]
+## Called when the scene gets shown.
+## By default it enables [code]func _process():[/code] and [code]func _physics_process():[/code].
+## If you don't want this or want to do additional things override this function.
 func scene_show():
-	self.visible = true
+	set_process(true)
+	set_physics_process(true)
 
 
 ## Called when the scene gets hidden.
-## If you e.g. do background status updates you should probably overwrite this function
-## and disable them until [method scene_show] is called again.
-## [codeblock]
-## func scene_hide():
-##     super()
-##     # disable background checks
-##     set_process(false)
-## [/codeblock]
+## By default it disables [code]func _process():[/code] and [code]func _physics_process():[/code]
+## until the scene gets shown again. If you don't want this or want to do additional things override
+## this function.
 func scene_hide():
-	self.visible = false
+	set_process(false)
+	set_physics_process(false)
 
 
 ## Called when the scene gets deleted.
