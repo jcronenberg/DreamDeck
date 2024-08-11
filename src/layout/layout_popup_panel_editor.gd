@@ -31,7 +31,7 @@ func show_new_panel():
 
 	# Connect the plugin enum editor here, because we need to populate
 	# the scene enum with the available scenes from the selected plugin
-	var plugins_editor: Config.EnumEditor = _config_editor.get_editor("Plugin")
+	var plugins_editor: Config.EnumEditor = _config_editor.get_editor("plugin")
 	plugins_editor.get_value_editor().connect("item_selected", _on_new_panel_plugin_selected)
 
 	add_child(_config_editor)
@@ -51,8 +51,8 @@ func _on_new_panel_plugin_selected(idx: int):
 	if idx == -1:
 		return
 
-	var scene_editor: Config.EnumEditor = _config_editor.get_editor("Scene")
-	var plugins_editor: Config.EnumEditor = _config_editor.get_editor("Plugin")
+	var scene_editor: Config.EnumEditor = _config_editor.get_editor("scene")
+	var plugins_editor: Config.EnumEditor = _config_editor.get_editor("plugin")
 	scene_editor.set_enum_dict(PluginCoordinator.generate_scene_enum(plugins_editor.get_value_string()))
 
 
