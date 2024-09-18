@@ -184,8 +184,8 @@ class SimpleWindow extends Window:
 
 
 	func _on_cancel_button_pressed() -> void:
-		emit_signal("cancelled")
+		cancelled.emit()
 
 
 	func _on_confirm_button_pressed() -> void:
-		emit_signal("confirmed")
+		confirmed.emit()

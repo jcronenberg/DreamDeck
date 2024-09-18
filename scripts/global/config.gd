@@ -52,7 +52,7 @@ func apply_dict(dict: Dictionary):
 		if object:
 			object.set_value(dict[item])
 
-	emit_signal("config_changed")
+	config_changed.emit()
 
 
 ## Saves the config to the specified path. Returns false if saving failed.

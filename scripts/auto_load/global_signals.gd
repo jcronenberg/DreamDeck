@@ -19,12 +19,12 @@ func toggle_edit_mode():
 
 func enter_edit_mode():
 	edit_state = true
-	emit_signal("entered_edit_mode")
+	entered_edit_mode.emit()
 
 
 func exit_edit_mode():
 	edit_state = false
-	emit_signal("exited_edit_mode")
+	exited_edit_mode.emit()
 
 
 func get_edit_state() -> bool:
@@ -33,9 +33,9 @@ func get_edit_state() -> bool:
 
 func emit_config_changed():
 	get_node("/root/Main/MainMenu").construct_config()
-	emit_signal("config_changed")
+	config_changed.emit()
 
 
 func emit_global_config_changed():
 	get_node("/root/Main/MainMenu").edit_settings()
-	emit_signal("global_config_changed")
+	global_config_changed.emit()

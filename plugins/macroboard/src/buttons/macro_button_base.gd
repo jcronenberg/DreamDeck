@@ -137,7 +137,7 @@ class ActionsEditor extends VBoxContainer:
 
 
 	func _on_add_button_pressed() -> void:
-		emit_signal("new_action_requested")
+		new_action_requested.emit()
 
 
 class ActionEditor extends HBoxContainer:
