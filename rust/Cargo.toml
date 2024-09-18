@@ -10,11 +10,11 @@ crate-type = ["cdylib"]
 
 [dependencies]
 godot = { git = "https://github.com/godot-rust/gdext", branch = "master", features = ["experimental-threads"] }
-russh = { version = "0.40.2", features = ["openssl"] }
-russh-keys = { version = "0.40.1", features = ["openssl"] }
-async-trait = "0.1.73"
-anyhow = "1.0.75"
-async-std = { version = "1.12.0", features = ["attributes", "tokio1"] }
-chrono = "0.4.31"
-async-ssh2-tokio = "0.8.4"
+russh = { version = "0.45.0", features = ["openssl"] }
+russh-keys = { version = "0.45.0", features = ["openssl"] }
+async-trait = "0.1.82"
+anyhow = "1.0.89"
+async-std = { version = "1.13.0", features = ["attributes", "tokio1"] }
+chrono = "0.4.38"
+async-ssh2-tokio = "0.8.12"
 osshkeys = "0.7.0"

@@ -10,6 +10,7 @@ use russh::client::Handle;
 use russh::*;
 use russh_keys::*;
 use std::fs;
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -32,22 +33,22 @@ impl client::Handler for Client {
     type Error = anyhow::Error;
 
     async fn check_server_key(
-        self,
+        &mut self,
         server_public_key: &key::PublicKey,
-    ) -> Result<(Self, bool), Self::Error> {
+    ) -> Result<bool, Self::Error> {
         match &self.server_check {
-            ServerCheckMethod::NoCheck => Ok((self, true)),
+            ServerCheckMethod::NoCheck => Ok(true),
             ServerCheckMethod::PublicKey(key) => {
                 let pk = russh_keys::parse_public_key_base64(key)
                     .map_err(|_| async_ssh2_tokio::Error::ServerCheckFailed)?;
 
-                Ok((self, pk == *server_public_key))
+                Ok(pk == *server_public_key)
             }
             ServerCheckMethod::PublicKeyFile(key_file_name) => {
                 let pk = russh_keys::load_public_key(key_file_name)
                     .map_err(|_| async_ssh2_tokio::Error::ServerCheckFailed)?;
 
-                Ok((self, pk == *server_public_key))
+                Ok(pk == *server_public_key)
             }
             ServerCheckMethod::KnownHostsFile(known_hosts_path) => {
                 let result = russh_keys::check_known_hosts_path(
@@ -58,24 +59,24 @@ impl client::Handler for Client {
                 )
                 .map_err(|_| async_ssh2_tokio::Error::ServerCheckFailed)?;
 
-                Ok((self, result))
+                Ok(result)
             }
             ServerCheckMethod::DefaultKnownHostsFile => {
                 let result = russh_keys::check_known_hosts(&self.ip, self.port, server_public_key)
                     .map_err(|_| async_ssh2_tokio::Error::ServerCheckFailed)?;
 
-                Ok((self, result))
+                Ok(result)
             }
             _ => Err(anyhow!(async_ssh2_tokio::Error::ServerCheckFailed)),
         }
     }
 
     async fn data(
-        self,
+        &mut self,
         channel: ChannelId,
         data: &[u8],
-        session: client::Session,
-    ) -> Result<(Self, client::Session), Self::Error> {
+        _session: &mut client::Session,
+    ) -> Result<(), Self::Error> {
         if self.debug {
             godot_print!(
                 "{}: SSH STDOUT on {}:{}:{:?}: {}",
@@ -86,16 +87,16 @@ impl client::Handler for Client {
                 String::from_utf8_lossy(data)
             );
         }
-        Ok((self, session))
+        Ok(())
     }
 
     async fn extended_data(
-        self,
+        &mut self,
         channel: ChannelId,
         ext: u32,
         data: &[u8],
-        session: client::Session,
-    ) -> Result<(Self, client::Session), Self::Error> {
+        _session: &mut client::Session,
+    ) -> Result<(), Self::Error> {
         if ext == 1 && self.debug {
             godot_print_rich!(
                 "[color=yellow]{}: SSH STDERR on {}:{}:{:?}: {}[color=white][/color]",
@@ -106,15 +107,15 @@ impl client::Handler for Client {
                 String::from_utf8_lossy(data)
             );
         }
-        Ok((self, session))
+        Ok(())
     }
 
     async fn exit_status(
-        self,
+        &mut self,
         channel: ChannelId,
         exit_status: u32,
-        session: client::Session,
-    ) -> Result<(Self, client::Session), Self::Error> {
+        _session: &mut client::Session,
+    ) -> Result<(), Self::Error> {
         if self.debug {
             let color = if exit_status != 0 { "red" } else { "white" };
             godot_print_rich!(
@@ -127,7 +128,7 @@ impl client::Handler for Client {
                 exit_status
             );
         }
-        Ok((self, session))
+        Ok(())
     }
 }
 
@@ -224,12 +225,12 @@ pub impl SSHClient {
         // Is only possible if self.auth_method is of type private key
         // We extract the values of self.auth_method to convert it later
         if let AuthMethod::PrivateKeyFile {
-            key_file_name,
+            key_file_path,
             key_pass,
         } = self.auth_method.clone().unwrap()
         {
             passphrase = key_pass;
-            key_path = key_file_name;
+            key_path = key_file_path;
         } else {
             return false;
         }
@@ -275,7 +276,7 @@ pub impl SSHClient {
         match method.to_string().as_str() {
             "key_file" => {
                 self.auth_method = Some(AuthMethod::PrivateKeyFile {
-                    key_file_name: key_path.to_string(),
+                    key_file_path: PathBuf::from(key_path.to_string()),
                     key_pass: if password.to_string() != *"" {
                         Some(password.to_string())
                     } else {
@@ -471,10 +472,10 @@ pub impl SSHClient {
                 Err(anyhow!("Private key auth failed"))
             }
             AuthMethod::PrivateKeyFile {
-                key_file_name,
+                key_file_path,
                 key_pass,
             } => {
-                let cprivk = match russh_keys::load_secret_key(key_file_name, key_pass.as_deref()) {
+                let cprivk = match russh_keys::load_secret_key(key_file_path, key_pass.as_deref()) {
                     Ok(kp) => kp,
                     Err(e) => return Err(anyhow!(e)),
                 };

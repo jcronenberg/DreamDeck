@@ -9,6 +9,6 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-evdev = "0.12.1"
+evdev = "0.12.2"
 godot = { git = "https://github.com/godot-rust/gdext", branch = "master" }
-nix = "0.23.1"
+nix = { version = "0.29.0", features = ["event", "fs"] }

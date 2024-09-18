@@ -7,7 +7,7 @@ use std::process::{Child, Command};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread::{self, JoinHandle};
 
-use godot::engine::Engine;
+use godot::classes::Engine;
 use godot::prelude::*;
 
 #[derive(GodotClass)]
