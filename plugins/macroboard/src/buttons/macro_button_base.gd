@@ -49,20 +49,20 @@ func open_editor(new_button: bool = false) -> void:
 	_actions_editor.connect("new_action_requested", _on_new_action_requested)
 	margin.add_child(_actions_editor)
 	tab_container.add_child(margin)
-	PopupManager.init_popup(tab_container, _on_popup_confirmed, func not_required(__): pass)
+	PopupManager.init_popup(tab_container, _on_popup_confirmed, func not_required(__) -> void: pass)
 
 
 func _on_new_action_requested() -> void:
 	PopupManager.add_stack_item(PluginCoordinator.PluginActionSelector.new())
 
 
-func _on_popup_confirmed(popup_window: Control) -> void:
+func _on_popup_confirmed(popup_window: Control) -> bool:
 	if popup_window is PluginCoordinator.PluginActionSelector:
 		var action: PluginCoordinator.PluginActionDefinition = popup_window.get_selected_action()
 		if action:
 			_actions_editor.add_action(action)
 
-		return
+	return true
 
 
 # Function called when a user presses the delete key for this button.

@@ -9,16 +9,6 @@ extends Node
 ## within the current popup with the ability to return to the previous popup
 ## after, use [method add_stack_item].
 
-## Emitted when popup was confirmed. [param popup_window] is the current window.
-signal popup_confirmed(popup_window: Control)
-
-## Emitted when popup was cancelled. [param popup_window] is the current window.
-## If emitted with [code]popup_window = null[/code] then the window was closed
-## or a new [method init_popup] was requested.
-## Closed is supposed to be handled as if the user cancelled all actions.
-signal popup_cancelled(popup_window: Control)
-
-
 @onready var _popup: SimpleWindow = SimpleWindow.new()
 var _current_popup: Control:
 	get = get_current_popup
@@ -37,15 +27,23 @@ func _ready() -> void:
 
 ## Initializes a new popup, freeing the whole previous stack if it existed.
 ## Pass your callable functions for how you want to handle the popup's
-## [signal popup_confirmed] and [signal popup_cancelled] signals.
-## The manager automatically connects and disconnects these functions.
+## confirm or cancel buttons/actions.
+## The manager automatically frees the item(s).[br]
+## [br]
+## [param confirm_func] should roughly look like this:[br]
+## [code]func confirm(popup_window: Control) -> bool:[/code][br]
+## It should return true if the action was successful.[br]
+## [br]
+## [param cancel_func] should roughly look like this:[br]
+## [code]func cancel(popup_window: Control) -> void:[/code][br]
+## If called with [code]popup_window = null[/code] then the window was closed
+## or a new [method init_popup] was requested.
+## Closed is supposed to be handled as if the user cancelled all actions.
 func init_popup(popup_window: Control, confirm_func: Callable, cancel_func: Callable) -> void:
 	_set_current_popup(popup_window)
 
 	_caller_confirm_func = confirm_func
-	popup_confirmed.connect(confirm_func)
 	_caller_cancel_func = cancel_func
-	popup_cancelled.connect(cancel_func)
 
 
 ## Adds the [param popup_window] to the popup stack.
@@ -70,7 +68,7 @@ func pop_stack_item() -> void:
 		if _popup_stack.size() == 1:
 			_popup.set_cancel_text("Cancel")
 	else:
-		_disconnect_caller()
+		_reset_callables()
 		_popup.hide()
 
 
@@ -91,7 +89,7 @@ func _set_current_popup(popup_window: Control) -> void:
 		for stack_item in _popup_stack:
 			stack_item.queue_free()
 
-	_disconnect_caller()
+	_reset_callables()
 
 	_current_popup = popup_window
 	_popup_stack = [popup_window]
@@ -100,22 +98,13 @@ func _set_current_popup(popup_window: Control) -> void:
 	_popup.show()
 
 
-func _disconnect_caller() -> void:
-	if not _caller_confirm_func or not _caller_cancel_func:
-		return
-	if popup_confirmed.is_connected(_caller_confirm_func):
-		popup_confirmed.disconnect(_caller_confirm_func)
-	if popup_cancelled.is_connected(_caller_cancel_func):
-		popup_cancelled.disconnect(_caller_cancel_func)
-
-
 func _on_popup_confirmed() -> void:
-	emit_signal("popup_confirmed", get_current_popup())
-	pop_stack_item()
+	if _caller_confirm_func.callv([get_current_popup()]):
+		pop_stack_item()
 
 
 func _on_popup_cancelled() -> void:
-	emit_signal("popup_cancelled", get_current_popup())
+	_caller_cancel_func.callv([get_current_popup()])
 	pop_stack_item()
 
 
@@ -124,8 +113,14 @@ func _on_popup_close_requested() -> void:
 	for stack_item in _popup_stack:
 		stack_item.queue_free()
 	_popup_stack = []
-	_disconnect_caller()
+	_reset_callables()
 	_popup.hide()
+
+
+# An older callable should never actually occur, but just to be sure
+func _reset_callables() -> void:
+	_caller_confirm_func = func unused(__) -> bool: return true
+	_caller_cancel_func = func unused(__) -> void: pass
 
 
 class SimpleWindow extends Window:

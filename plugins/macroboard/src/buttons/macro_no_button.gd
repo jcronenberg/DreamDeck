@@ -15,10 +15,10 @@ func _on_pressed() -> void:
 	open_editor(true)
 
 
-func _on_popup_confirmed(popup_window: Control) -> void:
+func _on_popup_confirmed(popup_window: Control) -> bool:
 	super(popup_window)
 	if popup_window is PluginCoordinator.PluginActionSelector:
-		return
+		return true
 
 	_config_editor.apply()
 	var config: Dictionary = _config.get_as_dict()
@@ -32,3 +32,4 @@ func _on_popup_confirmed(popup_window: Control) -> void:
 	new_button.deserialize(config)
 
 	get_macroboard().call_deferred("replace_button", self, new_button)
+	return true

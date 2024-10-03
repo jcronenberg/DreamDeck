@@ -113,15 +113,16 @@ func _action_config_migration(dict: Dictionary) -> void:
 	_show_button_label = dict["show_app_name"]
 
 
-func _on_popup_confirmed(popup_window: Control) -> void:
+func _on_popup_confirmed(popup_window: Control) -> bool:
 	super(popup_window)
 	if popup_window is PluginCoordinator.PluginActionSelector:
-		return
+		return true
 
 	_actions = _actions_editor.deserialize()
 	_config_editor.apply()
 	deserialize(_config.get_as_dict())
 	apply_change()
+	return true
 
 
 func _on_pressed() -> void:
