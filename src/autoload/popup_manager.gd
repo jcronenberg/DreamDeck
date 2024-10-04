@@ -109,7 +109,7 @@ func _on_popup_cancelled() -> void:
 
 
 func _on_popup_close_requested() -> void:
-	emit_signal("popup_cancelled", null)
+	_caller_cancel_func.callv([null])
 	for stack_item in _popup_stack:
 		stack_item.queue_free()
 	_popup_stack = []
