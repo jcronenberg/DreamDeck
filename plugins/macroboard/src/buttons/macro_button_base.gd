@@ -53,7 +53,7 @@ func open_editor(new_button: bool = false) -> void:
 
 
 func _on_new_action_requested() -> void:
-	PopupManager.add_stack_item(PluginCoordinator.PluginActionSelector.new())
+	PopupManager.push_stack_item(PluginCoordinator.PluginActionSelector.new())
 
 
 func _on_popup_confirmed(popup_window: Control) -> bool:

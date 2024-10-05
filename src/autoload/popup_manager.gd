@@ -7,7 +7,7 @@ extends Node
 ## The way it is meant to be used is first by calling [method init_popup].
 ## If you require "levels" to your popup, so you e.g. need to edit something
 ## within the current popup with the ability to return to the previous popup
-## after, use [method add_stack_item].
+## after, use [method push_stack_item].
 
 @onready var _popup: SimpleWindow = SimpleWindow.new()
 var _current_popup: Control:
@@ -46,9 +46,9 @@ func init_popup(popup_window: Control, confirm_func: Callable, cancel_func: Call
 	_caller_cancel_func = cancel_func
 
 
-## Adds the [param popup_window] to the popup stack.
+## Pushes the [param popup_window] onto the popup stack.
 ## If called before a [method init_popup] was called it does nothing.
-func add_stack_item(popup_window: Control) -> void:
+func push_stack_item(popup_window: Control) -> void:
 	if _popup_stack.size() == 0:
 		return
 
