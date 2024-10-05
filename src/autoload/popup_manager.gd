@@ -89,8 +89,7 @@ func close_popup() -> void:
 
 func _set_current_popup(popup_window: Control) -> void:
 	if _popup_stack.size() > 0:
-		emit_signal("popup_cancelled", null)
-
+		_caller_cancel_func.callv([null])
 		for stack_item in _popup_stack:
 			stack_item.queue_free()
 
