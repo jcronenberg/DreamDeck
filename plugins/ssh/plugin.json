@@ -1,3 +1,4 @@
 {
-  "plugin_name": "SSH"
+  "plugin_name": "SSH",
+  "description": "Allows you to execute commands over SSH."
 }

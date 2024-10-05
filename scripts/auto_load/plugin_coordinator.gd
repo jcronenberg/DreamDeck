@@ -32,7 +32,6 @@ func _ready():
 	load_activated_plugins()
 
 
-
 # FIXME doesn't check if already there, so can't currently be called at runtime
 ## Discovers all plugins at `res://plugins` and adds them to [member _plugins].
 ## It also loads all files in [member _conf_dir]/plugins as resource packs.
@@ -68,6 +67,10 @@ func _runtime_load_plugins():
 			push_error("Failed to load plugin %s" % file)
 
 
+func get_plugins():
+		return _plugins
+
+
 func get_activated_plugins() -> Array:
 	var ret_array: Array = []
 	for plugin in _plugins:
@@ -82,15 +85,6 @@ func get_plugin_config() -> Dictionary:
 	for plugin in _plugins:
 		ret_dict[plugin.plugin_name] = plugin.is_activated()
 	return ret_dict
-
-
-func change_activated_plugins(new_data):
-	for plugin in _plugins:
-		plugin.set_activated(new_data[plugin.plugin_name])
-
-	save_activated_plugins()
-
-	get_tree().call_group("layout_panels", "load_scene")
 
 
 func save_activated_plugins():
@@ -252,6 +246,9 @@ func add_panel(leaf: DockableLayoutPanel):
 
 class Plugin:
 	var plugin_name: String
+	var plugin_description: String
+
+	var _icon_path: String
 
 	var _plugin_path: String
 	var _activated: bool = false
@@ -272,10 +269,12 @@ class Plugin:
 			_loader = load("res://plugins/%s/loader.gd" % _plugin_path).new()
 			PluginCoordinator.add_child(_loader)
 			_loader.plugin_load()
+			GlobalSignals.activated_plugins_changed.emit()
 		elif not activated and _loader:
 			_loader.plugin_unload()
 			_loader.free()
 			_loader = null
+			GlobalSignals.activated_plugins_changed.emit()
 
 		_activated = activated
 
@@ -284,8 +283,25 @@ class Plugin:
 		return _loader
 
 
+	func get_icon() -> Texture2D:
+		var icon_path: String
+		if _icon_path:
+			if ResourceLoader.exists(_icon_path):
+				icon_path = _icon_path
+			else:
+				icon_path = "res://plugins/%s/%s" % [_plugin_path, _icon_path]
+		else:
+			icon_path = "res://resources/icons/dreamdeck.png"
+
+		return load(icon_path)
+
+
 	func deserialize(dict: Dictionary):
 		plugin_name = dict["plugin_name"]
+		if dict.has("description"):
+			plugin_description = dict["description"]
+		if dict.has("icon_path"):
+			_icon_path = dict["icon_path"]
 
 
 class PluginActionDefinition:

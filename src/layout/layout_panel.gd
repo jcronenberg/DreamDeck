@@ -13,6 +13,7 @@ var _plugin_instance: PluginSceneBase:
 func _ready():
 	add_to_group("layout_panels")
 	connect("visibility_changed", _on_visibility_changed)
+	GlobalSignals.activated_plugins_changed.connect(_on_activated_plugins_changed)
 
 
 # scene_dict is e.g. {"scene_name": resource}
@@ -39,6 +40,7 @@ func add_plugin_scene(plugin_name: String, scene_dict: Dictionary):
 func remove_plugin_scene(plugin_name: String, scene_name: String):
 	if plugin == plugin_name and scene == scene_name and _plugin_instance:
 		_plugin_instance.queue_free()
+		_plugin_instance = null
 
 
 func serialize() -> Dictionary:
@@ -101,3 +103,7 @@ func _on_visibility_changed() -> void:
 		_plugin_instance.scene_show()
 	else:
 		_plugin_instance.scene_hide()
+
+
+func _on_activated_plugins_changed() -> void:
+	load_scene()
