@@ -40,6 +40,9 @@ func _ready() -> void:
 ## or a new [method init_popup] was requested.
 ## Closed is supposed to be handled as if the user cancelled all actions.
 func init_popup(popup_window: Control, confirm_func: Callable, cancel_func: Callable) -> void:
+	if not popup_window:
+		return
+
 	_set_current_popup(popup_window)
 
 	_caller_confirm_func = confirm_func
@@ -50,6 +53,8 @@ func init_popup(popup_window: Control, confirm_func: Callable, cancel_func: Call
 ## If called before a [method init_popup] was called it does nothing.
 func push_stack_item(popup_window: Control) -> void:
 	if _popup_stack.size() == 0:
+		return
+	if not popup_window:
 		return
 
 	_popup_stack.append(popup_window)
