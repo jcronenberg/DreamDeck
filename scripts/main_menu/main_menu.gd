@@ -5,7 +5,6 @@ const plugins_popup_scene = preload("res://src/main_menu/plugins_popup.tscn")
 
 # Submenus
 var settings_submenu
-var edit_mode_button
 
 # State
 var main_menu_constructed := false
@@ -37,17 +36,19 @@ func construct_main_menu():
 	plugins_button.connect("pressed", _on_plugins_button_pressed)
 	$Menu/SettingSeparator.add_child(plugins_button)
 	# Edit Mode
-	new_button = execute_function_button.instantiate()
-	new_button.init("Edit Mode", "/root/GlobalSignals", "toggle_edit_mode")
-	new_button.size.x = 400
-	edit_mode_button = new_button
-	$Menu/SettingSeparator.add_child(new_button)
+	var edit_mode_button: Button = Button.new()
+	edit_mode_button.text = "Edit Mode"
+	edit_mode_button.theme_type_variation = "MyMenuButton"
+	edit_mode_button.custom_minimum_size = Vector2(0, 60)
+	edit_mode_button.connect("pressed", GlobalSignals.toggle_edit_mode)
+	$Menu/SettingSeparator.add_child(edit_mode_button)
 	# Quit button
-	new_button = execute_function_button.instantiate()
-	new_button.init("Quit", "", "quit")
-	new_button.size.x = 400
-	edit_mode_button = new_button
-	$Menu/SettingSeparator.add_child(new_button)
+	var quit_button: Button = Button.new()
+	quit_button.text = "Quit"
+	quit_button.theme_type_variation = "MyMenuButton"
+	quit_button.custom_minimum_size = Vector2(0, 60)
+	quit_button.connect("pressed", get_tree().quit)
+	$Menu/SettingSeparator.add_child(quit_button)
 
 	main_menu_constructed = true
 
