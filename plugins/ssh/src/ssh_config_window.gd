@@ -1,5 +1,5 @@
 class_name SSHConfigWindow
-extends MarginContainer
+extends Control
 
 const client_configurator_scene = preload("res://plugins/ssh/src/ssh_client_configurator.tscn")
 
