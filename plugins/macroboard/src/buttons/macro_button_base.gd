@@ -2,6 +2,7 @@ class_name MacroButtonBase
 extends Button
 
 var _actions_editor: ActionsEditor
+var _new_action_selector: PluginCoordinator.PluginActionSelector
 var _config_editor: Config.ConfigEditor
 var _config: Config = Config.new()
 
@@ -49,19 +50,27 @@ func open_editor(new_button: bool = false) -> void:
 	_actions_editor.connect("new_action_requested", _on_new_action_requested)
 	margin.add_child(_actions_editor)
 	tab_container.add_child(margin)
-	PopupManager.init_popup(tab_container, _on_popup_confirmed, func not_required(__) -> void: pass)
+	PopupManager.init_popup(tab_container, _on_popup_confirmed, func unused() -> void: pass)
 
 
 func _on_new_action_requested() -> void:
-	PopupManager.push_stack_item(PluginCoordinator.PluginActionSelector.new())
+	_new_action_selector = PluginCoordinator.PluginActionSelector.new()
+	PopupManager.push_stack_item(_new_action_selector, _on_popup_new_action_confirmed, func unused() -> void: pass)
 
 
-func _on_popup_confirmed(popup_window: Control) -> bool:
-	if popup_window is PluginCoordinator.PluginActionSelector:
-		var action: PluginCoordinator.PluginActionDefinition = popup_window.get_selected_action()
-		if action:
-			_actions_editor.add_action(action)
+func _on_popup_new_action_confirmed() -> bool:
+	if not _new_action_selector:
+		return true
 
+	var action: PluginCoordinator.PluginActionDefinition = _new_action_selector.get_selected_action()
+	if action:
+		_actions_editor.add_action(action)
+
+	_new_action_selector = null
+	return true
+
+
+func _on_popup_confirmed() -> bool:
 	return true
 
 

@@ -72,4 +72,4 @@ func construct_config():
 
 func _on_plugins_button_pressed() -> void:
 	var plugins_popup: PluginsPopup = plugins_popup_scene.instantiate()
-	PopupManager.init_popup(plugins_popup, plugins_popup._on_popup_confirm, plugins_popup._on_popup_cancel)
+	PopupManager.init_popup(plugins_popup, func unused() -> bool: return true, func unused() -> void: pass)

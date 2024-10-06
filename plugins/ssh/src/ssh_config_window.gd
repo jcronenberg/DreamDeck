@@ -19,10 +19,9 @@ func edit_client(index: int):
 		client_dict = _ssh_controller.get_client_list()[index]
 
 	var client_configurator: SSHClientConfigurator = client_configurator_scene.instantiate()
-	client_configurator.config_window = self
 	_client_configurator = client_configurator
 
-	PopupManager.push_stack_item(client_configurator)
+	PopupManager.push_stack_item(client_configurator, _on_confirm_client_configurator, _on_cancel_client_configurator)
 	client_configurator.edit_ssh_client(client_dict)
 
 
@@ -47,23 +46,28 @@ func save_client(client_dict: Dictionary) -> bool:
 
 
 func confirm() -> bool:
-	if _client_configurator:
-		if save_client(_client_configurator.serialize()):
-			populate_list()
-			_client_configurator.queue_free()
-			_client_configurator = null
-			_client_index = -1
-			return true
-		else:
-			return false
 	return true
 
 
 func cancel() -> void:
-	if _client_configurator:
+	pass
+
+
+func _on_confirm_client_configurator() -> bool:
+	if save_client(_client_configurator.serialize()):
+		populate_list()
 		_client_configurator.queue_free()
 		_client_configurator = null
 		_client_index = -1
+		return true
+
+	return false
+
+
+func _on_cancel_client_configurator() -> void:
+	_client_configurator.queue_free()
+	_client_configurator = null
+	_client_index = -1
 
 
 func _ensure_unique_name(client_name: String) -> bool:

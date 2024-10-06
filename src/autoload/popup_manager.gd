@@ -12,9 +12,7 @@ extends Node
 @onready var _popup: SimpleWindow = SimpleWindow.new()
 var _current_popup: Control:
 	get = get_current_popup
-var _popup_stack: Array[Control] = []
-var _caller_confirm_func: Callable
-var _caller_cancel_func: Callable
+var _popup_stack: Array[StackItem] = []
 
 
 func _ready() -> void:
@@ -43,21 +41,22 @@ func init_popup(popup_window: Control, confirm_func: Callable, cancel_func: Call
 	if not popup_window:
 		return
 
-	_set_current_popup(popup_window)
-
-	_caller_confirm_func = confirm_func
-	_caller_cancel_func = cancel_func
+	_set_current_popup(popup_window, confirm_func, cancel_func)
 
 
 ## Pushes the [param popup_window] onto the popup stack.
 ## If called before a [method init_popup] was called it does nothing.
-func push_stack_item(popup_window: Control) -> void:
+func push_stack_item(popup_window: Control, confirm_func: Callable, cancel_func: Callable) -> void:
 	if _popup_stack.size() == 0:
 		return
 	if not popup_window:
 		return
 
-	_popup_stack.append(popup_window)
+	var stack_item: StackItem = StackItem.new()
+	stack_item.control_node = popup_window
+	stack_item.confirm_callable = confirm_func
+	stack_item.cancel_callable = cancel_func
+	_popup_stack.append(stack_item)
 	_popup.set_scene(popup_window)
 	_popup.set_cancel_text("Back")
 
@@ -66,19 +65,18 @@ func push_stack_item(popup_window: Control) -> void:
 ## If nothing is left on the stack it disconnects the caller's functions
 ## and hides the popup.
 func pop_stack_item() -> void:
-	var stack_item: Control = _popup_stack.pop_back()
-	stack_item.queue_free()
+	var stack_item: StackItem = _popup_stack.pop_back()
+	stack_item.control_node.queue_free()
 	if _popup_stack.size() > 0:
-		_popup.set_scene(_popup_stack.back())
+		_popup.set_scene(_popup_stack.back().control_node)
 		if _popup_stack.size() == 1:
 			_popup.set_cancel_text("Cancel")
 	else:
-		_reset_callables()
 		_popup.hide()
 
 
 func get_current_popup() -> Control:
-	return _popup_stack[_popup_stack.size() - 1] if _popup_stack.size() > 0 else null
+	return _popup_stack[_popup_stack.size() - 1].control_node if _popup_stack.size() > 0 else null
 
 
 ## Closes the current popup and disconnects the caller's functions.
@@ -87,44 +85,39 @@ func close_popup() -> void:
 		pop_stack_item()
 
 
-func _set_current_popup(popup_window: Control) -> void:
+func _set_current_popup(popup_window: Control, confirm_func: Callable, cancel_func: Callable) -> void:
 	if _popup_stack.size() > 0:
-		_caller_cancel_func.callv([null])
 		for stack_item in _popup_stack:
+			stack_item.cancel()
 			stack_item.queue_free()
 
-	_reset_callables()
-
 	_current_popup = popup_window
-	_popup_stack = [popup_window]
+	var stack_item: StackItem = StackItem.new()
+	stack_item.control_node = popup_window
+	stack_item.confirm_callable = confirm_func
+	stack_item.cancel_callable = cancel_func
+	_popup_stack = [stack_item]
 	_popup.set_scene(popup_window)
 	_popup.set_cancel_text("Cancel")
 	_popup.show()
 
 
 func _on_popup_confirmed() -> void:
-	if _caller_confirm_func.callv([get_current_popup()]):
+	if _popup_stack.back().confirm():
 		pop_stack_item()
 
 
 func _on_popup_cancelled() -> void:
-	_caller_cancel_func.callv([get_current_popup()])
+	_popup_stack.back().cancel()
 	pop_stack_item()
 
 
 func _on_popup_close_requested() -> void:
-	_caller_cancel_func.callv([null])
 	for stack_item in _popup_stack:
+		stack_item.cancel()
 		stack_item.queue_free()
 	_popup_stack = []
-	_reset_callables()
 	_popup.hide()
-
-
-# An older callable should never actually occur, but just to be sure
-func _reset_callables() -> void:
-	_caller_confirm_func = func unused(__) -> bool: return true
-	_caller_cancel_func = func unused(__) -> void: pass
 
 
 class SimpleWindow extends Window:
@@ -188,3 +181,17 @@ class SimpleWindow extends Window:
 
 	func _on_confirm_button_pressed() -> void:
 		confirmed.emit()
+
+
+class StackItem:
+	var control_node: Control
+	var confirm_callable: Callable
+	var cancel_callable: Callable
+
+
+	func cancel() -> void:
+		cancel_callable.call()
+
+
+	func confirm() -> bool:
+		return confirm_callable.call()

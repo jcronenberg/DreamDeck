@@ -9,9 +9,6 @@ extends Control
 	"key_path": $Items/KeyPathSplit/LineEdit,
 	}
 
-# Bit of a hack, but the confirm and cancel logic should be handled by the parent
-var config_window: SSHConfigWindow = null
-
 
 func edit_ssh_client(client_dict: Dictionary) -> void:
 	for field in client_dict:
@@ -26,11 +23,3 @@ func serialize() -> Dictionary:
 
 	client_dict["port"] = int(client_dict["port"])
 	return client_dict
-
-
-func confirm() -> bool:
-	return config_window.confirm()
-
-
-func cancel() -> void:
-	config_window.cancel()

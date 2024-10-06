@@ -51,16 +51,5 @@ func _on_activate_check_button_toggled(_toggled: bool) -> void:
 
 
 func _on_settings_button_pressed() -> void:
-	PopupManager.push_stack_item(_plugins[_current_plugin].get_loader().get_settings_page())
-
-
-func _on_popup_confirm(node: Control) -> bool:
-	if node == self:
-		return true
-	return node.confirm()
-
-
-func _on_popup_cancel(node: Control) -> void:
-	if not node or node == self:
-		return
-	node.cancel()
+	var settings_page: Control = _plugins[_current_plugin].get_loader().get_settings_page()
+	PopupManager.push_stack_item(settings_page, settings_page.confirm, settings_page.cancel)
