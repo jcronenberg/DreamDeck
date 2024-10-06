@@ -92,7 +92,8 @@ func request_deletion():
 
 
 func _on_confirm_deletion():
-	_plugin_instance.delete_config()
+	if _plugin_instance and is_instance_valid(_plugin_instance):
+		_plugin_instance.delete_config()
 	get_node("/root/Main/Layout").call_deferred("delete_panel", self)
 
 
