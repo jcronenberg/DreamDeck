@@ -48,6 +48,7 @@ func _on_plugin_selector_list_item_selected(index: int) -> void:
 
 func _on_activate_check_button_toggled(_toggled: bool) -> void:
 	%SettingsButton.visible = _plugins[_current_plugin].show_settings_button()
+	PluginCoordinator.save_activated_plugins()
 
 
 func _on_settings_button_pressed() -> void:
