@@ -1,5 +1,5 @@
 {
   "plugin_name": "Touch",
   "description": "A plugin to grab a touch device on linux so it doesn't move the mouse cursor anymore, but exclusively interact with this application.\nOnly use this when required and other monitors are connected, otherwise native input is preferred.",
-  "icon_path": "assets/touch.png"
+  "icon_path": "assets/touch.png",
 }
