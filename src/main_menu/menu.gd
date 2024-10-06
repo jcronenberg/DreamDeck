@@ -3,8 +3,6 @@ extends Panel
 const TWEEN_SPEED := 0.5
 const MAX_MENU_MARGIN := 400
 
-@onready var setting_button := load("res://scenes/main_menu/submenu_button.tscn")
-
 
 func show_menu():
 	size.x = 0
