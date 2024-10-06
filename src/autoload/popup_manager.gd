@@ -89,7 +89,7 @@ func _set_current_popup(popup_window: Control, confirm_func: Callable, cancel_fu
 	if _popup_stack.size() > 0:
 		for stack_item in _popup_stack:
 			stack_item.cancel()
-			stack_item.queue_free()
+			stack_item.control_node.queue_free()
 
 	_current_popup = popup_window
 	var stack_item: StackItem = StackItem.new()
@@ -115,7 +115,7 @@ func _on_popup_cancelled() -> void:
 func _on_popup_close_requested() -> void:
 	for stack_item in _popup_stack:
 		stack_item.cancel()
-		stack_item.queue_free()
+		stack_item.control_node.queue_free()
 	_popup_stack = []
 	_popup.hide()
 
