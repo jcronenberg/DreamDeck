@@ -540,6 +540,8 @@ class IntEditor extends VariantEditor:
 
 		_value_editor = SpinBox.new()
 		_value_editor.step = 1
+		_value_editor.min_value = -100000000
+		_value_editor.max_value = 100000000
 		_value_editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_value_editor.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		add_child(_value_editor)
@@ -563,6 +565,8 @@ class FloatEditor extends VariantEditor:
 
 		_value_editor = SpinBox.new()
 		_value_editor.step = 0.00001
+		_value_editor.min_value = -100000000
+		_value_editor.max_value = 100000000
 		_value_editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_value_editor.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		add_child(_value_editor)
