@@ -70,20 +70,6 @@ func construct_config():
 		ConfigLoader.change_config(settings_submenu.construct_dict())
 
 
-## Adds a custom button to the MainMenu
-## The button needs to be freed by the caller when it is no longer needed
-func add_custom_button(button_scene):
-	# Because this may be called before _ready
-	if not main_menu_constructed:
-		_ready()
-
-	$Menu/SettingSeparator.add_child(button_scene)
-	# Quit and Edit Mode should be the last buttons
-	$Menu/SettingSeparator.move_child(button_scene, $Menu/SettingSeparator.get_child_count() - 3)
-
-
 func _on_plugins_button_pressed() -> void:
 	var plugins_popup: PluginsPopup = plugins_popup_scene.instantiate()
-	PopupManager.init_popup(plugins_popup,
-		func unused(__: Control) -> bool: return true,
-		func unused(__: Control) -> void: pass)
+	PopupManager.init_popup(plugins_popup, plugins_popup._on_popup_confirm, plugins_popup._on_popup_cancel)

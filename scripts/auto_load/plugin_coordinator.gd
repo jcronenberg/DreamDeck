@@ -249,6 +249,7 @@ class Plugin:
 	var plugin_description: String
 
 	var _icon_path: String
+	var _has_settings: bool = false
 
 	var _plugin_path: String
 	var _activated: bool = false
@@ -270,11 +271,13 @@ class Plugin:
 			PluginCoordinator.add_child(_loader)
 			_loader.plugin_load()
 			GlobalSignals.activated_plugins_changed.emit()
+			_has_settings = _loader.has_settings
 		elif not activated and _loader:
 			_loader.plugin_unload()
 			_loader.free()
 			_loader = null
 			GlobalSignals.activated_plugins_changed.emit()
+			_has_settings = false
 
 		_activated = activated
 
@@ -296,6 +299,11 @@ class Plugin:
 		return load(icon_path)
 
 
+	func show_settings_button() -> bool:
+		return is_activated() and _has_settings
+
+
+	## Function that populates values from a plugin's "plugin.json" file.
 	func deserialize(dict: Dictionary):
 		plugin_name = dict["plugin_name"]
 		if dict.has("description"):

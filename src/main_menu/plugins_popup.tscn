@@ -83,3 +83,4 @@ size_flags_horizontal = 4
 text = "Settings"
 
 [connection signal="item_selected" from="HBox/PluginSelectorScroll/PluginSelectorList" to="." method="_on_plugin_selector_list_item_selected"]
+[connection signal="pressed" from="HBox/PluginPanelMargin/PluginPanelScroll/PluginPanelHBox/SettingsButton" to="." method="_on_settings_button_pressed"]
