@@ -133,7 +133,7 @@ class SimpleWindow extends Window:
 
 
 	func _init() -> void:
-		set_size(Vector2(800, 400))
+		set_size(Vector2(1000, 600))
 		set_initial_position(Window.WINDOW_INITIAL_POSITION_CENTER_PRIMARY_SCREEN)
 
 		_margin.set("theme_override_constants/margin_left", 20)
