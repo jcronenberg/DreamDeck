@@ -10,11 +10,10 @@ const EMPTY_CLIENT = {
 	"key_path": "",
 	}
 
-var client_list := []
+@onready var conf_path = conf_dir + "clients.json"
 
+var client_list: Array = []
 var thread_pool: Array
-
-@onready var client_config: SimpleConfig = SimpleConfig.new({"ssh_clients": []}, conf_dir + "clients.json")
 
 
 func _init():
@@ -37,9 +36,16 @@ func _process(_delta):
 
 
 func load_client_config():
-	client_config.load_config()
-	client_list = client_config.get_config()["ssh_clients"]
-	for client in client_list:
+	var loaded_client_config: Variant = ConfLib.load_config(conf_path)
+	var client_config: Array
+
+	# FIXME delete in the future, migration from old config style
+	if loaded_client_config is Dictionary:
+		client_config = loaded_client_config["ssh_clients"]
+	elif loaded_client_config is Array:
+		client_config = loaded_client_config
+
+	for client in client_config:
 		add_client(client)
 
 
@@ -57,8 +63,7 @@ func new_client(client_name: String, ip: String, user: String, port: int, key_pa
 
 
 func save_config():
-	client_config.change_config({"ssh_clients": client_list})
-	client_config.save()
+	ConfLib.save_config(conf_path, client_list)
 
 
 func add_new_client(client_dict: Dictionary):
@@ -75,6 +80,7 @@ func add_client(client_dict: Dictionary):
 	update_loader_client_list()
 
 
+## Updates the action in the loader so it always shows all available clients
 func update_loader_client_list() -> void:
 	var clients: Array[String] = []
 	for client in client_list:
@@ -82,7 +88,7 @@ func update_loader_client_list() -> void:
 	PluginCoordinator.get_plugin_loader("SSH").set_client_config(clients)
 
 
-## edits also in client_list
+## Edits also in client_list
 func edit_client_config(index: int, client_dict: Dictionary):
 	var ssh_client = get_child(index)
 	if not ssh_client:
@@ -96,7 +102,10 @@ func edit_client_config(index: int, client_dict: Dictionary):
 	ssh_client.set_debug(true)
 	ssh_client.open_session()
 
-	client_list[index] = client_dict
+	if client_list.size() <= index:
+		client_list.push_back(client_dict)
+	else:
+		client_list[index] = client_dict
 	save_config()
 
 
