@@ -15,7 +15,6 @@ extends Node
 ##     plugin_name = "Plugin Name"
 ##     scenes = {"Scene Name": "res://plugins/your_plugin/scenes/default_scene.tscn"}
 ##     controllers = {"PluginController": "res://plugins/your_plugin/controller.gd"}
-##     allow_os = ["Linux"]
 ## [/codeblock]
 ##
 ## If you want to do additional custom things you can overwrite the functions:
@@ -28,11 +27,6 @@ extends Node
 ##     # to still execute the default plugin_load code
 ##     super()
 ## [/codeblock]
-
-## OSes that your plugin supports.[br]
-## See [method OS.get_name] for what the possible values to whitelist.[br]
-## Empty/default allows all OSes.
-@export var allow_os: Array = []
 
 ## Your plugin's name.[br]
 ## [b]FIXME[/b] currently not utilised.
@@ -107,10 +101,6 @@ func plugin_load():
 ## [param scene] is loaded asynchronously
 ## and once this is finished [method add_resource] is called.
 func plugin_load_scene(scene: String):
-	if not allow_os.is_empty() and not allow_os.has(OS.get_name()):
-		push_error("%s doesn't allow OS: %s" % [plugin_name, OS.get_name()])
-		return
-
 	if _load_queue.has(scenes[scene]):
 		return
 	ResourceLoader.load_threaded_request(scenes[scene])

@@ -68,7 +68,11 @@ func _runtime_load_plugins():
 
 
 func get_plugins():
-		return _plugins
+	var plugins: Array[Plugin] = []
+	for plugin in _plugins:
+		if plugin.is_os_allowed():
+			plugins.push_back(plugin)
+	return plugins
 
 
 func get_activated_plugins() -> Array:
@@ -250,6 +254,7 @@ class Plugin:
 
 	var _icon_path: String
 	var _has_settings: bool = false
+	var _allowed_oses: Array = []
 
 	var _plugin_path: String
 	var _activated: bool = false
@@ -266,6 +271,9 @@ class Plugin:
 
 
 	func set_activated(activated: bool):
+		if not is_os_allowed():
+			return
+
 		if activated and not _loader:
 			_loader = load("res://plugins/%s/loader.gd" % _plugin_path).new()
 			PluginCoordinator.add_child(_loader)
@@ -303,6 +311,12 @@ class Plugin:
 		return is_activated() and _has_settings
 
 
+	func is_os_allowed() -> bool:
+		if not _allowed_oses.is_empty() and not _allowed_oses.has(OS.get_name()):
+			return false
+		return true
+
+
 	## Function that populates values from a plugin's "plugin.json" file.
 	func deserialize(dict: Dictionary):
 		plugin_name = dict["plugin_name"]
@@ -310,6 +324,8 @@ class Plugin:
 			plugin_description = dict["description"]
 		if dict.has("icon_path"):
 			_icon_path = dict["icon_path"]
+		if dict.has("allow_os"):
+			_allowed_oses = dict["allow_os"]
 
 
 class PluginActionDefinition:
