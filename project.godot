@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="DreamDeck"
-run/main_scene="res://scenes/main.tscn"
+run/main_scene="res://src/main/main.tscn"
 config/use_custom_user_dir=true
 config/custom_user_dir_name="dreamdeck"
 config/features=PackedStringArray("4.3")
@@ -27,10 +27,10 @@ config/windows_native_icon="res://resources/general/dreamdeck.ico"
 
 [autoload]
 
-ArgumentParser="*res://scripts/auto_load/argument_parser.gd"
-ConfigLoader="*res://scripts/auto_load/config_loader.gd"
-GlobalSignals="*res://scripts/auto_load/global_signals.gd"
-PluginCoordinator="*res://scripts/auto_load/plugin_coordinator.gd"
+ArgumentParser="*res://src/autoload/argument_parser.gd"
+ConfigLoader="*res://src/autoload/config_loader.gd"
+GlobalSignals="*res://src/autoload/global_signals.gd"
+PluginCoordinator="*res://src/autoload/plugin_coordinator.gd"
 PopupManager="*res://src/autoload/popup_manager.gd"
 DreamdeckBuiltinActions="*res://src/builtin_actions/dreamdeck_builtin_actions.gd"
 
