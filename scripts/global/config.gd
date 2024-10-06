@@ -55,8 +55,8 @@ func apply_dict(dict: Dictionary):
 	config_changed.emit()
 
 
-## Saves the config to the specified path. Returns false if saving failed.
-## If no path was provided it simply returns false.
+## Saves the config to disk. Returns false if saving failed.
+## If no path was set before this it simply returns false.
 func save() -> bool:
 	if not _path:
 		return false

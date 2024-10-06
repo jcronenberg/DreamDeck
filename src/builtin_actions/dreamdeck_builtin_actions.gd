@@ -28,7 +28,7 @@ func exec_cmd(command: String) -> bool:
 	if OS.get_name() == "Windows":
 		command = "CMD.exe /c " + command
 
-	if ConfigLoader.get_config()["Debug"]:
+	if ConfigLoader.get_config()["debug"]:
 		var process: ProcessNode = ProcessNode.new()
 		process.connect("stdout", _on_process_stdout)
 		process.connect("stderr", _on_process_stderr)

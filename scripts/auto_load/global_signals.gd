@@ -2,8 +2,6 @@ extends Node
 
 signal entered_edit_mode
 signal exited_edit_mode
-signal config_changed
-signal global_config_changed
 signal activated_plugins_changed
 
 
@@ -29,13 +27,3 @@ func exit_edit_mode():
 
 func get_edit_state() -> bool:
 	return edit_state
-
-
-func emit_config_changed():
-	get_node("/root/Main/MainMenu").construct_config()
-	config_changed.emit()
-
-
-func emit_global_config_changed():
-	get_node("/root/Main/MainMenu").edit_settings()
-	global_config_changed.emit()

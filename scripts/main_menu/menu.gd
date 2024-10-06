@@ -25,10 +25,6 @@ func show_menu():
 
 
 func hide_menu():
-	GlobalSignals.emit_config_changed()
-	for child in $SettingSeparator.get_children():
-		if child.has_method("hide_submenu"):
-			child.hide_submenu()
 	clip_contents = true
 	set_menu_min_size(0.0)
 	size.x = MAX_MENU_MARGIN
