@@ -97,7 +97,7 @@ func plugin_load():
 
 
 ## Function called when a scene of this plugin is requested by a [LayoutPanel].
-## The scene will be cached by [PluginCoordinator] and only requested once.
+## The scene will be cached by [PluginCoordinator].
 ## [param scene] is loaded asynchronously
 ## and once this is finished [method add_resource] is called.
 func plugin_load_scene(scene: String):
@@ -137,7 +137,7 @@ func get_controller(controller_name: String) -> PluginControllerBase:
 
 
 ## If the plugin [member has_settings] is true this function is called
-## when the settings button in the plugin popup is pressed.
+## when the settings button in the plugins popup is pressed.
 ## The settings page needs to implement these 2 functions, to handle
 ## the [PopupManager]'s confirm and cancel actions.
 ## [codeblock]

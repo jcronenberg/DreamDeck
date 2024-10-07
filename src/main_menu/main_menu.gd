@@ -5,18 +5,8 @@ const plugins_popup_scene = preload("res://src/main_menu/plugins_popup.tscn")
 
 var _settings_popup: Config.ConfigEditor = null
 
-# State
-var main_menu_constructed := false
-
 
 func _ready():
-	construct_main_menu()
-
-
-func construct_main_menu():
-	if main_menu_constructed:
-		return
-
 	# Settings
 	var settings_button: Button = Button.new()
 	settings_button.text = "Settings"
@@ -45,8 +35,6 @@ func construct_main_menu():
 	quit_button.custom_minimum_size = Vector2(0, 60)
 	quit_button.connect("pressed", get_tree().quit)
 	$Menu/SettingSeparator.add_child(quit_button)
-
-	main_menu_constructed = true
 
 
 func _on_settings_button_pressed() -> void:

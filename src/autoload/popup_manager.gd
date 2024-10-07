@@ -30,7 +30,7 @@ func _ready() -> void:
 ## [param cancel_callable] can not be unsuccessful. It also gets called when the popup
 ## is closed.[br]
 func init_popup(scene: Control,
-	confirm_callable: Callable = func unused() -> bool: return true,
+		confirm_callable: Callable = func unused() -> bool: return true,
 		cancel_callable: Callable = func unused() -> void: pass) -> void:
 	if not scene:
 		return
@@ -62,7 +62,7 @@ func push_stack_item(scene: Control,
 
 
 ## Pops the current stack item.
-## Calls neither cancel or confirm functions.
+## Calls neither cancel nor confirm functions.
 ## If nothing is left it also hides the popup.
 func pop_stack_item() -> void:
 	var stack_item: StackItem = _popup_stack.pop_back()

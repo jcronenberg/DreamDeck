@@ -88,7 +88,7 @@ func update_loader_client_list() -> void:
 	PluginCoordinator.get_plugin_loader("SSH").set_client_config(clients)
 
 
-## Edits also in client_list
+## Edits a client in both the child SSHClient node and [member client_list].
 func edit_client_config(index: int, client_dict: Dictionary):
 	var ssh_client = get_child(index)
 	if not ssh_client:
