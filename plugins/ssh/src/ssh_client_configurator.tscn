@@ -23,7 +23,6 @@ theme_override_constants/separation = 14
 [node name="Label" type="Label" parent="Items/NameSplit"]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-tooltip_text = "Relative path to the icon. Icons need to be stored in the config directory in a 'icons' directory."
 mouse_filter = 0
 text = "Name"
 
@@ -39,7 +38,6 @@ theme_override_constants/separation = 14
 [node name="Label" type="Label" parent="Items/IpSplit"]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-tooltip_text = "Relative path to the icon. Icons need to be stored in the config directory in a 'icons' directory."
 mouse_filter = 0
 text = "Hostname/IP"
 
@@ -55,7 +53,6 @@ theme_override_constants/separation = 14
 [node name="Label" type="Label" parent="Items/UserSplit"]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-tooltip_text = "Relative path to the icon. Icons need to be stored in the config directory in a 'icons' directory."
 mouse_filter = 0
 text = "User"
 
@@ -71,7 +68,6 @@ theme_override_constants/separation = 14
 [node name="Label" type="Label" parent="Items/PortSplit"]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-tooltip_text = "Relative path to the icon. Icons need to be stored in the config directory in a 'icons' directory."
 mouse_filter = 0
 text = "Port"
 
@@ -87,7 +83,6 @@ theme_override_constants/separation = 14
 [node name="Label" type="Label" parent="Items/KeyPathSplit"]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-tooltip_text = "Relative path to the icon. Icons need to be stored in the config directory in a 'icons' directory."
 mouse_filter = 0
 text = "Key Path"
 
