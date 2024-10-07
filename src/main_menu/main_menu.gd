@@ -10,28 +10,28 @@ func _ready():
 	# Settings
 	var settings_button: Button = Button.new()
 	settings_button.text = "Settings"
-	settings_button.theme_type_variation = "MyMenuButton"
+	settings_button.theme_type_variation = "MainMenuButton"
 	settings_button.custom_minimum_size = Vector2(0, 60)
 	settings_button.connect("pressed", _on_settings_button_pressed)
 	$Menu/SettingSeparator.add_child(settings_button)
 	# Plugins
 	var plugins_button: Button = Button.new()
 	plugins_button.text = "Plugins"
-	plugins_button.theme_type_variation = "MyMenuButton"
+	plugins_button.theme_type_variation = "MainMenuButton"
 	plugins_button.custom_minimum_size = Vector2(0, 60)
 	plugins_button.connect("pressed", _on_plugins_button_pressed)
 	$Menu/SettingSeparator.add_child(plugins_button)
 	# Edit Mode
 	var edit_mode_button: Button = Button.new()
 	edit_mode_button.text = "Edit Mode"
-	edit_mode_button.theme_type_variation = "MyMenuButton"
+	edit_mode_button.theme_type_variation = "MainMenuButton"
 	edit_mode_button.custom_minimum_size = Vector2(0, 60)
 	edit_mode_button.connect("pressed", GlobalSignals.toggle_edit_mode)
 	$Menu/SettingSeparator.add_child(edit_mode_button)
 	# Quit button
 	var quit_button: Button = Button.new()
 	quit_button.text = "Quit"
-	quit_button.theme_type_variation = "MyMenuButton"
+	quit_button.theme_type_variation = "MainMenuButton"
 	quit_button.custom_minimum_size = Vector2(0, 60)
 	quit_button.connect("pressed", get_tree().quit)
 	$Menu/SettingSeparator.add_child(quit_button)
