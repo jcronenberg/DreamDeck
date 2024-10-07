@@ -9,7 +9,7 @@ extends Node
 ## within the current popup with the ability to return to the previous popup
 ## after, use [method push_stack_item].
 
-@onready var _popup: SimpleWindow = SimpleWindow.new()
+var _popup: SimpleWindow = SimpleWindow.new()
 var _popup_stack: Array[StackItem] = []
 
 
@@ -62,10 +62,13 @@ func push_stack_item(scene: Control,
 
 
 ## Pops the current stack item.
+## Calls neither cancel or confirm functions.
 ## If nothing is left it also hides the popup.
 func pop_stack_item() -> void:
 	var stack_item: StackItem = _popup_stack.pop_back()
-	stack_item.control_node.queue_free()
+	if stack_item.control_node and is_instance_valid(stack_item.control_node):
+		stack_item.control_node.queue_free()
+
 	if _popup_stack.size() > 0:
 		_popup.set_scene(_popup_stack.back().control_node)
 		if _popup_stack.size() == 1:
@@ -83,8 +86,7 @@ func get_current_popup() -> Control:
 ## Also calls cancel on all items on the stack.
 func close_popup() -> void:
 	for stack_item in _popup_stack:
-		stack_item.cancel()
-		stack_item.control_node.queue_free()
+		stack_item.delete()
 
 	_popup_stack = []
 	_popup.hide()
@@ -92,8 +94,7 @@ func close_popup() -> void:
 
 func _set_current_popup(scene: Control, confirm_callable: Callable, cancel_callable: Callable) -> void:
 	for stack_item in _popup_stack:
-		stack_item.cancel()
-		stack_item.control_node.queue_free()
+		stack_item.delete()
 
 	_popup_stack = [_create_stack_item(scene, confirm_callable, cancel_callable)]
 	_popup.set_cancel_text("Cancel")
@@ -121,8 +122,7 @@ func _on_popup_cancelled() -> void:
 
 func _on_popup_close_requested() -> void:
 	for stack_item in _popup_stack:
-		stack_item.cancel()
-		stack_item.control_node.queue_free()
+		stack_item.delete()
 	_popup_stack = []
 	_popup.hide()
 
@@ -206,3 +206,10 @@ class StackItem:
 			return ret_val
 
 		return true
+
+
+	func delete() -> void:
+		if control_node and is_instance_valid(control_node):
+			control_node.queue_free()
+
+		cancel()
