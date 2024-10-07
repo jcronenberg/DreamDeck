@@ -29,7 +29,7 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 size_flags_vertical = 3
-theme_type_variation = &"PluginsPopupItemList"
+theme_type_variation = &"SimpleSelectionItemList"
 auto_height = true
 
 [node name="PluginPanelMargin" type="MarginContainer" parent="HBox"]

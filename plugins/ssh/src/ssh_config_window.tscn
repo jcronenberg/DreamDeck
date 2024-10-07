@@ -29,5 +29,6 @@ horizontal_alignment = 1
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
+theme_type_variation = &"SimpleSelectionItemList"
 
 [connection signal="item_selected" from="Rows/SSHClientList" to="." method="_on_ssh_client_list_item_selected"]
