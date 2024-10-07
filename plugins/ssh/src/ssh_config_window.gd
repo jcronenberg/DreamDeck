@@ -18,11 +18,10 @@ func edit_client(index: int):
 		_client_index = index
 		client_dict = _ssh_controller.get_client_list()[index]
 
-	var client_configurator: SSHClientConfigurator = client_configurator_scene.instantiate()
-	_client_configurator = client_configurator
+	_client_configurator = client_configurator_scene.instantiate()
 
-	PopupManager.push_stack_item(client_configurator, _on_confirm_client_configurator, _on_cancel_client_configurator)
-	client_configurator.edit_ssh_client(client_dict)
+	PopupManager.push_stack_item(_client_configurator, _on_confirm_client_configurator, _on_cancel_client_configurator)
+	_client_configurator.edit_ssh_client(client_dict)
 
 
 func populate_list():
@@ -56,7 +55,6 @@ func cancel() -> void:
 func _on_confirm_client_configurator() -> bool:
 	if save_client(_client_configurator.serialize()):
 		populate_list()
-		_client_configurator.queue_free()
 		_client_configurator = null
 		_client_index = -1
 		return true
@@ -65,7 +63,6 @@ func _on_confirm_client_configurator() -> bool:
 
 
 func _on_cancel_client_configurator() -> void:
-	_client_configurator.queue_free()
 	_client_configurator = null
 	_client_index = -1
 
