@@ -50,12 +50,12 @@ func open_editor(new_button: bool = false) -> void:
 	_actions_editor.connect("new_action_requested", _on_new_action_requested)
 	margin.add_child(_actions_editor)
 	tab_container.add_child(margin)
-	PopupManager.init_popup(tab_container, _on_popup_confirmed, func unused() -> void: pass)
+	PopupManager.init_popup(tab_container, _on_popup_confirmed)
 
 
 func _on_new_action_requested() -> void:
 	_new_action_selector = PluginCoordinator.PluginActionSelector.new()
-	PopupManager.push_stack_item(_new_action_selector, _on_popup_new_action_confirmed, func unused() -> void: pass)
+	PopupManager.push_stack_item(_new_action_selector, _on_popup_new_action_confirmed)
 
 
 func _on_popup_new_action_confirmed() -> bool:
@@ -70,6 +70,7 @@ func _on_popup_new_action_confirmed() -> bool:
 	return true
 
 
+# Required for extending classes to overwrite
 func _on_popup_confirmed() -> bool:
 	return true
 

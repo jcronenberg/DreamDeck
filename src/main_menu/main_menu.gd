@@ -51,7 +51,7 @@ func construct_main_menu():
 
 func _on_settings_button_pressed() -> void:
 	_settings_popup = ConfigLoader.config.generate_editor()
-	PopupManager.init_popup(_settings_popup, _on_settings_confirmed, func unused() -> void: pass)
+	PopupManager.init_popup(_settings_popup, _on_settings_confirmed)
 
 
 func _on_settings_confirmed() -> bool:
@@ -61,4 +61,4 @@ func _on_settings_confirmed() -> bool:
 
 func _on_plugins_button_pressed() -> void:
 	var plugins_popup: PluginsPopup = plugins_popup_scene.instantiate()
-	PopupManager.init_popup(plugins_popup, func unused() -> bool: return true, func unused() -> void: pass)
+	PopupManager.init_popup(plugins_popup)

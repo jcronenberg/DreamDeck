@@ -10,8 +10,6 @@ extends Node
 ## after, use [method push_stack_item].
 
 @onready var _popup: SimpleWindow = SimpleWindow.new()
-var _current_popup: Control:
-	get = get_current_popup
 var _popup_stack: Array[StackItem] = []
 
 
@@ -24,46 +22,47 @@ func _ready() -> void:
 
 
 ## Initializes a new popup, freeing the whole previous stack if it existed.
-## Pass your callable functions for how you want to handle the popup's
+## The manager automatically frees the [param scene] when no longer needed.[br]
+## You can pass callable functions for how you want to handle the popup's
 ## confirm or cancel buttons/actions.
-## The manager automatically frees the item(s).[br]
 ## [br]
-## [param confirm_func] should roughly look like this:[br]
-## [code]func confirm(popup_window: Control) -> bool:[/code][br]
-## It should return true if the action was successful.[br]
-## [br]
-## [param cancel_func] should roughly look like this:[br]
-## [code]func cancel(popup_window: Control) -> void:[/code][br]
-## If called with [code]popup_window = null[/code] then the window was closed
-## or a new [method init_popup] was requested.
-## Closed is supposed to be handled as if the user cancelled all actions.
-func init_popup(popup_window: Control, confirm_func: Callable, cancel_func: Callable) -> void:
-	if not popup_window:
+## [param confirm_callable] can return false if confirming should not be successful.[br]
+## [param cancel_callable] can not be unsuccessful. It also gets called when the popup
+## is closed.[br]
+func init_popup(scene: Control,
+	confirm_callable: Callable = func unused() -> bool: return true,
+		cancel_callable: Callable = func unused() -> void: pass) -> void:
+	if not scene:
 		return
 
-	_set_current_popup(popup_window, confirm_func, cancel_func)
+	_set_current_popup(scene, confirm_callable, cancel_callable)
 
 
-## Pushes the [param popup_window] onto the popup stack.
-## If called before a [method init_popup] was called it does nothing.
-func push_stack_item(popup_window: Control, confirm_func: Callable, cancel_func: Callable) -> void:
+## Pushes the [param scene] onto the popup stack.
+## If there are no items it has the same effect as [method init_popup].
+## The manager automatically frees the [param scene] when no longer needed.[br]
+## You can pass callable functions for how you want to handle the popup's
+## confirm or cancel buttons/actions.
+## [br]
+## [param confirm_callable] can return false if confirming should not be successful.[br]
+## [param cancel_callable] can not be unsuccessful. It also gets called when the popup
+## is closed.[br]
+func push_stack_item(scene: Control,
+		confirm_callable: Callable = func unused() -> bool: return true,
+		cancel_callable: Callable = func unused() -> void: pass) -> void:
+	if not scene:
+		return
+
 	if _popup_stack.size() == 0:
-		return
-	if not popup_window:
-		return
-
-	var stack_item: StackItem = StackItem.new()
-	stack_item.control_node = popup_window
-	stack_item.confirm_callable = confirm_func
-	stack_item.cancel_callable = cancel_func
-	_popup_stack.append(stack_item)
-	_popup.set_scene(popup_window)
-	_popup.set_cancel_text("Back")
+		_set_current_popup(scene, confirm_callable, cancel_callable)
+	else:
+		var stack_item: StackItem = _create_stack_item(scene, confirm_callable, cancel_callable)
+		_popup.set_cancel_text("Back")
+		_popup_stack.push_back(stack_item)
 
 
 ## Pops the current stack item.
-## If nothing is left on the stack it disconnects the caller's functions
-## and hides the popup.
+## If nothing is left it also hides the popup.
 func pop_stack_item() -> void:
 	var stack_item: StackItem = _popup_stack.pop_back()
 	stack_item.control_node.queue_free()
@@ -75,31 +74,39 @@ func pop_stack_item() -> void:
 		_popup.hide()
 
 
+## Get current control in popup.
 func get_current_popup() -> Control:
 	return _popup_stack[_popup_stack.size() - 1].control_node if _popup_stack.size() > 0 else null
 
 
-## Closes the current popup and disconnects the caller's functions.
+## Closes the current popup.
+## Also calls cancel on all items on the stack.
 func close_popup() -> void:
-	while _popup_stack.size() > 0:
-		pop_stack_item()
+	for stack_item in _popup_stack:
+		stack_item.cancel()
+		stack_item.control_node.queue_free()
+
+	_popup_stack = []
+	_popup.hide()
 
 
-func _set_current_popup(popup_window: Control, confirm_func: Callable, cancel_func: Callable) -> void:
-	if _popup_stack.size() > 0:
-		for stack_item in _popup_stack:
-			stack_item.cancel()
-			stack_item.control_node.queue_free()
+func _set_current_popup(scene: Control, confirm_callable: Callable, cancel_callable: Callable) -> void:
+	for stack_item in _popup_stack:
+		stack_item.cancel()
+		stack_item.control_node.queue_free()
 
-	_current_popup = popup_window
-	var stack_item: StackItem = StackItem.new()
-	stack_item.control_node = popup_window
-	stack_item.confirm_callable = confirm_func
-	stack_item.cancel_callable = cancel_func
-	_popup_stack = [stack_item]
-	_popup.set_scene(popup_window)
+	_popup_stack = [_create_stack_item(scene, confirm_callable, cancel_callable)]
 	_popup.set_cancel_text("Cancel")
 	_popup.show()
+
+
+func _create_stack_item(scene: Control, confirm_callable: Callable, cancel_callable: Callable) -> StackItem:
+	var stack_item: StackItem = StackItem.new()
+	stack_item.control_node = scene
+	stack_item.confirm_callable = confirm_callable
+	stack_item.cancel_callable = cancel_callable
+	_popup.set_scene(stack_item.control_node)
+	return stack_item
 
 
 func _on_popup_confirmed() -> void:
@@ -194,4 +201,8 @@ class StackItem:
 
 
 	func confirm() -> bool:
-		return confirm_callable.call()
+		var ret_val: Variant = confirm_callable.call()
+		if ret_val is bool:
+			return ret_val
+
+		return true
