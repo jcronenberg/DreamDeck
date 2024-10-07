@@ -15,11 +15,7 @@ func _on_pressed() -> void:
 	open_editor(true)
 
 
-func _on_popup_confirmed(popup_window: Control) -> bool:
-	super(popup_window)
-	if popup_window is PluginCoordinator.PluginActionSelector:
-		return true
-
+func _on_popup_confirmed() -> bool:
 	_config_editor.apply()
 	var config: Dictionary = _config.get_as_dict()
 	var actions: Array[PluginCoordinator.PluginAction] = _actions_editor.deserialize()

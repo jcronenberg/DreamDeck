@@ -15,7 +15,6 @@ extends Node
 ##     plugin_name = "Plugin Name"
 ##     scenes = {"Scene Name": "res://plugins/your_plugin/scenes/default_scene.tscn"}
 ##     controllers = {"PluginController": "res://plugins/your_plugin/controller.gd"}
-##     allow_os = ["Linux"]
 ## [/codeblock]
 ##
 ## If you want to do additional custom things you can overwrite the functions:
@@ -28,11 +27,6 @@ extends Node
 ##     # to still execute the default plugin_load code
 ##     super()
 ## [/codeblock]
-
-## OSes that your plugin supports.[br]
-## See [method OS.get_name] for what the possible values to whitelist.[br]
-## Empty/default allows all OSes.
-@export var allow_os: Array = []
 
 ## Your plugin's name.[br]
 ## [b]FIXME[/b] currently not utilised.
@@ -68,6 +62,10 @@ extends Node
 ## (The bool return is optional, but with it you can indicate if the action was successfully executed or not)
 var actions: Array[PluginCoordinator.PluginActionDefinition] = []
 
+## Indicates if the plugin has a global config or not.
+## Determines if a "Settings" button is shown in the plugins popup.
+var has_settings: bool = false
+
 # Used to store all resources that are supposed to be loaded
 var _load_queue: Array[String] = []
 
@@ -75,7 +73,7 @@ var _load_queue: Array[String] = []
 var _controllers: Dictionary = {}
 
 
-## Continuous checking if a scene in [member _load_queue] is loaded.
+# Continuous checking if a scene in [member _load_queue] is loaded.
 func _process(_delta):
 	for load_item in _load_queue:
 		var load_status = ResourceLoader.load_threaded_get_status(load_item)
@@ -88,21 +86,21 @@ func _process(_delta):
 		set_process(false)
 
 
+## Called when the plugin is to be loaded.
+## Either at startup or at runtime.
 func plugin_load():
+	# Threaded load all controllers
 	for controller in controllers:
 		ResourceLoader.load_threaded_request(controllers[controller])
 		_load_queue.append(controllers[controller])
 	set_process(true)
 
 
-## Function called when plugin loading is started.
+## Function called when a scene of this plugin is requested by a [LayoutPanel].
+## The scene will be cached by [PluginCoordinator].
 ## [param scene] is loaded asynchronously
-## and once this is finished [method add_scene] is called.
+## and once this is finished [method add_resource] is called.
 func plugin_load_scene(scene: String):
-	if not allow_os.is_empty() and not allow_os.has(OS.get_name()):
-		push_error("%s doesn't allow OS: %s" % [plugin_name, OS.get_name()])
-		return
-
 	if _load_queue.has(scenes[scene]):
 		return
 	ResourceLoader.load_threaded_request(scenes[scene])
@@ -135,4 +133,17 @@ func get_controller(controller_name: String) -> PluginControllerBase:
 	if _controllers.has(controller_name):
 		return _controllers[controller_name]
 
+	return null
+
+
+## If the plugin [member has_settings] is true this function is called
+## when the settings button in the plugins popup is pressed.
+## The settings page needs to implement these 2 functions, to handle
+## the [PopupManager]'s confirm and cancel actions.
+## [codeblock]
+## # Can indicate whether confirm is successful or not
+## func confirm() -> bool:
+## func cancel() -> void:
+## [/codeblock]
+func get_settings_page() -> Control:
 	return null

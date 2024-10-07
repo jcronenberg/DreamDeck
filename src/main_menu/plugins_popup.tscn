@@ -1,0 +1,88 @@
+[gd_scene load_steps=2 format=3 uid="uid://bnwdp45cij8o8"]
+
+[ext_resource type="Script" path="res://src/main_menu/plugins_popup.gd" id="1_ece6v"]
+
+[node name="PluginsPopup" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_ece6v")
+
+[node name="HBox" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+
+[node name="PluginSelectorScroll" type="ScrollContainer" parent="HBox"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+
+[node name="PluginSelectorList" type="ItemList" parent="HBox/PluginSelectorScroll"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_vertical = 3
+theme_type_variation = &"SimpleSelectionItemList"
+auto_height = true
+
+[node name="PluginPanelMargin" type="MarginContainer" parent="HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="PluginPanelScroll" type="ScrollContainer" parent="HBox/PluginPanelMargin"]
+layout_mode = 2
+
+[node name="PluginPanelHBox" type="VBoxContainer" parent="HBox/PluginPanelMargin/PluginPanelScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 20
+
+[node name="PluginName" type="Label" parent="HBox/PluginPanelMargin/PluginPanelScroll/PluginPanelHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Plugin1"
+horizontal_alignment = 1
+
+[node name="PluginIcon" type="TextureRect" parent="HBox/PluginPanelMargin/PluginPanelScroll/PluginPanelHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 2
+size_flags_horizontal = 4
+expand_mode = 1
+stretch_mode = 5
+
+[node name="PluginDescription" type="RichTextLabel" parent="HBox/PluginPanelMargin/PluginPanelScroll/PluginPanelHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+bbcode_enabled = true
+text = "[b]Description:[/b]
+This is a description of plugin1
+What does it do?
+etc."
+fit_content = true
+scroll_active = false
+
+[node name="ActivateCheckButton" type="CheckButton" parent="HBox/PluginPanelMargin/PluginPanelScroll/PluginPanelHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Activate plugin"
+
+[node name="SettingsButton" type="Button" parent="HBox/PluginPanelMargin/PluginPanelScroll/PluginPanelHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Settings"
+
+[connection signal="item_selected" from="HBox/PluginSelectorScroll/PluginSelectorList" to="." method="_on_plugin_selector_list_item_selected"]
+[connection signal="pressed" from="HBox/PluginPanelMargin/PluginPanelScroll/PluginPanelHBox/SettingsButton" to="." method="_on_settings_button_pressed"]

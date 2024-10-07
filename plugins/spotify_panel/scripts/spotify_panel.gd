@@ -167,7 +167,7 @@ func load_credentials():
 
 # Creates the first dialog and connects the functions
 func create_config():
-	input_scene = load("res://scenes/user_input_popup.tscn").instantiate()
+	input_scene = load("res://src/deprecated/user_input_popup.tscn").instantiate()
 	get_node("/root/Main").add_child(input_scene)
 	input_scene.create_dialog(config_stage1_text, "Client ID")
 	input_scene.connect("apply_text", _on_text_config)

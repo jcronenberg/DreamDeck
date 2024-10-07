@@ -37,7 +37,7 @@ func show_new_panel():
 	add_child(_config_editor)
 
 
-func save(_popup_window: Control) -> bool:
+func save() -> bool:
 	if _new_panel:
 		return _new_panel_save()
 	else:

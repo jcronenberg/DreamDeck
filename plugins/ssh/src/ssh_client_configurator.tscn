@@ -1,0 +1,91 @@
+[gd_scene load_steps=2 format=3 uid="uid://ckyrn5q0fv0t0"]
+
+[ext_resource type="Script" path="res://plugins/ssh/src/ssh_client_configurator.gd" id="1_im3mq"]
+
+[node name="SSHClientConfigurator" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_im3mq")
+
+[node name="Items" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+
+[node name="NameSplit" type="HBoxContainer" parent="Items"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Label" type="Label" parent="Items/NameSplit"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+mouse_filter = 0
+text = "Name"
+
+[node name="LineEdit" type="LineEdit" parent="Items/NameSplit"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_next = NodePath("../../IpSplit/LineEdit")
+
+[node name="IpSplit" type="HBoxContainer" parent="Items"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Label" type="Label" parent="Items/IpSplit"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+mouse_filter = 0
+text = "Hostname/IP"
+
+[node name="LineEdit" type="LineEdit" parent="Items/IpSplit"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_next = NodePath("../../UserSplit/LineEdit")
+
+[node name="UserSplit" type="HBoxContainer" parent="Items"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Label" type="Label" parent="Items/UserSplit"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+mouse_filter = 0
+text = "User"
+
+[node name="LineEdit" type="LineEdit" parent="Items/UserSplit"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_next = NodePath("../../PortSplit/LineEdit")
+
+[node name="PortSplit" type="HBoxContainer" parent="Items"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Label" type="Label" parent="Items/PortSplit"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+mouse_filter = 0
+text = "Port"
+
+[node name="LineEdit" type="LineEdit" parent="Items/PortSplit"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_next = NodePath("../../KeyPathSplit/LineEdit")
+
+[node name="KeyPathSplit" type="HBoxContainer" parent="Items"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Label" type="Label" parent="Items/KeyPathSplit"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+mouse_filter = 0
+text = "Key Path"
+
+[node name="LineEdit" type="LineEdit" parent="Items/KeyPathSplit"]
+layout_mode = 2
+size_flags_horizontal = 3

@@ -1,3 +1,5 @@
 {
-  "plugin_name": "Spotify Panel"
+  "plugin_name": "Spotify Panel",
+  "description": "A panel that shows and allows you to control the current Spotify playback for an authorized account.",
+  "icon_path": "icons/spotify.png"
 }

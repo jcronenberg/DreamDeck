@@ -1,3 +1,4 @@
 {
-  "plugin_name": "Macroboard"
+  "plugin_name": "Macroboard",
+  "description": "A panel that allows you to place buttons that execute actions."
 }
