@@ -21,13 +21,17 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="AppName" type="Label" parent="."]
+unique_name_in_owner = true
 layout_mode = 0
 anchor_left = 0.1
 anchor_top = 0.75
 anchor_right = 0.9
 anchor_bottom = 0.92
+theme_type_variation = &"MacroButtonLabel"
 horizontal_alignment = 1
 vertical_alignment = 1
 clip_text = true
 
+[connection signal="button_down" from="." to="." method="_on_button_down"]
+[connection signal="button_up" from="." to="." method="_on_button_up"]
 [connection signal="pressed" from="." to="." method="_on_pressed"]

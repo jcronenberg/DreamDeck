@@ -65,3 +65,7 @@ MacroButton/colors/font_pressed_color = Color(1, 1, 1, 1)
 MacroButton/styles/hover = SubResource("StyleBoxFlat_6ltvl")
 MacroButton/styles/normal = SubResource("StyleBoxFlat_fc8w3")
 MacroButton/styles/pressed = SubResource("StyleBoxFlat_d7pgx")
+MacroButtonLabel/base_type = &"Label"
+MacroButtonLabel/colors/font_color = Color(1, 1, 1, 1)
+MacroButtonLabelPressed/base_type = &"Label"
+MacroButtonLabelPressed/colors/font_color = Color(1, 1, 1, 1)

@@ -136,6 +136,14 @@ func _on_pressed() -> void:
 	_actions_editor.populate_actions(_actions)
 
 
+func _on_button_down() -> void:
+	%AppName.theme_type_variation = "MacroButtonLabelPressed"
+
+
+func _on_button_up() -> void:
+	%AppName.theme_type_variation = "MacroButtonLabel"
+
+
 # Handles if drag was successful or not
 func _notification(notif: int) -> void:
 	if not _dragging:

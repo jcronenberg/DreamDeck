@@ -57,7 +57,9 @@ func _set_default_font_color(font_color: Color) -> void:
 	macroboard_theme.set_color("font_color", THEME_TYPE_VARIATION, font_color)
 	macroboard_theme.set_color("font_focus_color", THEME_TYPE_VARIATION, font_color)
 	macroboard_theme.set_color("font_hover_color", THEME_TYPE_VARIATION, font_color)
+	macroboard_theme.set_color("font_color", "MacroButtonLabel", font_color)
 
 
 func _set_default_font_pressed_color(font_pressed_color: Color) -> void:
 	macroboard_theme.set_color("font_pressed_color", THEME_TYPE_VARIATION, font_pressed_color)
+	macroboard_theme.set_color("font_color", "MacroButtonLabelPressed", font_pressed_color)
