@@ -4,6 +4,8 @@ class_name Config
 ##
 ## Includes several helper functions and also the ability to automatically generate
 ## a default editor for the config.[br]
+## The editor that can be generated via [method generate_editor] allows editing of
+## all objects within the config.
 ## [br]
 ## Example usage:
 ##
@@ -70,7 +72,7 @@ func save() -> bool:
 ## Returns the config as a [Dictionary].
 ## Note that this is not the definition dictionary but a simple dict
 ## containing just the key and value.[br]
-## Example return value: [code]{"Example Int": -1, "Example String": "Foo"}[/code].
+## Example return value: [code]{"example_int": -1, "example_string": "Foo"}[/code].
 func get_as_dict() -> Dictionary:
 	var ret_dict: Dictionary = {}
 	for object in _config:
@@ -158,8 +160,9 @@ func add_string_array(label: String, key: String, default_value: String, string_
 	_config.append(StringArrayObject.new(label, key, default_value, string_array, description))
 
 
-## Adds a Color object.[br]
-## Note that color is stored and gets loaded with the rgba32 format.[br]
+## Adds a color object.[br]
+## Note that color is stored and gets loaded with the rgba32 format.
+## Use [method Color.hex] to convert back to a [Color].[br]
 ## [param label]: User facing name of this object when editing[br]
 ## [param key]: Key string for the object (Will be what it is saved as on disk and also what you
 ## get when running [method get_as_dict])[br]
@@ -451,13 +454,15 @@ class ColorObject extends ConfigObject:
 ##
 ## The editor is a [VBoxContainer] that contains a row for each object
 ## inside a [Config]. Each row allows a user to edit the values for the objects.[br]
-## A editor is always linked to a [Config].
+## A editor is always linked to a [Config] and allows directly applying and saving to
+## the config. If you need to react to changes connect to the configs
+## [signal Config.config_changed] signal.
 class ConfigEditor extends VBoxContainer:
 
 	var _config_ref: Config
 	var _object_editors: Array[VariantEditor] = []
 
-	func _init(config: Config):
+	func _init(config: Config) -> void:
 		_config_ref = config
 
 		set_anchors_preset(PRESET_FULL_RECT)
@@ -484,11 +489,12 @@ class ConfigEditor extends VBoxContainer:
 
 
 	## Applies the current values to the config via [method Config.apply_dict].
-	func apply():
+	## Note that this doesn't save to disk, use [method save] for this.
+	func apply() -> void:
 		_config_ref.apply_dict(serialize())
 
 
-	## Returns a key value [Dictionary] for the current values.
+	## Returns a key value [Dictionary] with the current values.
 	func serialize() -> Dictionary:
 		var save_dict: Dictionary = {}
 		for child in get_children():
@@ -498,12 +504,13 @@ class ConfigEditor extends VBoxContainer:
 
 
 	## Saves the config via [method Config.save].
-	func save():
+	## Note that this doesn't apply the current editor values, use [method apply] for this.
+	func save() -> void:
 		_config_ref.save()
 
 
 	## Get a specific editor by [param key].
-	## Useful if you e.g. need to change some values for a editor after
+	## Useful if you e.g. need to change some values for an object editor after
 	## the the editor was already initialized.
 	func get_editor(key: String) -> VariantEditor:
 		for editor in _object_editors:
@@ -513,6 +520,7 @@ class ConfigEditor extends VBoxContainer:
 		return null
 
 
+	## Set all values at once.
 	func set_values(values: Array[Variant]) -> void:
 		if values.size() > _object_editors.size():
 			push_error("Trying to set too many values for Config")
@@ -521,6 +529,7 @@ class ConfigEditor extends VBoxContainer:
 			_object_editors[i].set_value(values[i])
 
 
+	## Get all values at once.
 	func get_values() -> Array[Variant]:
 		var ret_arr: Array[Variant] = []
 		for object_editor in _object_editors:
@@ -529,13 +538,13 @@ class ConfigEditor extends VBoxContainer:
 		return ret_arr
 
 
-	## Called when plugin settings get confirmed.
+	## Invokes [method apply] and [method save]. Called when plugin settings get confirmed.
 	func confirm() -> void:
 		apply()
 		save()
 
 
-	## Called when plugin settings get cancelled.
+	## Doesn't do anything. Just a stub that gets called when plugin settings get cancelled.
 	func cancel() -> void:
 		pass
 
