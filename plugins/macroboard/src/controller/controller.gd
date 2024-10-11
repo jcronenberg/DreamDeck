@@ -11,8 +11,8 @@ const macroboard_theme = preload("res://plugins/macroboard/themes/theme.tres")
 
 func _init():
 	plugin_name = "Macroboard"
-	config.add_color("Button background color", "bg_color", DEFAULT_BG_COLOR, "", false)
-	config.add_color("Button pressed color", "pressed_color", DEFAULT_PRESSED_COLOR, "", false)
+	config.add_color("Normal background color", "bg_color", DEFAULT_BG_COLOR, "", false)
+	config.add_color("Pressed background color", "pressed_color", DEFAULT_PRESSED_COLOR, "", false)
 	config.add_color("Normal font color", "font_color", DEFAULT_FONT_COLOR, "", false)
 	config.add_color("Pressed font color", "font_pressed_color", DEFAULT_FONT_COLOR, "", false)
 

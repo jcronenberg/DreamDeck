@@ -16,8 +16,8 @@ func _init() -> void:
 	_config.add_string("Button label", "button_label", "")
 	_config.add_string("Icon path", "icon_path", "")
 	_config.add_bool("Show button label", "show_button_label", false)
-	_config.add_color("Button background color", "bg_color", DEFAULT_BG_COLOR, "", false)
-	_config.add_color("Button pressed color", "pressed_color", DEFAULT_PRESSED_COLOR, "", false)
+	_config.add_color("Normal background color", "bg_color", DEFAULT_BG_COLOR, "", false)
+	_config.add_color("Pressed background color", "pressed_color", DEFAULT_PRESSED_COLOR, "", false)
 	_config.add_color("Normal font color", "font_color", DEFAULT_FONT_COLOR, "", false)
 	_config.add_color("Pressed font color", "font_pressed_color", DEFAULT_FONT_COLOR, "", false)
 	theme_type_variation = THEME_VARIATION
