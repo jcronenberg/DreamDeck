@@ -1,6 +1,12 @@
 class_name MacroNoButton
 extends MacroButtonBase
 
+
+func _init() -> void:
+	super()
+	theme_type_variation = "FixedMacroButton"
+
+
 func toggle_add_button() -> void:
 	disabled = not disabled
 	$Icon.visible = not $Icon.visible

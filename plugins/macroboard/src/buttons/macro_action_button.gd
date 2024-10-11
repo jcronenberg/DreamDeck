@@ -26,21 +26,19 @@ func _ready() -> void:
 
 
 func deserialize(dict: Dictionary) -> void:
-	# Migration for old command format
-	if dict.has("command"):
-		_action_config_migration(dict)
-		return
-
 	_config.apply_dict(dict)
-	# FIXME config label migration, delete in the future
-	if dict.has("Button label"):
-		_button_label = dict["Button label"]
-		_icon_path = dict["Icon path"]
-		_show_button_label = dict["Show button label"]
-	else:
-		_button_label = dict["button_label"]
-		_icon_path = dict["icon_path"]
-		_show_button_label = dict["show_button_label"]
+
+	_button_label = dict["button_label"]
+	_icon_path = dict["icon_path"]
+	_show_button_label = dict["show_button_label"]
+	if dict.has("bg_color"):
+		set_bg_color(Color.hex(dict["bg_color"]))
+	if dict.has("pressed_color"):
+		set_pressed_color(Color.hex(dict["pressed_color"]))
+	if dict.has("font_color"):
+		set_font_color(Color.hex(dict["font_color"]))
+	if dict.has("font_pressed_color"):
+		set_font_pressed_color(Color.hex(dict["font_pressed_color"]))
 
 	if dict.has("actions"):
 		_actions = []
@@ -96,21 +94,27 @@ func show_name_with_icon() -> void:
 	$AppName.visible = true
 
 
-# FIXME delete in the future
-func _action_config_migration(dict: Dictionary) -> void:
-	if dict["ssh_client"] != "":
-		var action: PluginCoordinator.PluginAction = PluginCoordinator.PluginAction.new()
-		action.deserialize({"controller": "SSHController", "plugin": "SSH", "func_name": "exec_on_client", "args": [dict["ssh_client"], dict["command"]], "blocking": false})
-		_actions = [action]
-	else:
-		var action: PluginCoordinator.PluginAction = PluginCoordinator.PluginAction.new()
-		action.deserialize({"controller": "", "plugin": "DreamDeck", "func_name": "exec_cmd", "args": [dict["command"]], "blocking": false})
-		_actions = [action]
+func set_bg_color(bg_color: Color) -> void:
+	var bg_stylebox: StyleBoxFlat = get_theme_stylebox("normal").duplicate()
+	bg_stylebox.bg_color = bg_color
+	add_theme_stylebox_override("normal", bg_stylebox)
+	add_theme_stylebox_override("hover", bg_stylebox)
 
-	_config.apply_dict({"Button label": dict["app_name"], "Icon path": dict["icon_path"], "Show button label": dict["show_app_name"]})
-	_button_label = dict["app_name"]
-	_icon_path = dict["icon_path"]
-	_show_button_label = dict["show_app_name"]
+
+func set_pressed_color(pressed_color: Color) -> void:
+	var pressed_stylebox: StyleBoxFlat = get_theme_stylebox("pressed").duplicate()
+	pressed_stylebox.bg_color = pressed_color
+	add_theme_stylebox_override("pressed", pressed_stylebox)
+
+
+func set_font_color(font_color: Color) -> void:
+	add_theme_color_override("font_color", font_color)
+	add_theme_color_override("font_focus_color", font_color)
+	add_theme_color_override("font_hover_color", font_color)
+
+
+func set_font_pressed_color(font_pressed_color: Color) -> void:
+	add_theme_color_override("font_pressed_color", font_pressed_color)
 
 
 func _on_popup_confirmed() -> bool:
@@ -130,6 +134,14 @@ func _on_pressed() -> void:
 
 	open_editor()
 	_actions_editor.populate_actions(_actions)
+
+
+func _on_button_down() -> void:
+	%AppName.theme_type_variation = "MacroButtonLabelPressed"
+
+
+func _on_button_up() -> void:
+	%AppName.theme_type_variation = "MacroButtonLabel"
 
 
 # Handles if drag was successful or not

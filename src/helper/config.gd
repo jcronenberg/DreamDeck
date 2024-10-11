@@ -4,6 +4,8 @@ class_name Config
 ##
 ## Includes several helper functions and also the ability to automatically generate
 ## a default editor for the config.[br]
+## The editor that can be generated via [method generate_editor] allows editing of
+## all objects within the config.
 ## [br]
 ## Example usage:
 ##
@@ -12,6 +14,8 @@ class_name Config
 ## config.add_bool("Example bool", "example_bool", false, "[code]Example code[/code]\n[b]Another line[/b]")
 ## config.add_string("Example string", "example string", "Example default value")
 ## [/codeblock]
+
+const RESTORE_DEFAULT_ICON = preload("res://resources/icons/restore_default.png")
 
 ## Emitted when the config changed
 signal config_changed
@@ -68,7 +72,7 @@ func save() -> bool:
 ## Returns the config as a [Dictionary].
 ## Note that this is not the definition dictionary but a simple dict
 ## containing just the key and value.[br]
-## Example return value: [code]{"Example Int": -1, "Example String": "Foo"}[/code].
+## Example return value: [code]{"example_int": -1, "example_string": "Foo"}[/code].
 func get_as_dict() -> Dictionary:
 	var ret_dict: Dictionary = {}
 	for object in _config:
@@ -91,47 +95,47 @@ func add_object(object: ConfigObject) -> void:
 ## [param label]: User facing name of this object when editing[br]
 ## [param key]: Key string for the object (Will be what it is saved as on disk and also what you
 ## get when running [method get_as_dict])[br]
-## [param value]: Default value[br]
+## [param default_value]: Default value[br]
 ## [param description](Optional): Description for what this config object does
-func add_bool(label: String, key: String, value: bool, description: String = "") -> void:
-	_config.append(BoolObject.new(label, key, value, description))
+func add_bool(label: String, key: String, default_value: bool, description: String = "") -> void:
+	_config.append(BoolObject.new(label, key, default_value, description))
 
 
 ## Adds a int object.[br]
 ## [param label]: User facing name of this object when editing[br]
 ## [param key]: Key string for the object (Will be what it is saved as on disk and also what you
 ## get when running [method get_as_dict])[br]
-## [param value]: Default value[br]
+## [param default_value]: Default value[br]
 ## [param description](Optional): Description for what this config object does
-func add_int(label: String, key: String, value: int, description: String = "") -> void:
-	_config.append(IntObject.new(label, key, value, description))
+func add_int(label: String, key: String, default_value: int, description: String = "") -> void:
+	_config.append(IntObject.new(label, key, default_value, description))
 
 
 ## Adds a float object.[br]
 ## [param label]: User facing name of this object when editing[br]
 ## [param key]: Key string for the object (Will be what it is saved as on disk and also what you
 ## get when running [method get_as_dict])[br]
-## [param value]: Default value[br]
+## [param default_value]: Default value[br]
 ## [param description](Optional): Description for what this config object does
-func add_float(label: String, key: String, value: float, description: String = "") -> void:
-	_config.append(FloatObject.new(label, key, value, description))
+func add_float(label: String, key: String, default_value: float, description: String = "") -> void:
+	_config.append(FloatObject.new(label, key, default_value, description))
 
 
 ## Adds a string object.[br]
 ## [param label]: User facing name of this object when editing[br]
 ## [param key]: Key string for the object (Will be what it is saved as on disk and also what you
 ## get when running [method get_as_dict])[br]
-## [param value]: Default value[br]
+## [param default_value]: Default value[br]
 ## [param description](Optional): Description for what this config object does
-func add_string(label: String, key: String, value: String, description: String = "") -> void:
-	_config.append(StringObject.new(label, key, value, description))
+func add_string(label: String, key: String, default_value: String, description: String = "") -> void:
+	_config.append(StringObject.new(label, key, default_value, description))
 
 
 ## Adds a enum object.[br]
 ## [param label]: User facing name of this object when editing[br]
 ## [param key]: Key string for the object (Will be what it is saved as on disk and also what you
 ## get when running [method get_as_dict])[br]
-## [param value]: Default value[br]
+## [param default_value]: Default value[br]
 ## [param enum_dict]: All available values for the enum in a [Dictionary].[br]
 ## Gdscript's [code]enum[/code] automatically generates this enum. See example below.[br]
 ## [param description](Optional): Description for what this config object does[br]
@@ -140,20 +144,34 @@ func add_string(label: String, key: String, value: String, description: String =
 ## enum Example {ENUM_VALUE1, ENUM_VALUE2}
 ## config.add_enum("Example Enum", Example.ENUM_VALUE1, Example)
 ## [/codeblock]
-func add_enum(label: String, key: String, value: int, enum_dict: Dictionary, description: String = "") -> void:
-	_config.append(EnumObject.new(label, key, value, enum_dict, description))
+func add_enum(label: String, key: String, default_value: int, enum_dict: Dictionary, description: String = "") -> void:
+	_config.append(EnumObject.new(label, key, default_value, enum_dict, description))
 
 
 ## Adds a string array object.[br]
-## This is useful if you want to store a string that can only be predetermined values.
+## This is useful if you want to store a string that can only be predetermined default_values.
 ## [param label]: User facing name of this object when editing[br]
 ## [param key]: Key string for the object (Will be what it is saved as on disk and also what you
 ## get when running [method get_as_dict])[br]
-## [param value]: Default value[br]
+## [param default_value]: Default value[br]
 ## [param string_array]: All available values to pick from[br]
 ## [param description](Optional): Description for what this config object does[br]
-func add_string_array(label: String, key: String, value: String, string_array: Array[String], description: String = "") -> void:
-	_config.append(StringArrayObject.new(label, key, value, string_array, description))
+func add_string_array(label: String, key: String, default_value: String, string_array: Array[String], description: String = "") -> void:
+	_config.append(StringArrayObject.new(label, key, default_value, string_array, description))
+
+
+## Adds a color object.[br]
+## Note that color is stored and gets loaded with the rgba32 format.
+## Use [method Color.hex] to convert back to a [Color].[br]
+## [param label]: User facing name of this object when editing[br]
+## [param key]: Key string for the object (Will be what it is saved as on disk and also what you
+## get when running [method get_as_dict])[br]
+## [param default_value]: Default value[br]
+## [param description](Optional): Description for what this config object does[br]
+## [param serialize_when_default](Optional): Whether serializing/saving the object
+## should still store the value when it is the same as the default
+func add_color(label: String, key: String, default_value: Color, description: String = "", serialize_when_default: bool = true) -> void:
+	_config.append(ColorObject.new(label, key, default_value, description, serialize_when_default))
 
 
 ## Clears the config of all objects.
@@ -383,17 +401,68 @@ class StringArrayObject extends ConfigObject:
 		return {_key: _value}
 
 
+class ColorObject extends ConfigObject:
+	var _value: Color
+	var _default_value: Color
+	var _serialize_when_default: bool
+
+
+	func _init(label: String, key: String, value: Color, description: String = "", serialize_when_default: bool = true):
+		super(label, key, description)
+		_value = value.to_rgba32()
+		_default_value = _value
+		_serialize_when_default = serialize_when_default
+
+
+	## Get value as rgba32
+	func get_value() -> int:
+		return _value.to_rgba32()
+
+
+	## Set value from rgba32
+	func set_value(value: int):
+		_value = Color.hex(value)
+
+
+	func get_value_color() -> Color:
+		return _value
+
+
+	func set_value_color(value: Color):
+		_value = value
+
+
+	func get_default_value() -> Color:
+		return _default_value
+
+
+	func set_default_value(value: Color) -> void:
+		if get_value() == _default_value.to_rgba32():
+			set_value_color(value)
+		_default_value = value
+
+
+	## Serialization happens with value in rgba32 format
+	func serialize() -> Dictionary:
+		if _serialize_when_default or get_value() != _default_value.to_rgba32():
+			return {_key: get_value()}
+
+		return {}
+
+
 ## An editor for a [Config]
 ##
 ## The editor is a [VBoxContainer] that contains a row for each object
 ## inside a [Config]. Each row allows a user to edit the values for the objects.[br]
-## A editor is always linked to a [Config].
+## A editor is always linked to a [Config] and allows directly applying and saving to
+## the config. If you need to react to changes connect to the configs
+## [signal Config.config_changed] signal.
 class ConfigEditor extends VBoxContainer:
 
 	var _config_ref: Config
 	var _object_editors: Array[VariantEditor] = []
 
-	func _init(config: Config):
+	func _init(config: Config) -> void:
 		_config_ref = config
 
 		set_anchors_preset(PRESET_FULL_RECT)
@@ -412,17 +481,20 @@ class ConfigEditor extends VBoxContainer:
 				_object_editors.append(EnumEditor.new(object))
 			elif object is StringArrayObject:
 				_object_editors.append(StringArrayEditor.new(object))
+			elif object is ColorObject:
+				_object_editors.append(ColorEditor.new(object))
 
 		for editor in _object_editors:
 			add_child(editor)
 
 
 	## Applies the current values to the config via [method Config.apply_dict].
-	func apply():
+	## Note that this doesn't save to disk, use [method save] for this.
+	func apply() -> void:
 		_config_ref.apply_dict(serialize())
 
 
-	## Returns a key value [Dictionary] for the current values.
+	## Returns a key value [Dictionary] with the current values.
 	func serialize() -> Dictionary:
 		var save_dict: Dictionary = {}
 		for child in get_children():
@@ -432,12 +504,13 @@ class ConfigEditor extends VBoxContainer:
 
 
 	## Saves the config via [method Config.save].
-	func save():
+	## Note that this doesn't apply the current editor values, use [method apply] for this.
+	func save() -> void:
 		_config_ref.save()
 
 
 	## Get a specific editor by [param key].
-	## Useful if you e.g. need to change some values for a editor after
+	## Useful if you e.g. need to change some values for an object editor after
 	## the the editor was already initialized.
 	func get_editor(key: String) -> VariantEditor:
 		for editor in _object_editors:
@@ -447,6 +520,7 @@ class ConfigEditor extends VBoxContainer:
 		return null
 
 
+	## Set all values at once.
 	func set_values(values: Array[Variant]) -> void:
 		if values.size() > _object_editors.size():
 			push_error("Trying to set too many values for Config")
@@ -455,12 +529,24 @@ class ConfigEditor extends VBoxContainer:
 			_object_editors[i].set_value(values[i])
 
 
+	## Get all values at once.
 	func get_values() -> Array[Variant]:
 		var ret_arr: Array[Variant] = []
 		for object_editor in _object_editors:
 			ret_arr.append(object_editor.get_value())
 
 		return ret_arr
+
+
+	## Invokes [method apply] and [method save]. Called when plugin settings get confirmed.
+	func confirm() -> void:
+		apply()
+		save()
+
+
+	## Doesn't do anything. Just a stub that gets called when plugin settings get cancelled.
+	func cancel() -> void:
+		pass
 
 
 class VariantEditor extends HBoxContainer:
@@ -490,7 +576,7 @@ class VariantEditor extends HBoxContainer:
 
 	func set_description(description: String):
 		# Making everything just [indent] is a bit of a hack, but works visually
-		_description_label.text = "[indent]" + description + "[/indent]"
+		_description_label.text = "[indent]%s[/indent]" % description
 
 
 	func set_label(value: String):
@@ -745,3 +831,59 @@ class StringArrayEditor extends VariantEditor:
 
 	func _on_clear_button_pressed() -> void:
 		_value_editor.select(-1)
+
+
+class ColorEditor extends VariantEditor:
+	var _value_editor: ColorPickerButton
+	var _reset_to_default_button: TextureButton
+	var _default_value: Color
+
+
+	func _init(object: ColorObject):
+		super(object)
+
+		_default_value = object.get_default_value()
+
+		_reset_to_default_button = TextureButton.new()
+		_reset_to_default_button.texture_normal = RESTORE_DEFAULT_ICON
+		_reset_to_default_button.ignore_texture_size = true
+		_reset_to_default_button.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+		_reset_to_default_button.custom_minimum_size = Vector2(25, 0)
+		_reset_to_default_button.visible = false
+		_reset_to_default_button.pressed.connect(set_value_color.bind(object.get_default_value()))
+
+		var color_hbox: HBoxContainer = HBoxContainer.new()
+		color_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+		_value_editor = ColorPickerButton.new()
+		_value_editor.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		_value_editor.custom_minimum_size = Vector2(50, 0)
+		_value_editor.color_changed.connect(_on_color_changed)
+		set_value(object.get_value())
+
+		color_hbox.add_child(_value_editor)
+		color_hbox.add_child(_reset_to_default_button)
+
+		add_child(color_hbox)
+
+
+	func set_value(value: int):
+		_value_editor.color = Color.hex(value)
+		_on_color_changed(Color.hex(value))
+
+
+	func get_value() -> int:
+		return _value_editor.color.to_rgba32()
+
+
+	func set_value_color(value: Color):
+		_value_editor.color = value
+		_on_color_changed(value)
+
+
+	func get_value_color() -> Color:
+		return _value_editor.color
+
+
+	func _on_color_changed(color: Color) -> void:
+		_reset_to_default_button.visible = color.to_rgba32() != _default_value.to_rgba32()

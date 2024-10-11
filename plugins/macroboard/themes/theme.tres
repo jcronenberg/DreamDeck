@@ -1,0 +1,71 @@
+[gd_resource type="Theme" load_steps=7 format=3 uid="uid://bui8klmx42ngq"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_vykwb"]
+bg_color = Color(1, 1, 1, 0.0470588)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+corner_detail = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3j2nt"]
+bg_color = Color(1, 1, 1, 0.0470588)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+corner_detail = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_24mnh"]
+bg_color = Color(1, 1, 1, 0.196078)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+corner_detail = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6ltvl"]
+bg_color = Color(1, 1, 1, 0.0470588)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+corner_detail = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fc8w3"]
+bg_color = Color(1, 1, 1, 0.0470588)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+corner_detail = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_d7pgx"]
+bg_color = Color(1, 1, 1, 0.196078)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+corner_detail = 12
+
+[resource]
+FixedMacroButton/base_type = &"Button"
+FixedMacroButton/colors/font_color = Color(1, 1, 1, 1)
+FixedMacroButton/colors/font_focus_color = Color(1, 1, 1, 1)
+FixedMacroButton/colors/font_hover_color = Color(1, 1, 1, 1)
+FixedMacroButton/colors/font_pressed_color = Color(1, 1, 1, 1)
+FixedMacroButton/styles/hover = SubResource("StyleBoxFlat_vykwb")
+FixedMacroButton/styles/normal = SubResource("StyleBoxFlat_3j2nt")
+FixedMacroButton/styles/pressed = SubResource("StyleBoxFlat_24mnh")
+MacroButton/base_type = &"Button"
+MacroButton/colors/font_color = Color(1, 1, 1, 1)
+MacroButton/colors/font_focus_color = Color(1, 1, 1, 1)
+MacroButton/colors/font_hover_color = Color(1, 1, 1, 1)
+MacroButton/colors/font_pressed_color = Color(1, 1, 1, 1)
+MacroButton/styles/hover = SubResource("StyleBoxFlat_6ltvl")
+MacroButton/styles/normal = SubResource("StyleBoxFlat_fc8w3")
+MacroButton/styles/pressed = SubResource("StyleBoxFlat_d7pgx")
+MacroButtonLabel/base_type = &"Label"
+MacroButtonLabel/colors/font_color = Color(1, 1, 1, 1)
+MacroButtonLabelPressed/base_type = &"Label"
+MacroButtonLabelPressed/colors/font_color = Color(1, 1, 1, 1)
