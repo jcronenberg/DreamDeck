@@ -1,16 +1,26 @@
 class_name MacroButtonBase
 extends Button
 
+const THEME_VARIATION = "MacroButton"
+const DEFAULT_FONT_COLOR = Color(1, 1, 1)
+const DEFAULT_BG_COLOR = Color(1, 1, 1, 0.11)
+const DEFAULT_PRESSED_COLOR = Color(1, 1, 1, 0.196)
+
 var _actions_editor: ActionsEditor
 var _new_action_selector: PluginCoordinator.PluginActionSelector
 var _config_editor: Config.ConfigEditor
 var _config: Config = Config.new()
 
 
-func _init():
+func _init() -> void:
 	_config.add_string("Button label", "button_label", "")
 	_config.add_string("Icon path", "icon_path", "")
 	_config.add_bool("Show button label", "show_button_label", false)
+	_config.add_color("Button background color", "bg_color", DEFAULT_BG_COLOR, "", false)
+	_config.add_color("Button pressed color", "pressed_color", DEFAULT_PRESSED_COLOR, "", false)
+	_config.add_color("Normal font color", "font_color", DEFAULT_FONT_COLOR, "", false)
+	_config.add_color("Pressed font color", "font_pressed_color", DEFAULT_FONT_COLOR, "", false)
+	theme_type_variation = THEME_VARIATION
 
 
 func get_macroboard() -> Macroboard:
@@ -22,6 +32,13 @@ func get_macroboard() -> Macroboard:
 
 
 func open_editor(new_button: bool = false) -> void:
+	# Load default colors
+	var macro_theme: Theme = load("res://plugins/macroboard/themes/theme.tres")
+	_config.get_object("bg_color").set_default_value(macro_theme.get_stylebox("normal", THEME_VARIATION).bg_color)
+	_config.get_object("pressed_color").set_default_value(macro_theme.get_stylebox("pressed", THEME_VARIATION).bg_color)
+	_config.get_object("font_color").set_default_value(macro_theme.get_color("font_color", THEME_VARIATION))
+	_config.get_object("font_pressed_color").set_default_value(macro_theme.get_color("font_pressed_color", THEME_VARIATION))
+
 	var tab_container: TabContainer = TabContainer.new()
 	tab_container.set_anchors_preset(Control.PRESET_FULL_RECT)
 
