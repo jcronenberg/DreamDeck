@@ -31,14 +31,26 @@ func deserialize(dict: Dictionary) -> void:
 	_button_label = dict["button_label"]
 	_icon_path = dict["icon_path"]
 	_show_button_label = dict["show_button_label"]
+
 	if dict.has("bg_color"):
 		set_bg_color(Color.hex(dict["bg_color"]))
+	else:
+		set_bg_color(DEFAULT_BG_COLOR)
+
 	if dict.has("pressed_color"):
 		set_pressed_color(Color.hex(dict["pressed_color"]))
+	else:
+		set_pressed_color(DEFAULT_PRESSED_COLOR)
+
 	if dict.has("font_color"):
 		set_font_color(Color.hex(dict["font_color"]))
+	else:
+		set_font_color(DEFAULT_FONT_COLOR)
+
 	if dict.has("font_pressed_color"):
 		set_font_pressed_color(Color.hex(dict["font_pressed_color"]))
+	else:
+		set_font_pressed_color(DEFAULT_FONT_COLOR)
 
 	if dict.has("actions"):
 		_actions = []
@@ -95,6 +107,11 @@ func show_name_with_icon() -> void:
 
 
 func set_bg_color(bg_color: Color) -> void:
+	if bg_color.to_rgba32() == DEFAULT_BG_COLOR.to_rgba32():
+		remove_theme_stylebox_override("normal")
+		remove_theme_stylebox_override("hover")
+		return
+
 	var bg_stylebox: StyleBoxFlat = get_theme_stylebox("normal").duplicate()
 	bg_stylebox.bg_color = bg_color
 	add_theme_stylebox_override("normal", bg_stylebox)
@@ -102,18 +119,32 @@ func set_bg_color(bg_color: Color) -> void:
 
 
 func set_pressed_color(pressed_color: Color) -> void:
+	if pressed_color.to_rgba32() == DEFAULT_PRESSED_COLOR.to_rgba32():
+		remove_theme_stylebox_override("pressed")
+		return
+
 	var pressed_stylebox: StyleBoxFlat = get_theme_stylebox("pressed").duplicate()
 	pressed_stylebox.bg_color = pressed_color
 	add_theme_stylebox_override("pressed", pressed_stylebox)
 
 
 func set_font_color(font_color: Color) -> void:
+	if font_color.to_rgba32() == DEFAULT_FONT_COLOR.to_rgba32():
+		remove_theme_color_override("font_color")
+		remove_theme_color_override("font_focus_color")
+		remove_theme_color_override("font_hover_color")
+		return
+
 	add_theme_color_override("font_color", font_color)
 	add_theme_color_override("font_focus_color", font_color)
 	add_theme_color_override("font_hover_color", font_color)
 
 
 func set_font_pressed_color(font_pressed_color: Color) -> void:
+	if font_pressed_color.to_rgba32() == DEFAULT_FONT_COLOR.to_rgba32():
+		remove_theme_color_override("font_pressed_color")
+		return
+
 	add_theme_color_override("font_pressed_color", font_pressed_color)
 
 
