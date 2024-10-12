@@ -11,18 +11,11 @@ const DEFAULT_CONFIG := {
 		},
 	}
 
-var conf_dir: String = OS.get_user_data_dir() + "/"
+var conf_dir: String = ArgumentParser.get_conf_dir()
 var config: Config = Config.new()
 
 
 func _ready():
-	var new_conf_dir = ArgumentParser.get_arg("confdir")
-	if new_conf_dir:
-		if not new_conf_dir.ends_with("/"):
-			new_conf_dir = new_conf_dir + "/"
-
-		conf_dir = new_conf_dir
-
 	if OS.has_feature("editor"):
 		# So in editor we don't overwrite logs in normal config
 		ProjectSettings.set_setting("application/config/use_custom_user_dir", false)

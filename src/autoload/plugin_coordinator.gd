@@ -5,7 +5,7 @@ const DEFAULT_ACTIVATED_PLUGINS := {
 	"Macroboard": true,
 }
 
-var _conf_dir: String = OS.get_user_data_dir() + "/"
+var _conf_dir: String = ArgumentParser.get_conf_dir()
 var _conf_path: String # Path for plugins.json
 var _plugins: Array[Plugin] = []
 # _scenes example:
@@ -18,13 +18,6 @@ var _scenes: Dictionary # The already loaded scenes
 
 
 func _ready():
-	var new_conf_dir = ArgumentParser.get_arg("confdir")
-	if new_conf_dir:
-		if not new_conf_dir.ends_with("/"):
-			new_conf_dir = new_conf_dir + "/"
-
-		_conf_dir = new_conf_dir
-
 	_conf_path = _conf_dir + FILENAME
 
 	discover_plugins()

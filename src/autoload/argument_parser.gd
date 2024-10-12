@@ -1,14 +1,22 @@
 extends Node
 
-var arguments: Dictionary
+var _arguments: Dictionary
+var _conf_dir: String = OS.get_user_data_dir() + "/"
 
 
-func _ready():
-	arguments = parse_arguments()
+func _init():
+	_arguments = _parse_arguments()
+
+	var new_conf_dir = get_arg("confdir")
+	if new_conf_dir:
+		if not new_conf_dir.ends_with("/"):
+			new_conf_dir = new_conf_dir + "/"
+
+		_conf_dir = new_conf_dir
 
 
-func parse_arguments() -> Dictionary:
-	var args := {}
+func _parse_arguments() -> Dictionary:
+	var args: Dictionary = {}
 	for arg in OS.get_cmdline_args():
 		if arg.find("=") > -1:
 			var key_value = arg.split("=")
@@ -17,10 +25,14 @@ func parse_arguments() -> Dictionary:
 	return args
 
 
-# If key is present in given arguments returns the value
-# If it is not present returns null
+## If key is present in given arguments returns the value.
+## If it is not present returns null.
 func get_arg(key: String):
-	if arguments.has(key):
-		return arguments[key]
+	if _arguments.has(key):
+		return _arguments[key]
 
 	return null
+
+
+func get_conf_dir() -> String:
+	return _conf_dir
