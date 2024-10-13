@@ -174,6 +174,17 @@ func add_color(label: String, key: String, default_value: Color, description: St
 	_config.append(ColorObject.new(label, key, default_value, description, serialize_when_default))
 
 
+## Adds a file path object.
+## This is just a string object, but the editor has a button that opens a file dialog.[br]
+## [param label]: User facing name of this object when editing[br]
+## [param key]: Key string for the object (Will be what it is saved as on disk and also what you
+## get when running [method get_as_dict])[br]
+## [param default_value]: Default value[br]
+## [param description](Optional): Description for what this config object does[br]
+func add_file_path(label: String, key: String, default_value: String, description: String = "") -> void:
+	_config.append(FilePathObject.new(label, key, default_value, description))
+
+
 ## Clears the config of all objects.
 func clear_objects() -> void:
 	_config = []
@@ -450,6 +461,10 @@ class ColorObject extends ConfigObject:
 		return {}
 
 
+class FilePathObject extends StringObject:
+	pass
+
+
 ## An editor for a [Config]
 ##
 ## The editor is a [VBoxContainer] that contains a row for each object
@@ -471,6 +486,8 @@ class ConfigEditor extends VBoxContainer:
 		for object in _config_ref._config:
 			if object is BoolObject:
 				_object_editors.append(BoolEditor.new(object))
+			elif object is FilePathObject:
+				_object_editors.append(FilePathEditor.new(object))
 			elif object is IntObject:
 				_object_editors.append(IntEditor.new(object))
 			elif object is FloatObject:
@@ -887,3 +904,57 @@ class ColorEditor extends VariantEditor:
 
 	func _on_color_changed(color: Color) -> void:
 		_reset_to_default_button.visible = color.to_rgba32() != _default_value.to_rgba32()
+
+
+class FilePathEditor extends VariantEditor:
+	var _value_editor: LineEdit
+
+
+	func _init(object: StringObject):
+		super(object)
+
+		var editor_hbox: HBoxContainer = HBoxContainer.new()
+		editor_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		editor_hbox.add_theme_constant_override("separation", 10)
+
+		_value_editor = LineEdit.new()
+		_value_editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_value_editor.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+
+		var open_file_dialog_button: Button = Button.new()
+		open_file_dialog_button.text = "..."
+		open_file_dialog_button.pressed.connect(_on_open_file_dialog_button_pressed)
+
+		editor_hbox.add_child(_value_editor)
+		editor_hbox.add_child(open_file_dialog_button)
+		set_value(object.get_value())
+
+		add_child(editor_hbox)
+
+
+	func set_value(value: String):
+		_value_editor.text = value
+
+
+	func get_value() -> String:
+		return _value_editor.text
+
+
+	# TODO DisplayServer.file_dialog_show is only implemented on Linux, Windows and MacOS
+	func _on_open_file_dialog_button_pressed() -> void:
+		var initial_path: String = ConfLib.get_absolute_path(get_value().get_base_dir())
+		if initial_path == "":
+			initial_path = ConfLib.get_absolute_path(ArgumentParser.get_conf_dir())
+
+		DisplayServer.file_dialog_show("Select icon",
+				initial_path,
+				"",
+				true,
+				DisplayServer.FILE_DIALOG_MODE_OPEN_ANY,
+				["*.png,*.jpg,*.jpeg;Supported images", "*;All files"],
+				_on_file_dialog_completed)
+
+
+	func _on_file_dialog_completed(status: bool, selected_paths: PackedStringArray, _selected_filter_index: int) -> void:
+		if status and selected_paths.size() > 0:
+			set_value(selected_paths[0])
