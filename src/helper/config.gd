@@ -915,11 +915,11 @@ class FilePathEditor extends VariantEditor:
 
 		var editor_hbox: HBoxContainer = HBoxContainer.new()
 		editor_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		editor_hbox.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		editor_hbox.add_theme_constant_override("separation", 10)
 
 		_value_editor = LineEdit.new()
 		_value_editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		_value_editor.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 
 		var open_file_dialog_button: Button = Button.new()
 		open_file_dialog_button.text = "..."
@@ -942,9 +942,7 @@ class FilePathEditor extends VariantEditor:
 
 	# TODO DisplayServer.file_dialog_show is only implemented on Linux, Windows and MacOS
 	func _on_open_file_dialog_button_pressed() -> void:
-		var initial_path: String = ConfLib.get_absolute_path(get_value().get_base_dir())
-		if initial_path == "":
-			initial_path = ConfLib.get_absolute_path(ArgumentParser.get_conf_dir())
+		var initial_path: String = ConfLib.get_absolute_path(ArgumentParser.get_conf_dir() + get_value().get_base_dir())
 
 		DisplayServer.file_dialog_show("Select icon",
 				initial_path,

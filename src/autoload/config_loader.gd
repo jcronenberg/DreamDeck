@@ -42,12 +42,6 @@ func get_config() -> Dictionary:
 	return config.get_as_dict()
 
 
-# Returns the directory of all configs, since this can be modified with arguments
-# the returned path has a "/" at the end
-func get_conf_dir() -> String:
-	return conf_dir
-
-
 func _on_size_changed():
 	if get_window().mode == Window.MODE_FULLSCREEN:
 		return
