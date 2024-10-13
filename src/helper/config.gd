@@ -865,16 +865,17 @@ class ColorEditor extends VariantEditor:
 		_reset_to_default_button.texture_normal = RESTORE_DEFAULT_ICON
 		_reset_to_default_button.ignore_texture_size = true
 		_reset_to_default_button.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
-		_reset_to_default_button.custom_minimum_size = Vector2(25, 0)
+		_reset_to_default_button.custom_minimum_size = Vector2(25, 28)
 		_reset_to_default_button.visible = false
 		_reset_to_default_button.pressed.connect(set_value_color.bind(object.get_default_value()))
 
 		var color_hbox: HBoxContainer = HBoxContainer.new()
 		color_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		color_hbox.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 
 		_value_editor = ColorPickerButton.new()
 		_value_editor.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		_value_editor.custom_minimum_size = Vector2(50, 0)
+		_value_editor.custom_minimum_size = Vector2(50, 28)
 		_value_editor.color_changed.connect(_on_color_changed)
 		set_value(object.get_value())
 
