@@ -78,3 +78,19 @@ static func list_files_in_dir(path: String) -> Array:
 	else:
 		push_error("Failed to access %s" % path)
 	return file_list
+
+
+## Always returns the absolute path for [param path] and makes sure [param path] is valid.
+## If a path is relative it prefixes it with the current working dir
+## otherwise it just returns the given path.
+static func get_absolute_path(path: String) -> String:
+	if not path.begins_with("/"):
+		var dir = DirAccess.open(path)
+		if not dir:
+			return ""
+		return dir.get_current_dir()
+
+	if not DirAccess.open(path):
+		return ""
+
+	return path
