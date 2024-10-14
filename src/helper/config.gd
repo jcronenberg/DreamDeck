@@ -41,7 +41,7 @@ func load_config():
 
 ## Applies a simple key value [Dictionary] to the config.[br]
 ## [param dict] should be for example:
-## [code]{"Example Int": -1, "Example String": "Foo"}[/code].
+## [code]{"example_int": -1, "example_string": "Foo"}[/code].
 func apply_dict(dict: Dictionary):
 	for item in dict:
 		var object = get_object(item)
