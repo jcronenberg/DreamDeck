@@ -952,7 +952,9 @@ class FilePathEditor extends VariantEditor:
 
 	# TODO DisplayServer.file_dialog_show is only implemented on Linux, Windows and MacOS
 	func _on_open_file_dialog_button_pressed() -> void:
-		var initial_path: String = ConfLib.get_absolute_path(ArgumentParser.get_conf_dir() + get_value().get_base_dir())
+		var initial_path: String = get_value().get_base_dir()
+		if not initial_path.begins_with("/"):
+			initial_path = ConfLib.get_absolute_path(ArgumentParser.get_conf_dir() + get_value().get_base_dir())
 
 		DisplayServer.file_dialog_show("Select icon",
 				initial_path,
