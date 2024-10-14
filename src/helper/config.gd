@@ -181,8 +181,9 @@ func add_color(label: String, key: String, default_value: Color, description: St
 ## get when running [method get_as_dict])[br]
 ## [param default_value]: Default value[br]
 ## [param description](Optional): Description for what this config object does[br]
-func add_file_path(label: String, key: String, default_value: String, description: String = "") -> void:
-	_config.append(FilePathObject.new(label, key, default_value, description))
+## [param file_filters](Optional): Specify which file types are supported. See [member FileDialog.filters]
+func add_file_path(label: String, key: String, default_value: String, description: String = "", file_filters: Array[String] = []) -> void:
+	_config.append(FilePathObject.new(label, key, default_value, description, file_filters))
 
 
 ## Clears the config of all objects.
@@ -462,7 +463,12 @@ class ColorObject extends ConfigObject:
 
 
 class FilePathObject extends StringObject:
-	pass
+	var file_filters: Array[String]
+
+
+	func _init(label: String, key: String, default_value: String, description: String = "", init_file_filters: Array[String] = []):
+		super(label, key, default_value, description)
+		file_filters = init_file_filters
 
 
 ## An editor for a [Config]
@@ -909,10 +915,13 @@ class ColorEditor extends VariantEditor:
 
 class FilePathEditor extends VariantEditor:
 	var _value_editor: LineEdit
+	var file_filters: Array[String]
 
 
-	func _init(object: StringObject):
+	func _init(object: FilePathObject):
 		super(object)
+
+		file_filters = object.file_filters
 
 		var editor_hbox: HBoxContainer = HBoxContainer.new()
 		editor_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -950,7 +959,7 @@ class FilePathEditor extends VariantEditor:
 				"",
 				true,
 				DisplayServer.FILE_DIALOG_MODE_OPEN_ANY,
-				["*.png,*.jpg,*.jpeg;Supported images", "*;All files"],
+				file_filters,
 				_on_file_dialog_completed)
 
 
