@@ -136,7 +136,7 @@ class SimpleWindow extends Window:
 	var _cancel_button: Button = Button.new()
 	var _margin: MarginContainer = MarginContainer.new()
 	var _vbox: VBoxContainer = VBoxContainer.new()
-	var _scene_parent: MarginContainer = MarginContainer.new()
+	var _scene_parent: ScrollContainer = ScrollContainer.new()
 
 
 	func _init() -> void:
@@ -175,6 +175,8 @@ class SimpleWindow extends Window:
 			for child in _scene_parent.get_children():
 				_scene_parent.remove_child(child)
 
+		node.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		node.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		_scene_parent.add_child(node)
 
 
