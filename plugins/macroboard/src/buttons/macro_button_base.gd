@@ -14,7 +14,7 @@ var _config: Config = Config.new()
 
 func _init() -> void:
 	_config.add_string("Button label", "button_label", "")
-	_config.add_string("Icon path", "icon_path", "")
+	_config.add_file_path("Icon path", "icon_path", "", "[i]Can also be relative to config directory[/i]", ["*.png,*.jpg,*.jpeg;Supported images", "*;All files"])
 	_config.add_bool("Show button label", "show_button_label", false)
 	_config.add_color("Normal background color", "bg_color", DEFAULT_BG_COLOR, "", false)
 	_config.add_color("Pressed background color", "pressed_color", DEFAULT_PRESSED_COLOR, "", false)

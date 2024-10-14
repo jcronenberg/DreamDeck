@@ -1,8 +1,8 @@
 class_name MacroActionButton
 extends MacroButtonBase
 
-var _button_label: String
-var _icon_path: String
+var _button_label: String = ""
+var _icon_path: String = ""
 var _show_button_label: bool = false
 var _actions: Array[PluginCoordinator.PluginAction]
 var _dragging: bool = false # If button is currently being dragged
@@ -22,7 +22,16 @@ func _ready() -> void:
 	offset_right = size.x / 2
 	offset_bottom = size.y / 2
 
+	migrate_icon_path()
+
 	apply_change()
+
+
+# FIXME definitely remove this soon, this migrates the icon path
+func migrate_icon_path() -> void:
+	if _icon_path and not _icon_path.contains("/"):
+		_icon_path = "icons/" + _icon_path
+		_config.get_object("icon_path").set_value(_icon_path)
 
 
 func deserialize(dict: Dictionary) -> void:
@@ -72,10 +81,7 @@ func serialize() -> Dictionary:
 
 
 func apply_change() -> void:
-	if _icon_path:
-		set_image()
-	elif _button_label:
-		text = _button_label
+	set_image()
 
 	if _show_button_label:
 		show_name_with_icon()
@@ -85,9 +91,16 @@ func apply_change() -> void:
 
 func set_image() -> void:
 	if _icon_path:
-		var complete_icon_path: String = ConfigLoader.get_conf_dir() + "icons/" + _icon_path
-		var image: Image = Image.load_from_file(complete_icon_path)
+		var absolute_icon_path: String = _icon_path
+		if not absolute_icon_path.begins_with("/"):
+			absolute_icon_path = ArgumentParser.get_conf_dir() + _icon_path
+		var image: Image = Image.load_from_file(absolute_icon_path)
 		$Icon.texture = ImageTexture.create_from_image(image)
+
+		text = ""
+	else:
+		$Icon.texture = null
+		text = _button_label
 
 
 func show_only_icon() -> void:
