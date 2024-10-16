@@ -53,4 +53,4 @@ func _on_activate_check_button_toggled(_toggled: bool) -> void:
 
 func _on_settings_button_pressed() -> void:
 	var settings_page: Control = _plugins[_current_plugin].get_loader().get_settings_page()
-	PopupManager.push_stack_item(settings_page, settings_page.confirm, settings_page.cancel)
+	PopupManager.push_stack_item(settings_page, settings_page._on_settings_confirmed, settings_page._on_settings_cancelled)

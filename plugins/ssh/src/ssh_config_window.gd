@@ -59,12 +59,12 @@ func save_client() -> void:
 
 
 ## Called by [PopupManager] on confirm button pressed.
-func confirm() -> bool:
+func _on_settings_confirmed() -> bool:
 	return true
 
 
 ## Called by [PopupManager] on cancel button pressed.
-func cancel() -> void:
+func _on_settings_cancelled() -> void:
 	pass
 
 

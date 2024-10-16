@@ -142,8 +142,8 @@ func get_controller(controller_name: String) -> PluginControllerBase:
 ## the [PopupManager]'s confirm and cancel actions.
 ## [codeblock]
 ## # Can indicate whether confirm is successful or not
-## func confirm() -> bool:
-## func cancel() -> void:
+## func _on_settings_confirmed() -> bool:
+## func _on_settings_cancelled() -> void:
 ## [/codeblock]
 func get_settings_page() -> Control:
 	return null

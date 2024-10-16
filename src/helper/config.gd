@@ -562,13 +562,13 @@ class ConfigEditor extends VBoxContainer:
 
 
 	## Invokes [method apply] and [method save]. Called when plugin settings get confirmed.
-	func confirm() -> void:
+	func _on_settings_confirmed() -> void:
 		apply()
 		save()
 
 
 	## Doesn't do anything. Just a stub that gets called when plugin settings get cancelled.
-	func cancel() -> void:
+	func _on_settings_cancelled() -> void:
 		pass
 
 
