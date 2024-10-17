@@ -45,7 +45,6 @@ func open_editor(new_button: bool = false) -> void:
 	var vbox: VBoxContainer = VBoxContainer.new()
 	var margin: MarginContainer = MarginContainer.new()
 	margin.set("theme_override_constants/margin_top", 10)
-	margin.set("theme_override_constants/margin_bottom", 10)
 	margin.name = "Button settings"
 	_config_editor = _config.generate_editor()
 	_config_editor.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -61,7 +60,6 @@ func open_editor(new_button: bool = false) -> void:
 
 	margin = MarginContainer.new()
 	margin.set("theme_override_constants/margin_top", 10)
-	margin.set("theme_override_constants/margin_bottom", 10)
 	margin.name = "Actions"
 	_actions_editor = ActionsEditor.new()
 	_actions_editor.connect("new_action_requested", _on_new_action_requested)

@@ -152,6 +152,7 @@ class SimpleWindow extends Window:
 
 		_scene_parent.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		_vbox.add_child(_scene_parent)
+		_vbox.add_theme_constant_override("separation", 10)
 		_margin.add_child(_vbox)
 
 
