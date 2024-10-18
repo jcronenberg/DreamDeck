@@ -30,11 +30,7 @@ func edit_client(index: int) -> void:
 	vbox.add_child(_client_editor)
 	vbox.add_child(client_delete_button)
 
-	var margin: MarginContainer = MarginContainer.new()
-	margin.set("theme_override_constants/margin_bottom", 10)
-	margin.add_child(vbox)
-
-	PopupManager.push_stack_item(margin, _on_confirm_client_editor, _on_cancel_client_editor)
+	PopupManager.push_stack_item(vbox, _on_confirm_client_editor, _on_cancel_client_editor)
 
 
 ## Populates the client list with all current clients from ssh_controller
