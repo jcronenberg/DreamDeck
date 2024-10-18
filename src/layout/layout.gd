@@ -13,6 +13,7 @@ func _ready():
 	super()
 
 	if not load_layout():
+		push_error("Failed to load layout")
 		get_tree().quit(1)
 
 	set_split_handles_visibility(false)
@@ -21,6 +22,8 @@ func _ready():
 
 	GlobalSignals.connect("exited_edit_mode", _on_edit_mode_exited)
 	GlobalSignals.connect("entered_edit_mode", _on_edit_mode_entered)
+
+	DreamdeckBuiltinActions._layout = self
 
 
 func save():
@@ -56,7 +59,9 @@ func load_layout() -> bool:
 
 	# If we are here we have a valid existing configuration, so we can
 	# delete the first time launch helper
-	get_node("/root/Main/FirstTimeLaunch").queue_free()
+	var first_time_launch: Control = get_node_or_null("/root/Main/FirstTimeLaunch")
+	if first_time_launch:
+		first_time_launch.queue_free()
 
 	# Layout setup from config
 	_layout.from_dict(config["Layout"])

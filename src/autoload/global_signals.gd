@@ -27,3 +27,12 @@ func exit_edit_mode():
 
 func get_edit_state() -> bool:
 	return edit_state
+
+
+# The purpose for this function is mainly when importing a config backup.
+# It basically completely resets everything and then switches to a new main scene.
+func _perform_complete_reinit() -> void:
+	PluginCoordinator._reinit()
+	ConfigLoader.load_config()
+	var main_scene: PackedScene = load("res://src/main/main.tscn")
+	get_tree().change_scene_to_packed(main_scene)

@@ -48,7 +48,9 @@ func _ready():
 	handle_config()
 
 	if OS.has_feature("editor"):
-		get_node("/root/Main/DebugCursor").visible = true
+		var debug_cursor: ColorRect = get_node_or_null("/root/Main/DebugCursor")
+		if debug_cursor:
+			debug_cursor.visible = true
 
 
 func _on_main_window_resized():

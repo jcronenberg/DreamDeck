@@ -9,16 +9,17 @@ extends Node
 ## within the current popup with the ability to return to the previous popup
 ## after, use [method push_stack_item].
 
-var _popup: SimpleWindow = SimpleWindow.new()
+var _popup: SimpleWindow
 var _popup_stack: Array[StackItem] = []
 
 
-func _ready() -> void:
-	_popup.visible = false
-	_popup.connect("confirmed", _on_popup_confirmed)
-	_popup.connect("cancelled", _on_popup_cancelled)
-	_popup.connect("close_requested", _on_popup_close_requested)
-	get_node("/root/Main").add_child(_popup)
+# Adds a _popup to the scene tree
+func _process(_delta: float) -> void:
+	if not _popup or is_instance_valid(_popup):
+		var main: Control = get_node_or_null("/root/Main")
+		if main:
+			_add_popup_to_tree()
+			set_process(false)
 
 
 ## Initializes a new popup, freeing the whole previous stack if it existed.
@@ -120,11 +121,26 @@ func _on_popup_cancelled() -> void:
 	pop_stack_item()
 
 
+func _add_popup_to_tree() -> void:
+	_popup = SimpleWindow.new()
+	_popup.visible = false
+	_popup.confirmed.connect(_on_popup_confirmed)
+	_popup.cancelled.connect(_on_popup_cancelled)
+	_popup.close_requested.connect(_on_popup_close_requested)
+	get_node("/root/Main").add_child(_popup)
+	_popup.tree_exited.connect(_on_popup_tree_exited)
+
+
 func _on_popup_close_requested() -> void:
 	for stack_item in _popup_stack:
 		stack_item.delete()
 	_popup_stack = []
 	_popup.hide()
+
+
+# When popup has exited the tree start processing to add a new popup to the scene.
+func _on_popup_tree_exited() -> void:
+	set_process(true)
 
 
 class SimpleWindow extends Window:

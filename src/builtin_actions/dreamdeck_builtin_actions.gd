@@ -1,6 +1,6 @@
 extends Node
 
-@onready var _layout: Layout = get_node("/root/Main/Layout")
+var _layout: Layout # Meant to be set by Layout itself
 var _switch_panel_config: Config = Config.new()
 var _available_panels: Array[String] = []
 var _actions: Array[PluginCoordinator.PluginActionDefinition]
