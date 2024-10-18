@@ -85,6 +85,30 @@ static func list_files_in_dir(path: String) -> Array[String]:
 	return file_list
 
 
+## Returns an [Array] with a recursive list of directories in [param path] with complete relative path.[br]
+## Instead of [method DirAccess.get_files_at], that only lists filenames and not the complete relative path.
+## The directories are ordered so they can be removed (subdirectories precede their parent).
+static func list_dirs_in_dir(path: String) -> Array[String]:
+	var dir_list: Array[String] = []
+	var dir: DirAccess = DirAccess.open(path)
+	path = path.trim_suffix("/")
+
+	if not dir:
+		push_error("Failed to access %s" % path)
+		return []
+
+	dir.list_dir_begin()
+	var dir_name: String = dir.get_next()
+	while dir_name != "":
+		if dir.current_is_dir():
+			dir_list.append_array(list_dirs_in_dir(path + "/" + dir_name))
+			dir_list.append(path + "/" + dir_name)
+
+		dir_name = dir.get_next()
+
+	return dir_list
+
+
 ## Always returns the absolute path for [param path] and makes sure [param path] is valid.
 ## If a path is relative it prefixes it with the current working dir
 ## otherwise it just returns the given path.
