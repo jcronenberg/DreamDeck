@@ -21,7 +21,6 @@ func _ready():
 	_conf_path = _conf_dir + FILENAME
 
 	discover_plugins()
-
 	load_activated_plugins()
 
 
@@ -36,7 +35,7 @@ func discover_plugins():
 	if not OS.has_feature("editor"):
 		_runtime_load_plugins()
 
-	var discovered_plugins := list_plugins()
+	var discovered_plugins: Array = list_plugins()
 	for plugin_path in discovered_plugins:
 		var plugin_config: FileAccess = FileAccess.open("res://plugins/%s/plugin.json" % plugin_path,
 			FileAccess.READ)
@@ -116,12 +115,12 @@ func get_cache_dir(plugin_name: String):
 
 
 func list_plugins() -> Array:
-	var files := []
-	var dir = DirAccess.open("res://plugins")
+	var files: Array = []
+	var dir: DirAccess = DirAccess.open("res://plugins")
 	dir.list_dir_begin()
 
 	while true:
-		var file := dir.get_next()
+		var file: String = dir.get_next()
 		if file == "":
 			break
 		elif not file.begins_with("."):
@@ -239,6 +238,22 @@ func add_panel(leaf: DockableLayoutPanel):
 	var panel_editor: PanelEditor = PanelEditor.new()
 	panel_editor.show_new_panel()
 	PopupManager.init_popup(panel_editor, panel_editor.save)
+
+
+# Performs a complete re-initialization.
+func _reinit() -> void:
+	# Remove all plugin loaders
+	for plugin in _plugins:
+		var loader: PluginLoaderBase = plugin.get_loader()
+		if loader:
+			loader.queue_free()
+
+	_plugins = []
+	_scenes = {}
+
+	# Reinit
+	discover_plugins()
+	load_activated_plugins()
 
 
 class Plugin:

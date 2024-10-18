@@ -76,7 +76,7 @@ var _controllers: Dictionary = {}
 # Continuous checking if a scene in [member _load_queue] is loaded.
 func _process(_delta):
 	for load_item in _load_queue:
-		var load_status = ResourceLoader.load_threaded_get_status(load_item)
+		var load_status: ResourceLoader.ThreadLoadStatus = ResourceLoader.load_threaded_get_status(load_item)
 		if load_status == ResourceLoader.THREAD_LOAD_LOADED:
 			add_resource(load_item, ResourceLoader.load_threaded_get(load_item))
 		elif load_status == ResourceLoader.THREAD_LOAD_FAILED:
