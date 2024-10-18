@@ -61,22 +61,27 @@ static func conf_merge(dict1: Dictionary, dict2: Dictionary):
 			dict1[key] = int(dict2[key])
 
 
-## Returns an [Array] with a recursive list of files in [param path] with absolute path.[br]
-## Instead of [method DirAccess.get_files_at], that only lists filenames and not absolute path.
-static func list_files_in_dir(path: String) -> Array:
-	var file_list: Array = []
-	var dir = DirAccess.open(path)
-	if dir:
-		dir.list_dir_begin()
-		var file_name = dir.get_next()
-		while file_name != "":
-			if dir.current_is_dir():
-				file_list.append_array(list_files_in_dir(path + "/" + file_name))
-			else:
-				file_list.append(path + "/" + file_name)
-			file_name = dir.get_next()
-	else:
+## Returns an [Array] with a recursive list of files in [param path] with complete relative path.[br]
+## Instead of [method DirAccess.get_files_at], that only lists filenames and not the complete relative path.
+static func list_files_in_dir(path: String) -> Array[String]:
+	var file_list: Array[String] = []
+	var dir: DirAccess = DirAccess.open(path)
+	path = path.trim_suffix("/")
+
+	if not dir:
 		push_error("Failed to access %s" % path)
+		return []
+
+	dir.list_dir_begin()
+	var file_name: String = dir.get_next()
+	while file_name != "":
+		if dir.current_is_dir():
+			file_list.append_array(list_files_in_dir(path + "/" + file_name))
+		else:
+			file_list.append(path + "/" + file_name)
+
+		file_name = dir.get_next()
+
 	return file_list
 
 
