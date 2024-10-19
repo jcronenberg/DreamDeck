@@ -103,6 +103,13 @@ func _unpack_config_backup(path: String) -> void:
 		push_error("Failed to open backup file %s: %s" % [path, err])
 		return
 
+	# Remove current config
+	var dir: DirAccess = DirAccess.open(conf_dir)
+	for file in ConfLib.list_files_in_dir(conf_dir):
+		dir.remove(file.trim_prefix(conf_dir))
+	for delete_dir in ConfLib.list_dirs_in_dir(conf_dir):
+		dir.remove(delete_dir.trim_prefix(conf_dir))
+
 	var files: PackedStringArray = reader.get_files()
 	for file in files:
 		ConfLib.ensure_dir_exists((conf_dir + file).get_base_dir())
@@ -115,14 +122,3 @@ func _unpack_config_backup(path: String) -> void:
 		writer.store_buffer(reader.read_file(file))
 
 	reader.close()
-
-
-# Completely removes everything inside the [member conf_dir].
-func _remove_config() -> void:
-	var dir: DirAccess = DirAccess.open(conf_dir)
-
-	for file in ConfLib.list_files_in_dir(conf_dir):
-		dir.remove(file.trim_prefix(conf_dir))
-
-	for delete_dir in ConfLib.list_dirs_in_dir(conf_dir):
-		dir.remove(delete_dir.trim_prefix(conf_dir))

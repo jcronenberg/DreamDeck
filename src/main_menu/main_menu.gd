@@ -102,7 +102,6 @@ func _on_import_file_dialog_completed(path: String) -> void:
 
 
 func _on_confirm_import(path: String) -> void:
-	ConfigLoader._remove_config()
 	ConfigLoader._unpack_config_backup(path)
 	GlobalSignals._perform_complete_reinit()
 
