@@ -23,41 +23,44 @@ func _process(_delta: float) -> void:
 
 
 ## Initializes a new popup, freeing the whole previous stack if it existed.
-## The manager automatically frees the [param scene] when no longer needed.[br]
+## Multiple [param scenes] can be supplied, which will be separate tabs in the popup.
+## The manager automatically frees the [param scenes] when no longer needed.[br]
 ## You can pass callable functions for how you want to handle the popup's
 ## confirm or cancel buttons/actions.
 ## [br]
 ## [param confirm_callable] can return false if confirming should not be successful.[br]
 ## [param cancel_callable] can not be unsuccessful. It also gets called when the popup
 ## is closed.[br]
-func init_popup(scene: Control,
-		confirm_callable: Callable = func unused() -> bool: return true,
+func init_popup(scenes: Array[Control],
+	confirm_callable: Callable = func unused() -> bool: return true,
 		cancel_callable: Callable = func unused() -> void: pass) -> void:
-	if not scene:
+	if not scenes:
 		return
 
-	_set_current_popup(scene, confirm_callable, cancel_callable)
+	_set_current_popup(scenes, confirm_callable, cancel_callable)
 
 
-## Pushes the [param scene] onto the popup stack.
+## Pushes the [param scenes] onto the popup stack.
+## Multiple [param scenes] can be supplied, which will be separate tabs in the popup.
 ## If there are no items it has the same effect as [method init_popup].
-## The manager automatically frees the [param scene] when no longer needed.[br]
+## The manager automatically frees the [param scenes] when no longer needed.[br]
 ## You can pass callable functions for how you want to handle the popup's
 ## confirm or cancel buttons/actions.
 ## [br]
 ## [param confirm_callable] can return false if confirming should not be successful.[br]
 ## [param cancel_callable] can not be unsuccessful. It also gets called when the popup
 ## is closed.[br]
-func push_stack_item(scene: Control,
+func push_stack_item(scenes: Array[Control],
 		confirm_callable: Callable = func unused() -> bool: return true,
 		cancel_callable: Callable = func unused() -> void: pass) -> void:
-	if not scene:
+	if not scenes:
 		return
 
 	if _popup_stack.size() == 0:
-		_set_current_popup(scene, confirm_callable, cancel_callable)
+		_set_current_popup(scenes, confirm_callable, cancel_callable)
 	else:
-		var stack_item: StackItem = _create_stack_item(scene, confirm_callable, cancel_callable)
+		_popup_stack.back().previously_selected_control_id = _popup.get_selected_control_id()
+		var stack_item: StackItem = _create_stack_item(scenes, confirm_callable, cancel_callable)
 		_popup.set_cancel_text("Back")
 		_popup_stack.push_back(stack_item)
 
@@ -67,47 +70,59 @@ func push_stack_item(scene: Control,
 ## If nothing is left it also hides the popup.
 func pop_stack_item() -> void:
 	var stack_item: StackItem = _popup_stack.pop_back()
-	if stack_item.control_node and is_instance_valid(stack_item.control_node):
-		stack_item.control_node.queue_free()
+	stack_item.free_nodes()
 
 	if _popup_stack.size() > 0:
-		_popup.set_scene(_popup_stack.back().control_node)
+		_popup.set_scene(_popup_stack.back().control_nodes)
+		_popup.set_selected_control_id(_popup_stack.back().previously_selected_control_id)
 		if _popup_stack.size() == 1:
 			_popup.set_cancel_text("Cancel")
 	else:
 		_popup.hide()
 
 
-## Get current control in popup.
+## Get currently selected control in popup.
 func get_current_popup() -> Control:
-	return _popup_stack[_popup_stack.size() - 1].control_node if _popup_stack.size() > 0 else null
+	if _popup_stack.size() == 0:
+		return null
+	var nodes: Array[Control] = _popup_stack.back().control_nodes
+	return nodes[_popup.get_selected_control_id()]
+
+
+## Get all tabs in the current popup.
+func get_current_popup_tabs() -> Array[Control]:
+	if _popup_stack.size() == 0:
+		return []
+	return _popup_stack.back().control_nodes
 
 
 ## Closes the current popup.
 ## Also calls cancel on all items on the stack.
 func close_popup() -> void:
 	for stack_item in _popup_stack:
-		stack_item.delete()
+		stack_item.free_nodes()
+		stack_item.cancel()
 
 	_popup_stack = []
 	_popup.hide()
 
 
-func _set_current_popup(scene: Control, confirm_callable: Callable, cancel_callable: Callable) -> void:
+func _set_current_popup(scenes: Array[Control], confirm_callable: Callable, cancel_callable: Callable) -> void:
 	for stack_item in _popup_stack:
-		stack_item.delete()
+		stack_item.free_nodes()
+		stack_item.cancel()
 
-	_popup_stack = [_create_stack_item(scene, confirm_callable, cancel_callable)]
+	_popup_stack = [_create_stack_item(scenes, confirm_callable, cancel_callable)]
 	_popup.set_cancel_text("Cancel")
 	_popup.show()
 
 
-func _create_stack_item(scene: Control, confirm_callable: Callable, cancel_callable: Callable) -> StackItem:
+func _create_stack_item(scenes: Array[Control], confirm_callable: Callable, cancel_callable: Callable) -> StackItem:
 	var stack_item: StackItem = StackItem.new()
-	stack_item.control_node = scene
+	stack_item.control_nodes = scenes
 	stack_item.confirm_callable = confirm_callable
 	stack_item.cancel_callable = cancel_callable
-	_popup.set_scene(stack_item.control_node)
+	_popup.set_scene(stack_item.control_nodes)
 	return stack_item
 
 
@@ -121,6 +136,14 @@ func _on_popup_cancelled() -> void:
 	pop_stack_item()
 
 
+func _on_popup_close_requested() -> void:
+	for stack_item in _popup_stack:
+		stack_item.free_nodes()
+		stack_item.cancel()
+		_popup_stack = []
+		_popup.hide()
+
+
 func _add_popup_to_tree() -> void:
 	_popup = SimpleWindow.new()
 	_popup.visible = false
@@ -129,13 +152,6 @@ func _add_popup_to_tree() -> void:
 	_popup.close_requested.connect(_on_popup_close_requested)
 	get_node("/root/Main").add_child(_popup)
 	_popup.tree_exited.connect(_on_popup_tree_exited)
-
-
-func _on_popup_close_requested() -> void:
-	for stack_item in _popup_stack:
-		stack_item.delete()
-	_popup_stack = []
-	_popup.hide()
 
 
 # When popup has exited the tree start processing to add a new popup to the scene.
@@ -152,7 +168,7 @@ class SimpleWindow extends Window:
 	var _cancel_button: Button = Button.new()
 	var _margin: MarginContainer = MarginContainer.new()
 	var _vbox: VBoxContainer = VBoxContainer.new()
-	var _scene_parent: ScrollContainer = ScrollContainer.new()
+	var _scene_parent: TabContainer = TabContainer.new()
 
 
 	func _init() -> void:
@@ -186,19 +202,36 @@ class SimpleWindow extends Window:
 		_vbox.add_child(_buttons_hbox)
 
 
-	func set_scene(node: Control) -> void:
+	func set_scene(nodes: Array[Control]) -> void:
 		if _scene_parent.get_child_count() > 0:
-			# Should only ever be 1 but just to be sure
-			for child in _scene_parent.get_children():
-				_scene_parent.remove_child(child)
+			for scroll_container in _scene_parent.get_children():
+				for node in scroll_container.get_children():
+					scroll_container.remove_child(node)
+				# No queue_free here otherwise naming breaks because collisions can happen
+				scroll_container.free()
 
-		node.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		node.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		_scene_parent.add_child(node)
+		for node in nodes:
+			node.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			node.size_flags_vertical = Control.SIZE_EXPAND_FILL
+			var scroll_container: ScrollContainer = ScrollContainer.new()
+			if node.name:
+				scroll_container.name = node.name
+			scroll_container.add_child(node)
+			_scene_parent.add_child(scroll_container)
+
+		_scene_parent.tabs_visible = nodes.size() > 1
 
 
 	func set_cancel_text(text: String) -> void:
 		_cancel_button.text = text
+
+
+	func get_selected_control_id() -> int:
+		return _scene_parent.current_tab
+
+
+	func set_selected_control_id(id: int) -> void:
+		_scene_parent.current_tab = id
 
 
 	func _on_cancel_button_pressed() -> void:
@@ -210,9 +243,11 @@ class SimpleWindow extends Window:
 
 
 class StackItem:
-	var control_node: Control
+	var control_nodes: Array[Control]
 	var confirm_callable: Callable
 	var cancel_callable: Callable
+	## When a stack item gets selected again, this ensures we stay on the same tab
+	var previously_selected_control_id: int = 0
 
 
 	func cancel() -> void:
@@ -227,8 +262,7 @@ class StackItem:
 		return true
 
 
-	func delete() -> void:
-		if control_node and is_instance_valid(control_node):
-			control_node.queue_free()
-
-		cancel()
+	func free_nodes() -> void:
+		for control_node in control_nodes:
+			if control_node and is_instance_valid(control_node):
+				control_node.queue_free()

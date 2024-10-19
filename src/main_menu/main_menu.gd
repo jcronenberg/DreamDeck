@@ -54,7 +54,7 @@ func _on_settings_button_pressed() -> void:
 	import_button.pressed.connect(_on_import_button_pressed)
 	settings_vbox.add_child(import_button)
 
-	PopupManager.init_popup(settings_vbox, _on_settings_confirmed)
+	PopupManager.init_popup([settings_vbox], _on_settings_confirmed)
 
 
 func _on_settings_confirmed() -> bool:
@@ -64,7 +64,7 @@ func _on_settings_confirmed() -> bool:
 
 func _on_plugins_button_pressed() -> void:
 	var plugins_popup: PluginsPopup = plugins_popup_scene.instantiate()
-	PopupManager.init_popup(plugins_popup)
+	PopupManager.init_popup([plugins_popup])
 
 
 func _on_backup_button_pressed() -> void:

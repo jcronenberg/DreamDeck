@@ -39,18 +39,14 @@ func open_editor(new_button: bool = false) -> void:
 	_config.get_object("font_color").set_default_value(macro_theme.get_color("font_color", THEME_VARIATION))
 	_config.get_object("font_pressed_color").set_default_value(macro_theme.get_color("font_pressed_color", THEME_VARIATION))
 
-	var tab_container: TabContainer = TabContainer.new()
-	tab_container.set_anchors_preset(Control.PRESET_FULL_RECT)
-
 	var vbox: VBoxContainer = VBoxContainer.new()
-	var margin: MarginContainer = MarginContainer.new()
-	margin.set("theme_override_constants/margin_top", 10)
-	margin.name = "Button settings"
+	var settings_margin: MarginContainer = MarginContainer.new()
+	settings_margin.set("theme_override_constants/margin_top", 10)
+	settings_margin.name = "Button settings"
 	_config_editor = _config.generate_editor()
 	_config_editor.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vbox.add_child(_config_editor)
-	margin.add_child(vbox)
-	tab_container.add_child(margin)
+	settings_margin.add_child(vbox)
 
 	if not new_button:
 		var button: Button = Button.new()
@@ -58,19 +54,18 @@ func open_editor(new_button: bool = false) -> void:
 		button.connect("pressed", _on_delete_button_pressed)
 		vbox.add_child(button)
 
-	margin = MarginContainer.new()
-	margin.set("theme_override_constants/margin_top", 10)
-	margin.name = "Actions"
+	var actions_margin: MarginContainer = MarginContainer.new()
+	actions_margin.set("theme_override_constants/margin_top", 10)
+	actions_margin.name = "Actions"
 	_actions_editor = ActionsEditor.new()
 	_actions_editor.connect("new_action_requested", _on_new_action_requested)
-	margin.add_child(_actions_editor)
-	tab_container.add_child(margin)
-	PopupManager.init_popup(tab_container, _on_popup_confirmed)
+	actions_margin.add_child(_actions_editor)
+	PopupManager.init_popup([settings_margin, actions_margin], _on_popup_confirmed)
 
 
 func _on_new_action_requested() -> void:
 	_new_action_selector = PluginCoordinator.PluginActionSelector.new()
-	PopupManager.push_stack_item(_new_action_selector, _on_popup_new_action_confirmed)
+	PopupManager.push_stack_item([_new_action_selector], _on_popup_new_action_confirmed)
 
 
 func _on_popup_new_action_confirmed() -> bool:

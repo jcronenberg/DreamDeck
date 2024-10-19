@@ -198,7 +198,7 @@ func remove_scene(plugin_name: String, scene: String):
 func edit_panel(panel: LayoutPanel):
 	var panel_editor: PanelEditor = PanelEditor.new()
 	panel_editor.show_panel_config(panel.get_plugin_instance().edit_config())
-	PopupManager.init_popup(panel_editor, panel_editor.save)
+	PopupManager.init_popup([panel_editor], panel_editor.save)
 
 
 func generate_plugins_enum() -> Dictionary:
@@ -237,7 +237,7 @@ func add_panel(leaf: DockableLayoutPanel):
 	get_node("/root/Main/Layout").set_new_panel_leaf(leaf)
 	var panel_editor: PanelEditor = PanelEditor.new()
 	panel_editor.show_new_panel()
-	PopupManager.init_popup(panel_editor, panel_editor.save)
+	PopupManager.init_popup([panel_editor], panel_editor.save)
 
 
 # Performs a complete re-initialization.
