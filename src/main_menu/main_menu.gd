@@ -111,5 +111,8 @@ func _create_backup_file_dialog() -> FileDialog:
 	file_dialog.use_native_dialog = true
 	file_dialog.force_native = true
 	file_dialog.filters = ["*.zip;Zip archive", "*;All files"]
+	file_dialog.access = FileDialog.ACCESS_FILESYSTEM
+	file_dialog.size = Vector2(1000, 600)
+	file_dialog.initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_PRIMARY_SCREEN
 	PopupManager.get_current_popup().add_child(file_dialog)
 	return file_dialog
