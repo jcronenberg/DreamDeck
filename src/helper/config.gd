@@ -915,13 +915,23 @@ class ColorEditor extends VariantEditor:
 
 class FilePathEditor extends VariantEditor:
 	var _value_editor: LineEdit
-	var file_filters: Array[String]
+	var _file_dialog: FileDialog
 
 
 	func _init(object: FilePathObject):
 		super(object)
 
-		file_filters = object.file_filters
+		_file_dialog = FileDialog.new()
+		_file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+		_file_dialog.title = "Select file"
+		_file_dialog.use_native_dialog = true
+		_file_dialog.force_native = true
+		_file_dialog.filters = object.file_filters
+		_file_dialog.file_selected.connect(_on_file_dialog_completed)
+		_file_dialog.access = FileDialog.ACCESS_FILESYSTEM
+		_file_dialog.size = Vector2(1000, 600)
+		_file_dialog.initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_PRIMARY_SCREEN
+		add_child(_file_dialog)
 
 		var editor_hbox: HBoxContainer = HBoxContainer.new()
 		editor_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -950,21 +960,14 @@ class FilePathEditor extends VariantEditor:
 		return _value_editor.text
 
 
-	# TODO DisplayServer.file_dialog_show is only implemented on Linux, Windows and MacOS
 	func _on_open_file_dialog_button_pressed() -> void:
 		var initial_path: String = get_value().get_base_dir()
 		if not initial_path.begins_with("/"):
 			initial_path = ConfLib.get_absolute_path(ArgumentParser.get_conf_dir() + get_value().get_base_dir())
 
-		DisplayServer.file_dialog_show("Select icon",
-				initial_path,
-				"",
-				true,
-				DisplayServer.FILE_DIALOG_MODE_OPEN_ANY,
-				file_filters,
-				_on_file_dialog_completed)
+		_file_dialog.current_dir = initial_path
+		_file_dialog.show()
 
 
-	func _on_file_dialog_completed(status: bool, selected_paths: PackedStringArray, _selected_filter_index: int) -> void:
-		if status and selected_paths.size() > 0:
-			set_value(selected_paths[0])
+	func _on_file_dialog_completed(selected_path: String) -> void:
+		set_value(selected_path)
