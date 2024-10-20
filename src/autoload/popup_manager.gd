@@ -196,7 +196,7 @@ class SimpleWindow extends Window:
 		_cancel_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_cancel_button.connect("pressed", _on_cancel_button_pressed)
 		_buttons_hbox.size_flags_vertical = Control.SIZE_SHRINK_END
-		_buttons_hbox.set("theme_override_constants/separation", 20)
+		_buttons_hbox.add_theme_constant_override("separation", 10)
 		_buttons_hbox.add_child(_confirm_button)
 		_buttons_hbox.add_child(_cancel_button)
 		_vbox.add_child(_buttons_hbox)

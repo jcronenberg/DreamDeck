@@ -362,7 +362,7 @@ class PluginActionSelector extends VBoxContainer:
 
 	func _init() -> void:
 		set_anchors_preset(PRESET_FULL_RECT)
-		set("theme_override_constants/separation", 20)
+		add_theme_constant_override("separation", 10)
 
 		fill_plugins()
 		_plugin_selector.connect("item_selected", _on_plugin_selected)
