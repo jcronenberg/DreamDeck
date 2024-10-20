@@ -2,13 +2,10 @@ class_name NewPanelEditor
 extends Control
 
 ## Config that currently is being edited
-var _config_editor: Control = null
+var _config_editor: Config.ConfigEditor
 
 
 func _init() -> void:
-	if _config_editor:
-		_config_editor.queue_free()
-
 	# Generate a config and the editor for the new panel
 	var new_plugin_config: Config = Config.new()
 	new_plugin_config.add_string("Panel Name", "panel_name", "")
