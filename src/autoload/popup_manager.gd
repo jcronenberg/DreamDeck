@@ -203,20 +203,27 @@ class SimpleWindow extends Window:
 
 
 	func set_scene(nodes: Array[Control]) -> void:
-		if _scene_parent.get_child_count() > 0:
-			for scroll_container in _scene_parent.get_children():
-				for node in scroll_container.get_children():
-					scroll_container.remove_child(node)
-				# No queue_free here otherwise naming breaks because collisions can happen
-				scroll_container.free()
+		for scroll_container in _scene_parent.get_children():
+			for margin in scroll_container.get_children():
+				for node in margin.get_children():
+					# Need to remove nodes from scene tree, before we can free the parents
+					# otherwise the nodes would be freed and could not be reused later
+					margin.remove_child(node)
+			# No queue_free here otherwise naming breaks because collisions can happen
+			scroll_container.free()
 
 		for node in nodes:
-			node.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			node.size_flags_vertical = Control.SIZE_EXPAND_FILL
 			var scroll_container: ScrollContainer = ScrollContainer.new()
 			if node.name:
 				scroll_container.name = node.name
-			scroll_container.add_child(node)
+
+			var margin: MarginContainer = MarginContainer.new()
+			if nodes.size() > 1:
+				margin.add_theme_constant_override("margin_top", 10)
+			margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
+			margin.add_child(node)
+			scroll_container.add_child(margin)
 			_scene_parent.add_child(scroll_container)
 
 		_scene_parent.tabs_visible = nodes.size() > 1

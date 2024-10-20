@@ -39,28 +39,22 @@ func open_editor(new_button: bool = false) -> void:
 	_config.get_object("font_color").set_default_value(macro_theme.get_color("font_color", THEME_VARIATION))
 	_config.get_object("font_pressed_color").set_default_value(macro_theme.get_color("font_pressed_color", THEME_VARIATION))
 
-	var vbox: VBoxContainer = VBoxContainer.new()
-	var settings_margin: MarginContainer = MarginContainer.new()
-	settings_margin.set("theme_override_constants/margin_top", 10)
-	settings_margin.name = "Button settings"
+	var settings_vbox: VBoxContainer = VBoxContainer.new()
+	settings_vbox.name = "Settings"
 	_config_editor = _config.generate_editor()
 	_config_editor.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	vbox.add_child(_config_editor)
-	settings_margin.add_child(vbox)
+	settings_vbox.add_child(_config_editor)
 
 	if not new_button:
 		var button: Button = Button.new()
 		button.text = "Delete Button"
 		button.connect("pressed", _on_delete_button_pressed)
-		vbox.add_child(button)
+		settings_vbox.add_child(button)
 
-	var actions_margin: MarginContainer = MarginContainer.new()
-	actions_margin.set("theme_override_constants/margin_top", 10)
-	actions_margin.name = "Actions"
 	_actions_editor = ActionsEditor.new()
+	_actions_editor.name = "Actions"
 	_actions_editor.connect("new_action_requested", _on_new_action_requested)
-	actions_margin.add_child(_actions_editor)
-	PopupManager.init_popup([settings_margin, actions_margin], _on_popup_confirmed)
+	PopupManager.init_popup([settings_vbox, _actions_editor], _on_popup_confirmed)
 
 
 func _on_new_action_requested() -> void:
