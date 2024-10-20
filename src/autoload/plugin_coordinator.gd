@@ -196,9 +196,9 @@ func remove_scene(plugin_name: String, scene: String):
 
 
 func edit_panel(panel: LayoutPanel):
-	var panel_editor: PanelEditor = PanelEditor.new()
-	panel_editor.show_panel_config(panel.get_plugin_instance().edit_config())
-	PopupManager.init_popup([panel_editor], panel_editor.save)
+	var instance: PluginSceneBase = panel.get_plugin_instance()
+	if instance:
+		instance.edit_config()
 
 
 func generate_plugins_enum() -> Dictionary:
@@ -235,9 +235,8 @@ func get_plugin_actions() -> Array[PluginActionDefinition]:
 
 func add_panel(leaf: DockableLayoutPanel):
 	get_node("/root/Main/Layout").set_new_panel_leaf(leaf)
-	var panel_editor: PanelEditor = PanelEditor.new()
-	panel_editor.show_new_panel()
-	PopupManager.init_popup([panel_editor], panel_editor.save)
+	var new_panel_editor: NewPanelEditor = NewPanelEditor.new()
+	PopupManager.init_popup([new_panel_editor], new_panel_editor.save)
 
 
 # Performs a complete re-initialization.
@@ -363,7 +362,7 @@ class PluginActionSelector extends VBoxContainer:
 
 	func _init() -> void:
 		set_anchors_preset(PRESET_FULL_RECT)
-		set("theme_override_constants/separation", 20)
+		add_theme_constant_override("separation", 10)
 
 		fill_plugins()
 		_plugin_selector.connect("item_selected", _on_plugin_selected)

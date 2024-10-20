@@ -1,5 +1,5 @@
 # This file is mostly from Nolkaloid's godot-yt-dlp plugin
-# All credit to him
+# All credit to them
 # https://github.com/Nolkaloid/godot-yt-dlp
 
 extends RefCounted
