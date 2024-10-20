@@ -28,12 +28,12 @@ var config: Config = Config.new()
 var _scene_uuid: String
 
 
-func _ready():
+func _ready() -> void:
 	handle_config()
 
 
 ## Called by the plugin loader when being initialized.
-func init(init_scene_id: String):
+func init(init_scene_id: String) -> void:
 	GlobalSignals.connect("entered_edit_mode", _on_entered_edit_mode)
 	GlobalSignals.connect("exited_edit_mode", _on_exited_edit_mode)
 
@@ -43,7 +43,7 @@ func init(init_scene_id: String):
 
 
 ## Loads [member config] from disk.
-func _init_config():
+func _init_config() -> void:
 	if config.get_objects().size() <= 0:
 		return
 
@@ -60,38 +60,37 @@ func _init_config():
 ##    setting1 = data["setting1"]
 ##    setting2 = data["setting2"]
 ## [/codeblock]
-func handle_config():
+func handle_config() -> void:
 	pass
 
 
 ## Called when edit mode is entered.
-func _on_entered_edit_mode():
+func _on_entered_edit_mode() -> void:
 	pass
 
 
 ## Called when edit mode is exited.
-func _on_exited_edit_mode():
+func _on_exited_edit_mode() -> void:
 	pass
 
 
 ## Called when user applied changes to the config.
-func _on_config_changed():
+func _on_config_changed() -> void:
 	handle_config()
 
 
 ## Called when the plugin's config is to be edited.
 ## If you require a custom editor for your config overwrite this function.
-func edit_config():
-	if Config:
-		return config.generate_editor()
-
-	return null
+func edit_config() -> void:
+	if config:
+		var config_editor: Config.ConfigEditor = config.generate_editor()
+		PopupManager.init_popup([config_editor], func apply_and_save() -> void: config_editor.apply(); config_editor.save())
 
 
 ## Called when the scene gets shown.
 ## By default it enables [code]func _process():[/code] and [code]func _physics_process():[/code].
 ## If you don't want this or want to do additional things override this function.
-func scene_show():
+func scene_show() -> void:
 	set_process(true)
 	set_physics_process(true)
 
@@ -100,13 +99,13 @@ func scene_show():
 ## By default it disables [code]func _process():[/code] and [code]func _physics_process():[/code]
 ## until the scene gets shown again. If you don't want this or want to do additional things override
 ## this function.
-func scene_hide():
+func scene_hide() -> void:
 	set_process(false)
 	set_physics_process(false)
 
 
 ## Called when the scene gets deleted.
-func delete_config():
+func delete_config() -> void:
 	var files: Array = ConfLib.list_files_in_dir(conf_dir)
 	files.append(conf_dir)
 	for file in files:

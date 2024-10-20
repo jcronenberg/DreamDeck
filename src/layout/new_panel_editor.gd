@@ -1,26 +1,13 @@
-class_name PanelEditor
+class_name NewPanelEditor
 extends Control
 
 ## Config that currently is being edited
-var _config_editor: Config.ConfigEditor = null
-## Tracks whether a new panel is to be created or an existing one is being edited
-var _new_panel: bool = false
+var _config_editor: Control = null
 
 
-func show_panel_config(editor: Config.ConfigEditor):
+func _init() -> void:
 	if _config_editor:
 		_config_editor.queue_free()
-
-	_new_panel = false
-	_config_editor = editor
-	add_child(_config_editor)
-
-
-func show_new_panel():
-	if _config_editor:
-		_config_editor.queue_free()
-
-	_new_panel = true
 
 	# Generate a config and the editor for the new panel
 	var new_plugin_config: Config = Config.new()
@@ -38,25 +25,6 @@ func show_new_panel():
 
 
 func save() -> bool:
-	if _new_panel:
-		return _new_panel_save()
-	else:
-		_config_editor.apply()
-		_config_editor.save()
-
-	return true
-
-
-func _on_new_panel_plugin_selected(idx: int):
-	if idx == -1:
-		return
-
-	var scene_editor: Config.EnumEditor = _config_editor.get_editor("scene")
-	var plugins_editor: Config.EnumEditor = _config_editor.get_editor("plugin")
-	scene_editor.set_enum_dict(PluginCoordinator.generate_scene_enum(plugins_editor.get_value_string()))
-
-
-func _new_panel_save() -> bool:
 	var new_panel_dict: Dictionary = _config_editor.serialize()
 	var abort: bool = false
 
@@ -86,3 +54,12 @@ func _new_panel_save() -> bool:
 	new_panel_dict["plugin"] = _config_editor.get_editor("plugin").get_value_string()
 	get_node("/root/Main/Layout").add_panel(new_panel_dict)
 	return true
+
+
+func _on_new_panel_plugin_selected(idx: int):
+	if idx == -1:
+		return
+
+	var scene_editor: Config.EnumEditor = _config_editor.get_editor("scene")
+	var plugins_editor: Config.EnumEditor = _config_editor.get_editor("plugin")
+	scene_editor.set_enum_dict(PluginCoordinator.generate_scene_enum(plugins_editor.get_value_string()))
