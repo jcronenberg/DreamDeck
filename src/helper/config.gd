@@ -487,7 +487,7 @@ class ConfigEditor extends VBoxContainer:
 		_config_ref = config
 
 		set_anchors_preset(PRESET_FULL_RECT)
-		set("theme_override_constants/separation", 20)
+		add_theme_constant_override("separation", 10)
 
 		for object in _config_ref._config:
 			if object is BoolObject:
