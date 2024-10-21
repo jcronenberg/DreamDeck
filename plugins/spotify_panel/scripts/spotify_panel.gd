@@ -459,6 +459,7 @@ class AuthWizard extends VBoxContainer:
 	var _new_auth_vbox: VBoxContainer = VBoxContainer.new()
 	var _credentials_editor: Config.ConfigEditor
 	var _credentials_creation_config: Config = Config.new()
+	var _show_dev_setup_button: Button = Button.new()
 	var _start_auth_button: Button = Button.new()
 
 	var _auth_info_vbox: VBoxContainer = VBoxContainer.new()
@@ -471,7 +472,6 @@ class AuthWizard extends VBoxContainer:
 	var _auth_request: HTTPRequest
 
 
-	# TODO Link to documentation how to set up spotify developer account
 	func _init(auth_status: bool) -> void:
 		add_theme_constant_override("separation", 20)
 
@@ -486,11 +486,14 @@ class AuthWizard extends VBoxContainer:
 
 		_new_auth_vbox.add_theme_constant_override("separation", 10)
 		_credentials_creation_config.add_string("Client ID", "client_id", "")
-		_credentials_creation_config.add_string("Client Secret", "client_secret", "")
+		_credentials_creation_config.add_string("Client secret", "client_secret", "")
 		_credentials_editor = _credentials_creation_config.generate_editor()
+		_show_dev_setup_button.text = "How do get this info?"
+		_show_dev_setup_button.pressed.connect(_on_show_dev_setup_button_pressed)
 		_start_auth_button.text = "Start authentication"
 		_start_auth_button.pressed.connect(_on_start_auth_button_pressed)
 		_new_auth_vbox.add_child(_credentials_editor)
+		_new_auth_vbox.add_child(_show_dev_setup_button)
 		_new_auth_vbox.add_child(_start_auth_button)
 		_new_auth_vbox.visible = not _auth_status_vbox.visible
 		add_child(_new_auth_vbox)
@@ -518,8 +521,27 @@ class AuthWizard extends VBoxContainer:
 
 
 	func _on_setup_auth_button_pressed() -> void:
-		# _authentication_status_vbox.visible = false
+		_auth_status_vbox.visible = false
 		_new_auth_vbox.visible = true
+
+
+	func _on_show_dev_setup_button_pressed() -> void:
+		var dev_setup_label: RichTextLabel = RichTextLabel.new()
+		dev_setup_label.bbcode_enabled = true
+		dev_setup_label.selection_enabled = true
+		dev_setup_label.text = \
+"""For this you will need Spotify Premium and create a developer account.
+
+[ol type=1]
+Go to the Spotify dashboard: [color=lightblue][url]https://developer.spotify.com/dashboard/applications[/url][/color]
+Click \"Create app\" in the top right
+Fill out the necessary info and add \"%s\" to the \"Redirect URIs\"
+Click on \"Save\"
+Click on \"Settings\" in the top right
+Copy your \"Client ID\" and \"Client secret\" into DreamDeck
+[/ol]
+""" % REDIRECT_URI
+		PopupManager.push_stack_item([dev_setup_label])
 
 
 	func _on_start_auth_button_pressed() -> void:
@@ -593,7 +615,7 @@ class AuthWizard extends VBoxContainer:
 
 	func _show_auth_info(client_id: String) -> void:
 		var auth_link: String = _create_auth_link(client_id)
-		_auth_info_label.text = "Click this [color=lightblue][b][url=%s]link[/url][/b][/color]\nor copy the below link into your browser." % auth_link
+		_auth_info_label.text = "Click this [color=lightblue][b][url=%s]link[/url][/b][/color]\nor copy the link below into your browser." % auth_link
 		_auth_info_text_edit.text = auth_link
 		_auth_info_vbox.visible = true
 
