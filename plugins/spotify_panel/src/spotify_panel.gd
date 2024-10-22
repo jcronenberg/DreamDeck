@@ -501,6 +501,7 @@ class AuthWizard extends VBoxContainer:
 		_auth_info_vbox.add_theme_constant_override("separation", 10)
 		_auth_info_label.bbcode_enabled = true
 		_auth_info_label.fit_content = true
+		_auth_info_label.meta_clicked.connect(_on_meta_clicked)
 		_auth_info_text_edit.editable = false
 		_auth_info_vbox.add_child(_auth_info_label)
 		_auth_info_vbox.add_child(_auth_info_text_edit)
@@ -529,6 +530,7 @@ class AuthWizard extends VBoxContainer:
 		var dev_setup_label: RichTextLabel = RichTextLabel.new()
 		dev_setup_label.bbcode_enabled = true
 		dev_setup_label.selection_enabled = true
+		dev_setup_label.meta_clicked.connect(_on_meta_clicked)
 		dev_setup_label.text = \
 """For this you will need Spotify Premium and create a developer account.
 
@@ -631,3 +633,7 @@ Copy your \"Client ID\" and \"Client secret\" into DreamDeck
 
 	func _create_auth_link(client_id: String) -> String:
 		return "https://accounts.spotify.com/authorize?client_id=%s&response_type=code&scope=%s&redirect_uri=%s" % [client_id, SCOPE, REDIRECT_URI]
+
+
+	func _on_meta_clicked(meta: Variant) -> void:
+		OS.shell_open(str(meta))
