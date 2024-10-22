@@ -37,7 +37,6 @@ In the main menu, plugins can be enabled and disabled. You can also enter edit m
 The configuration files can be found in `~/.local/share/dreamdeck` after the app was once launched.
 You can also specify a custom directory via a cli argument like this `--confdir=local_config` (Note that a `=` is mandatory because of the way godot handles cli arguments).  
 It is not recommended to edit the config files yourself.  
-Note: Icons for buttons need to be stored in the config directory at `~/.local/share/dreamdeck/icons/` folder and the path in buttons is relative to this directory.
 
 ## Plugins
 ### Linux exclusive touch
