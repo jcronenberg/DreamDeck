@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=36 format=3 uid="uid://duea6v8sw5cfx"]
+[gd_resource type="Theme" load_steps=37 format=3 uid="uid://duea6v8sw5cfx"]
 
 [ext_resource type="FontFile" uid="uid://dnvsausndgsb2" path="res://fonts/roboto/roboto_bold.ttf" id="1_dkosj"]
 [ext_resource type="FontFile" uid="uid://cbcdnmy2og275" path="res://fonts/roboto/roboto_regular.ttf" id="1_orbee"]
@@ -166,6 +166,8 @@ corner_radius_top_right = 12
 corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
 
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_f1gid"]
+
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_815kh"]
 
 [sub_resource type="StyleBoxFlat" id="30"]
@@ -245,6 +247,7 @@ RichTextLabel/fonts/bold_font = ExtResource("1_dkosj")
 RichTextLabel/fonts/bold_italics_font = ExtResource("2_u3lia")
 RichTextLabel/fonts/italics_font = ExtResource("3_si0jc")
 RichTextLabel/fonts/mono_font = ExtResource("4_0ds26")
+RichTextLabel/styles/focus = SubResource("StyleBoxEmpty_f1gid")
 SimpleSelectionItemList/base_type = &"ItemList"
 SimpleSelectionItemList/colors/guide_color = Color(0, 0, 0, 0)
 SimpleSelectionItemList/constants/v_separation = 4

@@ -35,12 +35,7 @@ var repeat_textures := [
 # Spotify API variables
 var refresh_token: String # The token with which a new access_token can be generated
 var access_token: String # The token with which the requests get made, expires after 1 hour
-var client_id: String # The client_id provided by the spotify_app by the user
-var client_secret: String # The secret provided by the spotify_app by the user
 var encoded_client: String # Base64 encoded client_id and client_secret
-var authorization_code: String # Code from callback url, used for first time authorization
-const redirect_uri: String = "http://localhost:8888/callback"
-const scope: String = "user-modify-playback-state user-read-playback-state user-read-currently-playing"
 const base_api_url: String = "https://api.spotify.com/v1"
 
 # State vars
@@ -60,33 +55,7 @@ var device_list := []
 var playback_active := true # This gets set to false when the api doesn't provide playback-state anymore
 
 # Config vars
-var config_completed: bool = false # Stop all calls while we setup the config
-var input_stage: int = 0 # At what stage the input is, since we have to ask for 3 user inputs
-var input_scene
-
-# Config stage texts
-var config_stage1_text: String = "No existing configuration for the Spotify Panel found\n" \
-								 + "You need to create a developer application\n" \
-								 + "Instructions can be found [url=" \
-								 + "https://github.com/jcronenberg/DreamDeck#connect-to-spotifys-api" \
-								 + "]here[/url]\n\n" \
-								 + "Enter the Client ID"
-var config_stage2_text: String = "Enter the Client Secret"
-func create_auth_link() -> String:
-	return "https://accounts.spotify.com/authorize?client_id=" \
-		+ client_id \
-		+ "&response_type=code&scope=" \
-		+ scope \
-		+ "&redirect_uri=" \
-		+ redirect_uri
-func config_stage3_text() -> String:
-	print(create_auth_link())
-	return "Click this [url=" \
-		   + create_auth_link() \
-		   + "]link[/url] and authorize your account"
-
-# Http server that extracts auth token from first configuration
-var http_server
+var authenticated: bool = false # Stop all calls while not authenticated
 
 # Nodes
 @onready var http_get := get_node("HTTPGet")
@@ -97,7 +66,7 @@ var http_server
 @onready var cache_dir_path: String = PluginCoordinator.get_cache_dir(PLUGIN_NAME)
 
 # Configs
-var credentials: Config = Config.new()
+var _credentials_config: Config = Config.new()
 
 
 func _init():
@@ -111,18 +80,16 @@ func _ready():
 	ConfLib.ensure_dir_exists(cache_dir_path)
 
 	# Load credentials
-	credentials.set_config_path(conf_dir + "credentials.json")
-	credentials.add_string("Refresh token", "refresh_token", "")
-	credentials.add_string("Encoded client", "encoded_client", "")
+	_credentials_config.set_config_path(conf_dir + "credentials.json")
+	_credentials_config.add_string("Refresh token", "refresh_token", "")
+	_credentials_config.add_string("Encoded client", "encoded_client", "")
 	load_credentials()
 
 	# Clear cache dir to not fill the user dir with endless albumarts
 	clear_cache()
 
 	# Setup for requests
-# warning-ignore:return_value_discarded
 	http_get.connect("request_completed", _on_get_request_completed)
-# warning-ignore:return_value_discarded
 	http_get_devices.connect("request_completed", _on_get_request_completed)
 
 	# Initial state request, because otherwise it would take a pretty long time on first load
@@ -132,7 +99,7 @@ func _ready():
 
 
 func _physics_process(delta):
-	if not config_completed:
+	if not authenticated:
 		return
 	metadata_delta += delta
 	if metadata_delta >= metadata_refresh:
@@ -145,6 +112,18 @@ func _physics_process(delta):
 		devices_delta = 0.0
 
 
+## Called when panel config is supposed to be edited.
+func edit_config() -> void:
+	var config_editor: Config.ConfigEditor = config.generate_editor()
+	config_editor.name = "Settings"
+
+	var auth_wizard: AuthWizard = AuthWizard.new(authenticated)
+	auth_wizard.name = "Authentication Wizard"
+	auth_wizard.auth_completed.connect(_on_auth_wizard_auth_completed)
+
+	PopupManager.init_popup([config_editor, auth_wizard])
+
+
 func handle_config():
 	var data: Dictionary = config.get_as_dict()
 
@@ -153,72 +132,15 @@ func handle_config():
 	# Add + 0.1 to offset it a bit to metadata_refresh
 	devices_refresh = metadata_refresh * 3 + 0.1
 
+
 func load_credentials():
 	# Load plugin config
-	credentials.load_config()
-	var plugin_config = credentials.get_as_dict()
-	if plugin_config["refresh_token"] == "":
-		create_config()
-	else:
+	_credentials_config.load_config()
+	var plugin_config = _credentials_config.get_as_dict()
+	if plugin_config["refresh_token"] != "":
 		refresh_token = plugin_config["refresh_token"]
 		encoded_client = plugin_config["encoded_client"]
-		config_completed = true
-
-
-# Creates the first dialog and connects the functions
-func create_config():
-	input_scene = load("res://src/deprecated/user_input_popup.tscn").instantiate()
-	get_node("/root/Main").add_child(input_scene)
-	input_scene.create_dialog(config_stage1_text, "Client ID")
-	input_scene.connect("apply_text", _on_text_config)
-	input_scene.connect("canceled", _on_config_cancel)
-
-
-# If the user prematurely cancels we delete the object
-func _on_config_cancel():
-	queue_free()
-
-
-# User input function
-# Steps through all 3 stages we need, increments input_stage
-# Stage 0 Client ID
-# Stage 1 Client Secret
-#         After this we can create encoded_client and with that generate the url
-#         for the user to authorize the app
-# Stage 2 Final URL
-#         User inputs the callback url they get and we can finalize the config
-#         Also disconnect from user_input
-func _on_text_config(text):
-	# 1st state: client_id
-	if input_stage == 0:
-		client_id = text
-		input_scene.create_dialog(config_stage2_text, "Client Secret")
-		input_stage = 1
-	elif input_stage == 1:
-		client_secret = text
-		encoded_client = Marshalls.utf8_to_base64(client_id + ":" + client_secret)
-		input_scene.create_dialog(config_stage3_text(), \
-								  "Continue in browser")
-		input_stage = -1
-
-		http_server = HttpServer.new()
-		http_server.set("bind_address", "127.0.0.1")
-		http_server.set("port", 8888)
-		http_server.register_router("/callback", self)
-		add_child(http_server)
-		http_server.start()
-
-
-func handle_get(request, response):
-	if request.query.has("code"):
-		authorization_code = request.query["code"]
-		response.send(200, "You can now close this tab and continue in DreamDeck")
-		request_authorization()
-		config_completed = true
-		http_server.queue_free()
-		input_scene.queue_free()
-	else:
-		response.send(200, "Something went wrong, failed to extract authorization code from request url")
+		authenticated = true
 
 
 # Custom sort for device_list
@@ -263,14 +185,6 @@ func generate_device_list(data):
 
 func set_output_device(device, play=true):
 	send_command("/me/player", 3, true, JSON.stringify({"device_ids":[device.id],"play":play}))
-
-
-func request_authorization():
-	var headers = ["Content-Type: application/x-www-form-urlencoded", \
-				   "Authorization: Basic " + encoded_client]
-	var data = "grant_type=authorization_code&code=" + authorization_code \
-			   + "&redirect_uri=" + redirect_uri
-	send_get_command("https://accounts.spotify.com/api/token", headers, 2, data)
 
 
 func request_new_token():
@@ -322,15 +236,6 @@ func _on_get_request_completed(_result, response_code, _headers, body):
 	# GET /me/player/devices result
 	elif json_result.has("devices"):
 		generate_device_list(json_result["devices"])
-	# POST /api/token authorization_code result
-	# Needs to be before refresh_token result handling!
-	elif json_result.has("refresh_token"):
-		# Set vars
-		refresh_token = json_result["refresh_token"]
-		access_token = json_result["access_token"]
-		# Save new credentials
-		credentials.apply_dict({"refresh_token": refresh_token, "encoded_client": encoded_client})
-		credentials.save()
 	# POST /api/token refresh_token result
 	elif json_result.has("access_token"):
 		access_token = json_result["access_token"]
@@ -528,3 +433,207 @@ func _on_VolumeUpButton_pressed():
 
 func _on_exited_edit_mode():
 	config.save()
+
+
+func _on_auth_wizard_auth_completed(new_encoded_client: String, new_refresh_token: String, new_access_token: String) -> void:
+	encoded_client = new_encoded_client
+	refresh_token = new_refresh_token
+	access_token = new_access_token
+	_credentials_config.apply_dict({"refresh_token": refresh_token, "encoded_client": encoded_client})
+	_credentials_config.save()
+	authenticated = true
+
+
+## Handles authentication setup for the spotify client.
+class AuthWizard extends VBoxContainer:
+	## Signal emitted when the authentication is complete with all the relevant infos.
+	signal auth_completed(encoded_client: String, refresh_token: String, access_token: String)
+
+	const SCOPE: String = "user-modify-playback-state user-read-playback-state user-read-currently-playing"
+	const REDIRECT_URI: String = "http://localhost:8888/callback"
+
+	var _auth_status_vbox: VBoxContainer = VBoxContainer.new()
+	var _auth_status_label: Label = Label.new()
+	var _setup_auth_button: Button = Button.new()
+
+	var _new_auth_vbox: VBoxContainer = VBoxContainer.new()
+	var _credentials_editor: Config.ConfigEditor
+	var _credentials_creation_config: Config = Config.new()
+	var _show_dev_setup_button: Button = Button.new()
+	var _start_auth_button: Button = Button.new()
+
+	var _auth_info_vbox: VBoxContainer = VBoxContainer.new()
+	var _auth_info_label: RichTextLabel = RichTextLabel.new()
+	var _auth_info_text_edit: LineEdit = LineEdit.new()
+
+	var _http_server: HttpServer
+	var _encoded_client: String
+	var _authorization_code: String
+	var _auth_request: HTTPRequest
+
+
+	func _init(auth_status: bool) -> void:
+		add_theme_constant_override("separation", 20)
+
+		_auth_status_vbox.add_theme_constant_override("separation", 10)
+		_auth_status_label.text = "You're authenticated"
+		_setup_auth_button.text = "Authenticate new account"
+		_setup_auth_button.pressed.connect(_on_setup_auth_button_pressed)
+		_auth_status_vbox.add_child(_auth_status_label)
+		_auth_status_vbox.add_child(_setup_auth_button)
+		_auth_status_vbox.visible = auth_status
+		add_child(_auth_status_vbox)
+
+		_new_auth_vbox.add_theme_constant_override("separation", 10)
+		_credentials_creation_config.add_string("Client ID", "client_id", "")
+		_credentials_creation_config.add_string("Client secret", "client_secret", "")
+		_credentials_editor = _credentials_creation_config.generate_editor()
+		_show_dev_setup_button.text = "How do get this info?"
+		_show_dev_setup_button.pressed.connect(_on_show_dev_setup_button_pressed)
+		_start_auth_button.text = "Start authentication"
+		_start_auth_button.pressed.connect(_on_start_auth_button_pressed)
+		_new_auth_vbox.add_child(_credentials_editor)
+		_new_auth_vbox.add_child(_show_dev_setup_button)
+		_new_auth_vbox.add_child(_start_auth_button)
+		_new_auth_vbox.visible = not _auth_status_vbox.visible
+		add_child(_new_auth_vbox)
+
+		_auth_info_vbox.add_theme_constant_override("separation", 10)
+		_auth_info_label.bbcode_enabled = true
+		_auth_info_label.fit_content = true
+		_auth_info_label.meta_clicked.connect(_on_meta_clicked)
+		_auth_info_text_edit.editable = false
+		_auth_info_vbox.add_child(_auth_info_label)
+		_auth_info_vbox.add_child(_auth_info_text_edit)
+		_auth_info_vbox.visible = false
+		add_child(_auth_info_vbox)
+
+
+	## Handler for the auth callback http server
+	func handle_get(request, response):
+		if request.query.has("code"):
+			_authorization_code = request.query["code"]
+			response.send(200, "You can now close this tab and continue in DreamDeck")
+			_request_authorization()
+			_http_server.queue_free()
+			_http_server = null
+		else:
+			response.send(200, "Something went wrong, failed to extract authorization code from request url")
+
+
+	func _on_setup_auth_button_pressed() -> void:
+		_auth_status_vbox.visible = false
+		_new_auth_vbox.visible = true
+
+
+	func _on_show_dev_setup_button_pressed() -> void:
+		var dev_setup_label: RichTextLabel = RichTextLabel.new()
+		dev_setup_label.bbcode_enabled = true
+		dev_setup_label.selection_enabled = true
+		dev_setup_label.meta_clicked.connect(_on_meta_clicked)
+		dev_setup_label.text = \
+"""For this you will need Spotify Premium and create a developer account.
+
+[ol type=1]
+Go to the Spotify dashboard: [color=lightblue][url]https://developer.spotify.com/dashboard/applications[/url][/color]
+Click \"Create app\" in the top right
+Fill out the necessary info and add \"%s\" to the \"Redirect URIs\"
+Click on \"Save\"
+Click on \"Settings\" in the top right
+Copy your \"Client ID\" and \"Client secret\" into DreamDeck
+[/ol]
+""" % REDIRECT_URI
+		PopupManager.push_stack_item([dev_setup_label])
+
+
+	func _on_start_auth_button_pressed() -> void:
+		_credentials_editor.apply()
+		var creds: Dictionary = _credentials_creation_config.get_as_dict()
+		var abort: bool = false
+		if creds["client_id"] == "":
+			_credentials_editor.get_editor("client_id").modulate = Color.RED
+			abort = true
+		else:
+			_credentials_editor.get_editor("client_id").modulate = Color.WHITE
+
+		if creds["client_secret"] == "":
+			_credentials_editor.get_editor("client_secret").modulate = Color.RED
+			abort = true
+		else:
+			_credentials_editor.get_editor("client_secret").modulate = Color.WHITE
+
+		if abort:
+			return
+
+		_encoded_client = Marshalls.utf8_to_base64("%s:%s" % [creds["client_id"], creds["client_secret"]])
+		_setup_http_server()
+		_show_auth_info(creds["client_id"])
+
+
+	func _setup_http_server() -> void:
+		if _http_server and is_instance_valid(_http_server):
+			_http_server.free()
+		_http_server = HttpServer.new()
+		_http_server.set("bind_address", "127.0.0.1")
+		_http_server.set("port", 8888)
+		_http_server.register_router("/callback", self)
+		add_child(_http_server)
+		_http_server.start()
+
+
+	func _request_authorization():
+		var headers: Array = ["Content-Type: application/x-www-form-urlencoded", "Authorization: Basic %s" % _encoded_client]
+		var data: String = "grant_type=authorization_code&code=%s&redirect_uri=%s" % [_authorization_code, REDIRECT_URI]
+		if _auth_request and is_instance_valid(_auth_request):
+			_auth_request.free()
+
+		_auth_request = HTTPRequest.new()
+		add_child(_auth_request)
+		_auth_request.request_completed.connect(_on_auth_request_completed)
+		_auth_request.request("https://accounts.spotify.com/api/token", headers, HTTPClient.METHOD_POST, data)
+
+
+	func _on_auth_request_completed(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+		if result != HTTPRequest.RESULT_SUCCESS:
+			push_error("Auth request failed with result %s" % result)
+			return
+		if response_code != HTTPClient.RESPONSE_OK:
+			push_error("Auth request failed with response code %s: %s" % [response_code, body.get_string_from_utf8()])
+			return
+
+		var json: JSON = JSON.new()
+		var error: Error = json.parse(body.get_string_from_utf8())
+		if error != OK:
+			push_error("Error when parsing auth json: %s" % json.get_error_message())
+			return
+
+		if json.data.has("refresh_token"):
+			auth_completed.emit(_encoded_client, json.data["refresh_token"], json.data["access_token"])
+			_hide_auth_setup()
+
+		_auth_request.queue_free()
+		_auth_request = null
+
+
+	func _show_auth_info(client_id: String) -> void:
+		var auth_link: String = _create_auth_link(client_id)
+		_auth_info_label.text = "Click this [color=lightblue][b][url=%s]link[/url][/b][/color]\nor copy the link below into your browser." % auth_link
+		_auth_info_text_edit.text = auth_link
+		_auth_info_vbox.visible = true
+
+
+	func _hide_auth_setup() -> void:
+		_new_auth_vbox.visible = false
+		_auth_info_vbox.visible = false
+		_auth_info_label.text = ""
+		_auth_info_text_edit.text = ""
+
+		_auth_status_vbox.visible = true
+
+
+	func _create_auth_link(client_id: String) -> String:
+		return "https://accounts.spotify.com/authorize?client_id=%s&response_type=code&scope=%s&redirect_uri=%s" % [client_id, SCOPE, REDIRECT_URI]
+
+
+	func _on_meta_clicked(meta: Variant) -> void:
+		OS.shell_open(str(meta))

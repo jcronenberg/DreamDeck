@@ -106,7 +106,7 @@ class ActionsEditor extends VBoxContainer:
 
 
 	func _init() -> void:
-		set("theme_override_constants/separation", 10)
+		add_theme_constant_override("separation", 10)
 
 		_reorder_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_scroll_container.add_child(_reorder_vbox)

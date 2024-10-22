@@ -40,15 +40,6 @@ It is not recommended to edit the config files yourself.
 Note: Icons for buttons need to be stored in the config directory at `~/.local/share/dreamdeck/icons/` folder and the path in buttons is relative to this directory.
 
 ## Plugins
-### Connect to Spotify's API
-1. Go to the [Spotify dashboard](https://developer.spotify.com/dashboard/applications)
-1. Click `Create an app`
-    - Note down your `Client ID` and `Client Secret`
-1. Click on `Edit Settings`
-1. Add `http://localhost:8888/callback` to the Redirect URIs
-1. Scroll down and click `Save`
-1. You are now ready to authenticate with Spotify! Follow instructions shown by DreamDeck
-
 ### Linux exclusive touch
 Normally when using a touchscreen on linux, it automatically also moves the mouse. DreamDeck let's you circumvent this by grabbing the touch device via evdev and then interpreting the touch events.  
 This is only recommended for devices with more than 1 monitor connected.
