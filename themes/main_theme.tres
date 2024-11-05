@@ -1,8 +1,12 @@
-[gd_resource type="Theme" load_steps=37 format=3 uid="uid://duea6v8sw5cfx"]
+[gd_resource type="Theme" load_steps=45 format=3 uid="uid://duea6v8sw5cfx"]
 
 [ext_resource type="FontFile" uid="uid://dnvsausndgsb2" path="res://fonts/roboto/roboto_bold.ttf" id="1_dkosj"]
 [ext_resource type="FontFile" uid="uid://cbcdnmy2og275" path="res://fonts/roboto/roboto_regular.ttf" id="1_orbee"]
+[ext_resource type="Texture2D" uid="uid://dcrdtfvnm8gts" path="res://resources/icons/checked.svg" id="1_pqwle"]
+[ext_resource type="Texture2D" uid="uid://bl3r7fshyd6x2" path="res://resources/icons/unchecked_disabled.svg" id="1_sn5uo"]
+[ext_resource type="Texture2D" uid="uid://c7a1okmx1rjyp" path="res://resources/icons/unchecked.svg" id="2_kq6wx"]
 [ext_resource type="FontFile" uid="uid://bo545wk7wldh1" path="res://fonts/roboto/roboto_bolditalic.ttf" id="2_u3lia"]
+[ext_resource type="Texture2D" uid="uid://cq10hkgs58nqr" path="res://resources/icons/checked_disabled.svg" id="2_uyrs3"]
 [ext_resource type="FontFile" uid="uid://dyc3tr0jemihe" path="res://fonts/roboto/roboto_italic.ttf" id="3_si0jc"]
 [ext_resource type="FontFile" uid="uid://chaul44u4i772" path="res://fonts/roboto/robotomono_regular.ttf" id="4_0ds26"]
 
@@ -46,8 +50,15 @@ corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
 corner_detail = 12
 
-[sub_resource type="StyleBoxFlat" id="27"]
-bg_color = Color(0.6, 0.6, 0.6, 0)
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_0lg8t"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_5v3ct"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_83wiu"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_t4lmp"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_e8bbt"]
 
 [sub_resource type="StyleBoxFlat" id="10"]
 bg_color = Color(0.6, 0.6, 0.6, 0)
@@ -211,10 +222,15 @@ Button/styles/focus = SubResource("6")
 Button/styles/hover = SubResource("1")
 Button/styles/normal = SubResource("2")
 Button/styles/pressed = SubResource("3")
-CheckBox/styles/hover = SubResource("27")
-CheckBox/styles/hover_pressed = SubResource("27")
-CheckBox/styles/normal = SubResource("27")
-CheckBox/styles/pressed = SubResource("27")
+CheckBox/icons/checked = ExtResource("1_pqwle")
+CheckBox/icons/checked_disabled = ExtResource("2_uyrs3")
+CheckBox/icons/unchecked = ExtResource("2_kq6wx")
+CheckBox/icons/unchecked_disabled = ExtResource("1_sn5uo")
+CheckBox/styles/disabled = SubResource("StyleBoxEmpty_0lg8t")
+CheckBox/styles/hover = SubResource("StyleBoxEmpty_5v3ct")
+CheckBox/styles/hover_pressed = SubResource("StyleBoxEmpty_83wiu")
+CheckBox/styles/normal = SubResource("StyleBoxEmpty_t4lmp")
+CheckBox/styles/pressed = SubResource("StyleBoxEmpty_e8bbt")
 CheckButton/styles/focus = SubResource("10")
 CheckButton/styles/hover = SubResource("11")
 CheckButton/styles/hover_pressed = SubResource("12")
