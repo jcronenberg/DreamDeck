@@ -184,7 +184,14 @@ func generate_device_list(data):
 
 
 func set_output_device(device, play=true):
-	send_command("/me/player", 3, true, JSON.stringify({"device_ids":[device.id],"play":play}))
+	if playback_active:
+		send_command("/me/player", 3, true, JSON.stringify({"device_ids":[device.id],"play":play}))
+	elif play:
+		# Above api endpoint seems currently broken when trying to transfer inactive playback to a device.
+		# Previously this would work in order to restart the previous playback.
+		# Now it uses the start/resume playback endpoint with a device_id (empty brackets body is for some reason important)
+		send_command("/me/player/play?device_id=%s" % device_list[$Background/Controls/DeviceOptions.selected].id, 3, true, "{}")
+		playback_active = true
 
 
 func request_new_token():
@@ -376,12 +383,7 @@ func clear_cache():
 func _on_PlayPauseButton_pressed():
 	if not playback_active:
 		play_state = true
-		#set_output_device(device_list[$Background/Controls/DeviceOptions.selected], play_state)
-		# Above api endpoint seems currently broken when trying to transfer playback to a device.
-		# Previously this would work in order to restart the previous playback.
-		# Now it uses the start/resume playback endpoint with a device_id (empty brackets body is for some reason important)
-		send_command("/me/player/play?device_id=%s" % device_list[$Background/Controls/DeviceOptions.selected].id, 3, true, "{}")
-		playback_active = true
+		set_output_device(device_list[$Background/Controls/DeviceOptions.selected], play_state)
 	elif play_state:
 		send_command("/me/player/pause", 3)
 		play_state = false
