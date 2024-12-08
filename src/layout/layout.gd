@@ -91,6 +91,7 @@ func add_panel(panel_config: Dictionary):
 
 func delete_panel(panel: LayoutPanel):
 	panel.free()
+	DreamdeckBuiltinActions.update_available_panels(get_panel_names())
 	save()
 
 

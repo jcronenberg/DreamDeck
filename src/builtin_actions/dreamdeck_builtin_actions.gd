@@ -1,12 +1,28 @@
+## Handler for all the builtin actions.
 extends Node
 
 var _layout: Layout # Meant to be set by Layout itself
 var _switch_panel_config: Config = Config.new()
 var _available_panels: Array[String] = []
 var _actions: Array[PluginCoordinator.PluginActionDefinition]
+# Each process in debug mode is supposed to have the [CommandProcess]
+# as the key and the threads where stdio and stderr are monitored as the value.
+var _process_pool: Dictionary = {}
 
 
-## Returns all Dreamdeck builtin actions
+func _process(_delta: float) -> void:
+	for process: CommandProcess in _process_pool:
+		for thread: Thread in _process_pool[process]:
+			if not thread.is_alive():
+				thread.wait_to_finish()
+				_process_pool[process].erase(thread)
+
+		if _process_pool[process].size() == 0:
+			process.print_exit_code()
+			_process_pool.erase(process)
+
+
+## Returns all Dreamdeck builtin actions.
 func get_actions() -> Array[PluginCoordinator.PluginActionDefinition]:
 	if not _actions:
 		_setup_actions()
@@ -14,13 +30,13 @@ func get_actions() -> Array[PluginCoordinator.PluginActionDefinition]:
 	return _actions
 
 
-## Waits [param time]. Function for builtin action "Timer"
+## Waits [param time]. Function for builtin action "Timer".
 func wait_time(time: float) -> void:
 	await get_tree().create_timer(time).timeout
 
 
 # TODO doesn't really work with blocking
-## Executes [param command]. Function for builtin action "Execute Command"
+## Executes [param command]. Function for builtin action "Execute Command".
 func exec_cmd(command: String) -> bool:
 	# Platform specific
 	# If the os is windows we have to run commands like this:
@@ -29,22 +45,14 @@ func exec_cmd(command: String) -> bool:
 		command = "CMD.exe /c " + command
 
 	if ConfigLoader.get_config()["debug"]:
-		var process: ProcessNode = ProcessNode.new()
-		process.connect("stdout", _on_process_stdout)
-		process.connect("stderr", _on_process_stderr)
-		process.connect("finished", _on_process_finished)
-		var args: Array = _split_command(command)
-		process.set("cmd", args[0])
-		args.remove_at(0)
-		process.set("args", args as PackedStringArray)
-		self.add_child(process)
-		var ret: String = process.start()
-		# Error happened
-		if ret:
-			_print_dbg_msg(command, "error occurred: " + ret, "red")
+		var cmd_proc: CommandProcess = CommandProcess.new(command)
+		var threads: Array[Thread] = cmd_proc.exec_cmd()
+		if threads.size() == 0:
+			cmd_proc.print_exit_code()
 			return false
+		_process_pool[cmd_proc] = threads
 	else:
-		var args: Array = _split_command(command)
+		var args: Array = split_command(command)
 		var cmd: String = args[0]
 		args.remove_at(0)
 		return OS.create_process(cmd, args) != -1
@@ -52,10 +60,13 @@ func exec_cmd(command: String) -> bool:
 	return true
 
 
+## Switches panel [param panel_name] to the foreground. Function for builtin action "Switch panel".
 func switch_panel(panel_name: String) -> bool:
 	return _layout.show_panel_by_name(panel_name)
 
 
+## Updates all available panels. This is used to display a selection of panels in the action editor.
+## This is mostly supposed to be called by [Layout] when it loads something has changed.
 func update_available_panels(panels: Array[String]) -> void:
 	_available_panels = panels
 	var panel_object: Config.StringArrayObject = _switch_panel_config.get_object("panel_name")
@@ -77,23 +88,15 @@ func _setup_actions() -> void:
 		]
 
 
-# TODO will probably be replaced in the future by some sort of custom logger
-func _print_dbg_msg(cmd: String, msg: String, color_code: String = "white"):
-	# The second color code is there because when msg contains newlines the color delimiter seems to break
-	# and be written as plain text into the output.
-	# To circumvent this we just print a white color again before the delimiter
-	print_rich("[color=" + color_code + "]" + Time.get_datetime_string_from_system() + " \"" + cmd + "\": " + msg + "[color=white][/color]")
-
-
-# Creates an array of strings from a single command string.
-# It also does some basic parsing of quoted strings and escaped characters within the command
-# to make quoted strings a single string in the array.
-# E.g. "a 'quoted string' or escaped\\ char in \"a command\"" would result in
-# ["a", "quoted string", "or", "escaped char", "in", "a command"]
-# Further parsing may be needed to give a user the full capabilities of the shell,
-# but this comes close enough IMO and for really complex stuff a shell script is the preferred
-# option anyway.
-func _split_command(command: String) -> Array:
+## Creates an array of strings from a single command string.
+## It also does some basic parsing of quoted strings and escaped characters within the command
+## to make quoted strings a single string in the array.
+## E.g. "a 'quoted string' or escaped\\ char in \"a command\"" would result in
+## ["a", "quoted string", "or", "escaped char", "in", "a command"]
+## Further parsing may be needed to give a user the full capabilities of the shell,
+## but this comes close enough IMO and for really complex stuff a shell script is the preferred
+## option anyway.
+static func split_command(command: String) -> Array:
 	# If no quoted strings are in command simply use split()
 	if not command.contains('"') and not command.contains("'") and not command.contains("\\"):
 		return command.split(" ")
@@ -130,25 +133,63 @@ func _split_command(command: String) -> Array:
 	return args
 
 
-func _on_process_stdout(stdout: PackedByteArray, command: String, args: PackedStringArray):
-	for arg in args:
-		command += " " + arg
+## Helper class that allows async printing of a command
+##
+## Uses [method OS.execute_with_pipe] to achieve this and sets up 2 threads that monitor and print
+## stdio and stderr.
+class CommandProcess:
+	## The command string.
+	var command: String
 
-	_print_dbg_msg(command, stdout.get_string_from_utf8())
-
-
-func _on_process_stderr(stderr: PackedByteArray, command: String, args: PackedStringArray):
-	for arg in args:
-		command += " " + arg
-
-	_print_dbg_msg(command, stderr.get_string_from_utf8(), "yellow")
+	var _pid: int = -1
 
 
-func _on_process_finished(err_code: int, command: String, args: PackedStringArray):
-	for arg in args:
-		command += " " + arg
+	func _init(init_command: String):
+		command = init_command
 
-	if err_code:
-		_print_dbg_msg(command, "exited with code: " + str(err_code), "red")
-	else:
-		_print_dbg_msg(command, "exited with code: success", "green")
+
+	## Executes the [member command].[br]
+	## Returns 2 threads that monitor and print stdio and stderr of the [member command].
+	func exec_cmd() -> Array[Thread]:
+		@warning_ignore("static_called_on_instance")
+		var args: Array = DreamdeckBuiltinActions.split_command(command)
+		var cmd: String = args[0]
+		args.remove_at(0)
+		var process: Dictionary = OS.execute_with_pipe(cmd, args)
+		if process == {}:
+			_print_dbg_msg("Failed to execute", "red")
+			return []
+
+		_pid = process["pid"]
+		var threads: Array[Thread] = []
+		for fd in ["stdio", "stderr"]:
+			var thread: Thread = Thread.new()
+			thread.start(_read.bind(process[fd], "white" if fd == "stdio" else "yellow"))
+			threads.append(thread)
+
+		return threads
+
+
+	## Prints the exit code nicely formatted or an error message if it was never started.
+	func print_exit_code() -> void:
+		if _pid < 0:
+			_print_dbg_msg("failed to start", "red")
+			return
+
+		var exit_code: int = OS.get_process_exit_code(_pid)
+		_print_dbg_msg("exited with code %s" % exit_code, "red" if exit_code != 0 else "green")
+
+
+	func _read(file: FileAccess, color_code: String = "white") -> void:
+		if is_instance_valid(file):
+				while file.is_open() and file.get_error() == OK:
+					var line: String = file.get_line()
+					if line != "":
+						_print_dbg_msg(line, color_code)
+
+
+	func _print_dbg_msg(msg: String, color_code: String = "white"):
+		# The second color code is there because when msg contains newlines the color delimiter seems to break
+		# and be written as plain text into the output.
+		# To circumvent this we just print a white color again before the delimiter
+		print_rich("[color=%s]%s \"%s\": %s[color=white][/color]" % [color_code, Time.get_datetime_string_from_system(), command, msg])
