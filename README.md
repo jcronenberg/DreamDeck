@@ -47,7 +47,6 @@ This is only recommended for devices with more than 1 monitor connected.
 DreamDeck uses code from some Addons that awesome people made. Huge thanks to these projects:
 * [GodotTPD](https://github.com/deep-entertainment/godottpd)
 * [GODOT YT-DLP](https://github.com/Nolkaloid/godot-yt-dlp)
-* [Better Processes](https://gitlab.com/greenfox/better-processes)
 * [Godot UUID](https://github.com/binogure-studio/godot-uuid)
 * [Dockable Container](https://github.com/gilzoide/godot-dockable-container)
 * [ReorderableContainer](https://github.com/FoolLin/ReorderableContainer)
