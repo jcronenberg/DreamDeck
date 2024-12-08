@@ -607,7 +607,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "dreamdeck"
+name = "dreamdeck_ssh"
 version = "0.1.0"
 dependencies = [
  "anyhow",
