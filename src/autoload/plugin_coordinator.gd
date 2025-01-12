@@ -123,7 +123,7 @@ func list_plugins() -> Array:
 		var file: String = dir.get_next()
 		if file == "":
 			break
-		elif not file.begins_with("."):
+		elif not file.begins_with(".") and not files.has(file):
 			files.append(file)
 
 	dir.list_dir_end()

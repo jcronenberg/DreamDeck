@@ -3,7 +3,7 @@ ifdef GODOT_EXECUTABLE
 	GODOT_VERSION := $(shell $(GODOT_EXECUTABLE) --version 2>/dev/null | cut -d'.' -f1)
 endif
 CARGO := $(shell command -v cargo 2> /dev/null)
-RUST_DIRS = rust/ plugins/touch/rust/
+RUST_DIRS = plugins/ssh/rust/ plugins/touch/rust/
 INSTALL_BIN = /usr/local/bin/
 INSTALL_LIB = /usr/local/lib/
 ICON_DIR = /usr/local/share/icons/hicolor/256x256/apps/
@@ -12,29 +12,55 @@ BUILD_DIR = bin
 DREAMDECK_LINUX = dreamdeck
 DREAMDECK_WINDOWS = dreamdeck.exe
 LIBDREAMDECKTOUCH = libdreamdeck_touch.so
-LIBDREAMDECK = libdreamdeck.so
+LIBDREAMDECKSSH = libdreamdeck_ssh.so
 RESOURCE_PATH = resources/
 DREAMDECK_ICON = icons/dreamdeck.png
 DESKTOP_FILE = dreamdeck.desktop
+define NO_CARGO_MESSAGE 
+	$(info INFO: No cargo found, building without rust)
+endef
 
 .PHONY: all windows linux _check-godot _check-godot-version _build-linux _build-windows rust clean rust-clean install uninstall
 
 all:
+ifdef CARGO
 	$(MAKE) rust
 	$(MAKE) _build-linux
 	$(MAKE) _build-windows
+else
+	$(NO_CARGO_MESSAGE)
+	$(MAKE) _build-linux-rustless
+	$(MAKE) _build-windows-rustless
+endif
+
 
 windows:
+ifdef CARGO
 	$(MAKE) rust
 	$(MAKE) _build-windows
+else
+	$(NO_CARGO_MESSAGE)
+	$(MAKE) _build-windows-rustless
+endif
 
 linux:
+ifdef CARGO
 	$(MAKE) rust
 	$(MAKE) _build-linux
+else
+	$(NO_CARGO_MESSAGE)
+	$(MAKE) _build-linux-rustless
+endif
 
 linux-debug:
 	$(MAKE) rust-debug
 	$(MAKE) _build-linux-debug
+
+linux-rustless:
+	$(MAKE) _build-linux-rustless
+
+windows-rustless:
+	$(MAKE) _build-windows-rustless
 
 _check-godot:
 ifndef GODOT_EXECUTABLE
@@ -56,6 +82,12 @@ _build-linux-debug: _check-godot
 _build-windows: _check-godot
 	@$(GODOT_EXECUTABLE) --headless --export-release "Windows Desktop"
 
+_build-linux-rustless: _check-godot
+	@$(GODOT_EXECUTABLE) --headless --export-release "Linux without rust"
+
+_build-windows-rustless: _check-godot
+	@$(GODOT_EXECUTABLE) --headless --export-release "Windows Desktop without rust"
+
 rust:
 ifndef CARGO
 	$(error "Cargo not installed, rust is required")
@@ -71,7 +103,7 @@ endif
 clean: rust-clean
 	rm -f $(BUILD_DIR)/$(DREAMDECK_LINUX)
 	rm -f $(BUILD_DIR)/$(DREAMDECK_WINDOWS)
-	rm -f $(BUILD_DIR)/$(LIBDREAMDECK)
+	rm -f $(BUILD_DIR)/$(LIBDREAMDECKSSH)
 	rm -f $(BUILD_DIR)/$(LIBDREAMDECKTOUCH)
 
 rust-clean:
@@ -81,14 +113,18 @@ endif
 
 install:
 	install -D bin/$(DREAMDECK_LINUX) $(INSTALL_BIN)$(DREAMDECK_LINUX)
-	install -D bin/$(LIBDREAMDECK) $(INSTALL_LIB)$(LIBDREAMDECK)
+ifneq ($(wildcard bin/$(LIBDREAMDECKSSH)),)
+	install -D bin/$(LIBDREAMDECKSSH) $(INSTALL_LIB)$(LIBDREAMDECKSSH)
+endif
+ifneq ($(wildcard bin/$(LIBDREAMDECKTOUCH)),)
 	install -D bin/$(LIBDREAMDECKTOUCH) $(INSTALL_LIB)$(LIBDREAMDECKTOUCH)
+endif
 	install -D $(RESOURCE_PATH)$(DREAMDECK_ICON) $(ICON_DIR)$(DREAMDECK_ICON)
 	install -D $(RESOURCE_PATH)$(DESKTOP_FILE) $(DESKTOP_DIR)$(DESKTOP_FILE)
 
 uninstall:
 	rm -f $(INSTALL_BIN)$(DREAMDECK_LINUX)
-	rm -f $(INSTALL_LIB)$(LIBDREAMDECK)
+	rm -f $(INSTALL_LIB)$(LIBDREAMDECKSSH)
 	rm -f $(INSTALL_LIB)$(LIBDREAMDECKTOUCH)
 	rm -f $(ICON_DIR)$(DREAMDECK_ICON)
 	rm -f $(DESKTOP_DIR)$(DESKTOP_FILE)

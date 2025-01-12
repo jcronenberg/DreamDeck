@@ -3,7 +3,7 @@ bin/*
 .godot/
 export.cfg
 
-rust/target
+plugins/ssh/rust/target
 plugins/touch/rust/target
 
 local_config
