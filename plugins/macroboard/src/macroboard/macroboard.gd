@@ -32,6 +32,13 @@ var _tmp_button_position: int = -1
 # Path where layout is stored.
 @onready var _layout_path: String = conf_dir + "layout.json"
 
+## WARNING! Should pretty much never be used outside of the [Macroboard] instance itself.[br][br]
+## Signal that gets emitted when confirm dialog gets closed
+## with the bool value representing true if confirmed, otherwise false.[br]
+## This is necessary because awaiting both [ConfirmationDialog] signals,
+## confirmed and canceled is not possible.
+signal _confirm_dialog_closed(bool)
+
 
 func _init() -> void:
 	config.add_int("Columns", "columns", 8)
@@ -95,6 +102,12 @@ func handle_config() -> void:
 	# Apply settings
 	_on_size_changed()
 	_create_buttons(load_layout())
+
+
+## Overwrite confirm function, so it will check for button deletion and ask user.
+func edit_config() -> void:
+	var config_editor: Config.ConfigEditor = config.generate_editor()
+	PopupManager.init_popup([config_editor], _check_apply_and_save_config.bind(config_editor))
 
 
 # Saves layout to disk
@@ -288,3 +301,75 @@ func _on_exited_edit_mode() -> void:
 
 	_save_layout()
 	config.save()
+
+
+# Removes up to [param count] [MacroNoButton]s starting from the back of the layout.[br]
+# [param count] The maximum number of [MacroNoButton]s to remove.[br]
+# Returns true if [param count] [MacroNoButton]s were deleted.
+func _remove_no_buttons(count: int) -> bool:
+	var no_buttons_removed: int = 0
+
+	# Traverse [member _layout_instances] from the back
+	for i in range(_layout_instances.size() - 1, -1, -1):
+		if no_buttons_removed >= count:
+			break
+		if _layout_instances[i] is MacroNoButton:
+			_layout_instances[i].free()
+			_layout_instances.remove_at(i)
+			no_buttons_removed += 1
+
+	return count >= no_buttons_removed
+
+
+# Checks if config changes can be applied without losing any buttons.
+# In case it can't, it shows a deletion warning.
+# If either the deletion warning was confirmed or changes can be applied without losing buttons,
+# it frees as many [MacroNoButton]s as it can/needs to from the scene and also from [member _layout_instances].
+# Returns false if user declined the deletion warning.
+# Note: this only deletes [MacroNoButton]s, it will never delete any other buttons.
+func _on_macroboard_config_change(new_config_dict: Dictionary) -> bool:
+	var new_layout_size: int = new_config_dict["columns"] * new_config_dict["rows"]
+	var max_buttons_diff: int = _layout_instances.size() - new_layout_size
+	# If less max buttons than previously
+	if max_buttons_diff > 0:
+		if _create_layout_array().count(null) < max_buttons_diff:
+			if await _show_button_deletion_warning():
+				_remove_no_buttons(max_buttons_diff)
+				return true
+			else:
+				return false
+
+		else:
+			_remove_no_buttons(max_buttons_diff)
+
+	return true
+
+
+# Shows and returns the value of a [ConfirmationDialog], warning the user of imminent button deletion.
+func _show_button_deletion_warning() -> bool:
+	var confirm_dialog: ConfirmationDialog = ConfirmationDialog.new()
+	confirm_dialog.dialog_text = "WARNING!\nExisting buttons will be deleted by the size change (starting from the back).\nAre you certain you want to continue?"
+	add_child(confirm_dialog)
+	confirm_dialog.initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_PRIMARY_SCREEN
+	confirm_dialog.show()
+	confirm_dialog.confirmed.connect(_on_confirm_dialog_confirmed)
+	confirm_dialog.canceled.connect(_on_confirm_dialog_canceled)
+	return await _confirm_dialog_closed
+
+
+func _on_confirm_dialog_confirmed() -> void:
+	_confirm_dialog_closed.emit(true)
+
+
+func _on_confirm_dialog_canceled() -> void:
+	_confirm_dialog_closed.emit(false)
+
+
+# Function for [method Macroboard.edit_config] when popup gets confirmed.
+func _check_apply_and_save_config(config_editor: Config.ConfigEditor) -> void:
+	if await _on_macroboard_config_change(config_editor.serialize()):
+		# Need to save before applying, because it applies from disk
+		# and the deleted [MacroNoButton]s weren't saved before.
+		_save_layout()
+		config_editor.apply()
+		config_editor.save()
