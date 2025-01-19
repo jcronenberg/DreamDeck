@@ -89,6 +89,7 @@ func replace_button(original_button: MacroButtonBase, new_button: MacroButtonBas
 	original_button.free()
 
 	_resize_buttons()
+	_save_layout()
 
 
 ## Load the saved [Macroboard] configuration from disk.
@@ -135,11 +136,17 @@ func _create_buttons(layout: Array) -> void:
 
 			# Only if an entry exists at this position we add it
 			if layout.size() > button_iterator and layout[button_iterator]:
-				new_button = _action_button.instantiate()
-				new_button.deserialize(layout[button_iterator])
+				var action_button: MacroActionButton = _action_button.instantiate()
+				# deserialize before connecting button_changed signal, because it emits button_changed
+				action_button.deserialize(layout[button_iterator])
+				action_button.button_changed.connect(_save_layout)
+				new_button = action_button
 			else:
-				new_button = _no_button.instantiate()
+				var no_button: MacroNoButton = _no_button.instantiate()
+				no_button.replace_button.connect(replace_button, CONNECT_DEFERRED)
+				new_button = no_button
 
+			new_button.button_deletion_requested.connect(delete_button.bind(new_button), CONNECT_DEFERRED)
 			new_button.set_custom_minimum_size(_button_min_size)
 
 			_layout_instances.append(new_button)
