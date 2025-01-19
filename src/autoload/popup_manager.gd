@@ -32,7 +32,7 @@ func _process(_delta: float) -> void:
 ## [param cancel_callable] can not be unsuccessful. It also gets called when the popup
 ## is closed.[br]
 func init_popup(scenes: Array[Control],
-	confirm_callable: Callable = func unused() -> bool: return true,
+		confirm_callable: Callable = func unused() -> bool: return true,
 		cancel_callable: Callable = func unused() -> void: pass) -> void:
 	if not scenes:
 		return
@@ -127,12 +127,12 @@ func _create_stack_item(scenes: Array[Control], confirm_callable: Callable, canc
 
 
 func _on_popup_confirmed() -> void:
-	if _popup_stack.back().confirm():
+	if await _popup_stack.back().confirm():
 		pop_stack_item()
 
 
 func _on_popup_cancelled() -> void:
-	_popup_stack.back().cancel()
+	await _popup_stack.back().cancel()
 	pop_stack_item()
 
 
@@ -258,11 +258,11 @@ class StackItem:
 
 
 	func cancel() -> void:
-		cancel_callable.call()
+		await cancel_callable.call()
 
 
 	func confirm() -> bool:
-		var ret_val: Variant = confirm_callable.call()
+		var ret_val: Variant = await confirm_callable.call()
 		if ret_val is bool:
 			return ret_val
 
