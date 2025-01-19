@@ -121,7 +121,7 @@ func edit_config() -> void:
 	auth_wizard.name = "Authentication Wizard"
 	auth_wizard.auth_completed.connect(_on_auth_wizard_auth_completed)
 
-	PopupManager.init_popup([config_editor, auth_wizard])
+	PopupManager.init_popup([config_editor, auth_wizard], func apply_and_save() -> void: config_editor.apply(); config_editor.save())
 
 
 func handle_config():
