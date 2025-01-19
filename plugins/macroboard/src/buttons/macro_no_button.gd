@@ -1,6 +1,9 @@
 class_name MacroNoButton
 extends MacroButtonBase
 
+## Emitted when this button is supposed to be replaced by the [param new_button].
+signal replace_button(caller: MacroNoButton, new_button: MacroButtonBase)
+
 
 func _init() -> void:
 	super()
@@ -33,5 +36,5 @@ func _on_popup_confirmed() -> bool:
 	var new_button: MacroActionButton = load("res://plugins/macroboard/src/buttons/macro_action_button.tscn").instantiate()
 	new_button.deserialize(config)
 
-	get_macroboard().call_deferred("replace_button", self, new_button)
+	replace_button.emit(self, new_button)
 	return true

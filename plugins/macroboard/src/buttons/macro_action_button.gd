@@ -1,6 +1,9 @@
 class_name MacroActionButton
 extends MacroButtonBase
 
+## Emitted when a change to this button has happened.
+signal button_changed()
+
 var _button_label: String = ""
 var _icon_path: String = ""
 var _show_button_label: bool = false
@@ -68,6 +71,8 @@ func deserialize(dict: Dictionary) -> void:
 			var action: PluginCoordinator.PluginAction = PluginCoordinator.PluginAction.new()
 			action.deserialize(action_dict)
 			_actions.append(action)
+
+	button_changed.emit()
 
 
 func serialize() -> Dictionary:

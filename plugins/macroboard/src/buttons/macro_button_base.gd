@@ -1,6 +1,9 @@
 class_name MacroButtonBase
 extends Button
 
+## Emitted when this button is supposed to be deleted.
+signal button_deletion_requested()
+
 const THEME_VARIATION = "MacroButton"
 const DEFAULT_FONT_COLOR = Color(1, 1, 1)
 const DEFAULT_BG_COLOR = Color(1, 1, 1, 0.11)
@@ -21,14 +24,6 @@ func _init() -> void:
 	_config.add_color("Normal font color", "font_color", DEFAULT_FONT_COLOR, "", false)
 	_config.add_color("Pressed font color", "font_pressed_color", DEFAULT_FONT_COLOR, "", false)
 	theme_type_variation = THEME_VARIATION
-
-
-func get_macroboard() -> Macroboard:
-	var macroboard: Variant = get_parent()
-	while not macroboard is Macroboard:
-		macroboard = macroboard.get_parent()
-
-	return macroboard
 
 
 func open_editor(new_button: bool = false) -> void:
@@ -92,9 +87,7 @@ func _on_delete_button_pressed() -> void:
 
 func _on_confirm_deletion() -> void:
 	PopupManager.close_popup()
-	var macroboard: Macroboard = get_macroboard()
-
-	macroboard.call_deferred("delete_button", self)
+	button_deletion_requested.emit()
 
 
 class ActionsEditor extends VBoxContainer:
