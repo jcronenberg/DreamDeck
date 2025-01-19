@@ -83,7 +83,7 @@ func get_plugin_instance():
 ## Function called when a user presses the delete key in edit mode for this panel.
 ## It constructs a [ConfirmationDialog] to make sure it isn't deleted accidentally.
 func request_deletion():
-	var confirm_dialog = ConfirmationDialog.new()
+	var confirm_dialog: ConfirmationDialog = ConfirmationDialog.new()
 	confirm_dialog.dialog_text = "Do you really want to delete " + panel_name + "?"
 	add_child(confirm_dialog)
 	confirm_dialog.initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_PRIMARY_SCREEN
