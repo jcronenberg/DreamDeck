@@ -8,22 +8,12 @@ var _button_label: String = ""
 var _icon_path: String = ""
 var _show_button_label: bool = false
 var _actions: Array[PluginCoordinator.PluginAction]
-var _dragging: bool = false # If button is currently being dragged
+var dragging_macroboard: Macroboard = null
 
 
 func _ready() -> void:
 	# Required for dragging to work
 	mouse_filter = Control.MOUSE_FILTER_PASS
-	# Anchors the button in the center, also needed for dragging (centers the preview)
-	anchors_preset = 8
-	anchor_left = 0.5
-	anchor_top = 0.5
-	anchor_right = 0.5
-	anchor_bottom = 0.5
-	offset_left = -size.x / 2
-	offset_top = -size.y / 2
-	offset_right = size.x / 2
-	offset_bottom = size.y / 2
 
 	migrate_icon_path()
 
@@ -195,28 +185,34 @@ func _on_button_up() -> void:
 
 # Handles if drag was successful or not
 func _notification(notif: int) -> void:
-	if not _dragging:
-		return
-	# Drag failed
-	if notif == NOTIFICATION_DRAG_END and not get_viewport().gui_is_drag_successful():
-		visible = true
-		_dragging = false
-		# Drag successful
-	elif notif == NOTIFICATION_DRAG_END:
-		_dragging = false
+	if notif == NOTIFICATION_DRAG_END:
+		disabled = false
+		if dragging_macroboard:
+			dragging_macroboard.reset_dragging_state()
+			dragging_macroboard = null
 
 
 func _get_drag_data(_at_position: Vector2) -> Variant:
 	if not GlobalSignals.get_edit_state():
 		return
 
+	var duplicated_node: Button = self.duplicate(0)
+	# Anchors the button to the center
+	duplicated_node.anchors_preset = 8
+	duplicated_node.anchor_left = 0.5
+	duplicated_node.anchor_top = 0.5
+	duplicated_node.anchor_right = 0.5
+	duplicated_node.anchor_bottom = 0.5
+	duplicated_node.offset_left = -size.x / 2
+	duplicated_node.offset_top = -size.y / 2
+	duplicated_node.offset_right = size.x / 2
+	duplicated_node.offset_bottom = size.y / 2
 	var preview: Control = Control.new()
-	preview.add_child(self.duplicate())
+	preview.add_child(duplicated_node)
 
 	var data: Dictionary = {"ref": self, "type": "macroboard_button"}
 
 	set_drag_preview(preview)
-	visible = false
-	_dragging = true
+	disabled = true
 
 	return data
