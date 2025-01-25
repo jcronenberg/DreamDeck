@@ -241,11 +241,6 @@ func _calculate_button_size() -> Vector2:
 	return button_size
 
 
-func _drop_data(_at_position: Vector2, data: Variant) -> void:
-	associate_signals(data["ref"] as MacroActionButton)
-	get_tree().call_group("macroboards", "save_layout")
-
-
 # Handle button dragging
 func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 	if data.has("type") and data["type"] == "macroboard_button":
