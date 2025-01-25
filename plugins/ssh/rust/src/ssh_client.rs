@@ -182,7 +182,7 @@ pub impl SSHClient {
         if self.session.is_none() && !self.open_session() {
             return false;
         }
-        return block_on(self._exec_ssh(cmd.to_string()));
+        block_on(self._exec_ssh(cmd.to_string()))
     }
 
     #[func]
