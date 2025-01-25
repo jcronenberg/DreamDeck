@@ -265,6 +265,10 @@ func _has_space() -> bool:
 # [param lifted_button]: Instance of the button itself that is calling this function.
 func _handle_lifted_button(cursor_position: Vector2, lifted_button: MacroActionButton) -> void:
 	lifted_button.set_custom_minimum_size(_button_min_size)
+	# Just started dragging
+	if not lifted_button.dragging_macroboard:
+		_removed_button_pos = _layout_instances.find(lifted_button)
+		assert(_removed_button_pos > -1)
 	if lifted_button.dragging_macroboard != self:
 		if lifted_button.dragging_macroboard:
 			lifted_button.dragging_macroboard._add_removed_button(lifted_button)
@@ -300,10 +304,11 @@ func _place_dragging_button(pos: int, button: MacroActionButton) -> void:
 # Finds the first free space in reverse order and then removes that [MacroNoButton].
 # Should only be called if it has already been validated that there is space(a [MacroNoButton]) to remove.
 func _make_space_for_dragging_button() -> void:
-	for i in range(_layout_instances.size() - 1, -1, -1):
-		if _layout_instances[i] is MacroNoButton:
-			_removed_button_pos = i
-			break
+	if _removed_button_pos < 0:
+		for i in range(_layout_instances.size() - 1, -1, -1):
+			if _layout_instances[i] is MacroNoButton:
+				_removed_button_pos = i
+				break
 
 	assert(_removed_button_pos > -1)
 
@@ -325,7 +330,7 @@ func _add_removed_button(lifted_button: MacroActionButton) -> void:
 	_layout_instances.erase(lifted_button)
 	_layout_instances.insert(_removed_button_pos, button)
 
-	reset_dragging_state()
+	_dragged_button_pos = -1
 	_place_buttons()
 
 

@@ -189,6 +189,7 @@ func _notification(notif: int) -> void:
 		disabled = false
 		if dragging_macroboard:
 			dragging_macroboard.associate_signals(self)
+			get_tree().call_group("macroboards", "reset_dragging_state")
 			get_tree().call_group("macroboards", "save_layout")
 			dragging_macroboard = null
 
