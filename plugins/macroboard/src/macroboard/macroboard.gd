@@ -282,7 +282,7 @@ func _calculate_button_position(cursor_position: Vector2) -> int:
 	return int(pos.y * _max_buttons.x + pos.x)
 
 
-# Places the [member _tmp_button] instance at [param pos] and updates [member _tmp_button_position] accordingly.
+# Makes space and places the [param button] at [param pos].
 # Note: The instance is also saved in [member _layout_instances].
 func _place_dragging_button(pos: int, button: MacroActionButton) -> void:
 	if pos == _dragged_button_pos: return
