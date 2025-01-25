@@ -1,15 +1,8 @@
-use evdev::{
-    AbsoluteAxisType, Device,
-    InputEventKind::{AbsAxis, Key},
-};
+use evdev::{AbsoluteAxisCode, Device, EventSummary, KeyCode};
 use godot::prelude::*;
-use nix::{
-    fcntl::{FcntlArg, OFlag},
-    sys::epoll,
-};
+use nix::sys::epoll;
 use std::collections::HashMap;
 use std::fs;
-use std::os::fd::{AsRawFd, FromRawFd, OwnedFd};
 
 /// Time interval between retrying to reconnect device
 const RETRY_TIMER: f64 = 0.5;
@@ -17,8 +10,8 @@ const RETRY_TIMER: f64 = 0.5;
 const INPUT_DIR_PATH: &str = "/dev/input/";
 
 macro_rules! PARSE_EVENT {
-    ($parent:expr,$function:expr,$event:expr) => {
-        $parent.call($function, &[$event.value().to_variant()])
+    ($parent:expr,$function:expr,$value:expr) => {
+        $parent.call($function, &[$value.to_variant()])
     };
 }
 
@@ -88,7 +81,7 @@ impl GrabTouchDevice {
 
         // Get id from device_list by matching name
         let device_name: &GString = match &self.device_name {
-            Some(device_name) => &device_name,
+            Some(device_name) => device_name,
             None => return Err("No device name set".into()),
         };
         let id: usize = *match self.device_list.as_ref().unwrap().get(device_name) {
@@ -102,18 +95,10 @@ impl GrabTouchDevice {
         let device = devices.into_iter().nth(id).unwrap();
 
         // Nonblocking stuff
-        let raw_fd = device.as_raw_fd();
-        nix::fcntl::fcntl(raw_fd, FcntlArg::F_SETFL(OFlag::O_NONBLOCK))?;
-
-        let epoll_fd = epoll::epoll_create1(epoll::EpollCreateFlags::EPOLL_CLOEXEC)?;
-        let epoll_fd = unsafe { OwnedFd::from_raw_fd(epoll_fd) };
-        let mut event = epoll::EpollEvent::new(epoll::EpollFlags::EPOLLIN, 0);
-        epoll::epoll_ctl(
-            epoll_fd.as_raw_fd(),
-            epoll::EpollOp::EpollCtlAdd,
-            raw_fd,
-            Some(&mut event),
-        )?;
+        device.set_nonblocking(true)?;
+        let epoll = epoll::Epoll::new(epoll::EpollCreateFlags::EPOLL_CLOEXEC)?;
+        let event = epoll::EpollEvent::new(epoll::EpollFlags::EPOLLIN, 0);
+        epoll.add(&device, event)?;
 
         // get and store max absolute axis values for the device
         self.device_max_abs_x = device.get_abs_state().unwrap()[0].maximum;
@@ -161,7 +146,7 @@ impl GrabTouchDevice {
         let mut device_map: HashMap<GString, usize> = HashMap::new();
         for (i, d) in devices.iter().enumerate() {
             if d.supported_absolute_axes().map_or(false, |axes| {
-                axes.contains(AbsoluteAxisType::ABS_X) && axes.contains(AbsoluteAxisType::ABS_Y)
+                axes.contains(AbsoluteAxisCode::ABS_X) && axes.contains(AbsoluteAxisCode::ABS_Y)
             }) {
                 device_map.insert(d.name().unwrap_or("Unnamed device").to_string().into(), i);
             }
@@ -281,14 +266,20 @@ impl INode for GrabTouchDevice {
                 Ok(iterator) => {
                     // Match event
                     for ev in iterator {
-                        if ev.kind() == AbsAxis(AbsoluteAxisType::ABS_X) {
-                            PARSE_EVENT!(self.parent.clone().unwrap(), "x_coord_event".into(), ev);
-                        } else if ev.kind() == AbsAxis(AbsoluteAxisType::ABS_Y) {
-                            PARSE_EVENT!(self.parent.clone().unwrap(), "y_coord_event".into(), ev);
-                        } else if ev.kind() == Key(evdev::Key::BTN_TOUCH)
-                            || ev.kind() == Key(evdev::Key::BTN_LEFT)
-                        {
-                            PARSE_EVENT!(self.parent.clone().unwrap(), "key_event".into(), ev);
+                        match ev.destructure() {
+                            EventSummary::AbsoluteAxis(_, AbsoluteAxisCode::ABS_X, value) => {
+                                PARSE_EVENT!(self.parent.clone().unwrap(), "x_coord_event", value);
+                            }
+                            EventSummary::AbsoluteAxis(_, AbsoluteAxisCode::ABS_Y, value) => {
+                                PARSE_EVENT!(self.parent.clone().unwrap(), "y_coord_event", value);
+                            }
+                            EventSummary::Key(_, KeyCode::BTN_TOUCH, value) => {
+                                PARSE_EVENT!(self.parent.clone().unwrap(), "key_event", value);
+                            }
+                            EventSummary::Key(_, KeyCode::BTN_LEFT, value) => {
+                                PARSE_EVENT!(self.parent.clone().unwrap(), "key_event", value);
+                            }
+                            _ => {}
                         }
                     }
                 }
