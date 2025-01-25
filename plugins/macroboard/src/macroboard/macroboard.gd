@@ -168,8 +168,7 @@ func _create_buttons(layout: Array) -> void:
 
 	_place_buttons()
 	# Since all buttons get reset, we need to account for edit mode
-	if GlobalSignals.get_edit_state():
-		_toggle_add_buttons()
+	_toggle_add_buttons(GlobalSignals.get_edit_state())
 
 
 func _create_action_button(button_dict: Dictionary) -> MacroActionButton:
@@ -186,8 +185,7 @@ func _create_no_button() -> MacroNoButton:
 	no_button.replace_button.connect(add_action_button, CONNECT_DEFERRED)
 	no_button.button_deletion_requested.connect(delete_button.bind(no_button), CONNECT_DEFERRED)
 	no_button.set_custom_minimum_size(_button_min_size)
-	if GlobalSignals.get_edit_state():
-		no_button.toggle_add_button()
+	no_button.set_add_button(GlobalSignals.get_edit_state())
 	return no_button
 
 
@@ -213,11 +211,11 @@ func _place_buttons() -> void:
 
 
 # Toggles all [MacroNoButton]s.
-func _toggle_add_buttons() -> void:
+func _toggle_add_buttons(state: bool) -> void:
 	for row in %RowSeparator.get_children():
 		for button in row.get_children():
-			if button.has_method("toggle_add_button"):
-				button.toggle_add_button()
+			if button is MacroNoButton:
+				button.set_add_button(state)
 
 
 # Returns the maximum size the buttons can have based on [member _max_buttons] and current size.
@@ -364,11 +362,11 @@ func _create_layout_array() -> Array:
 
 
 func _on_entered_edit_mode() -> void:
-	_toggle_add_buttons()
+	_toggle_add_buttons(true)
 
 
 func _on_exited_edit_mode() -> void:
-	_toggle_add_buttons()
+	_toggle_add_buttons(false)
 
 	save_layout()
 	config.save()

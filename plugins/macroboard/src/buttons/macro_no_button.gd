@@ -10,13 +10,15 @@ func _init() -> void:
 	theme_type_variation = "FixedMacroButton"
 
 
+## Toggles the add state.
 func toggle_add_button() -> void:
 	disabled = not disabled
 	$Icon.visible = not $Icon.visible
 
 
+## Sets the state of this placeholder button. [code]true[/code] for showing the add state.
 func set_add_button(value: bool) -> void:
-	disabled = value
+	disabled = not value
 	$Icon.visible = value
 
 
