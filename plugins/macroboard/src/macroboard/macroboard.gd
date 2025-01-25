@@ -22,12 +22,12 @@ var _layout_instances: Array[MacroButtonBase] = []
 # Flag if buttons are supposed to be maximum size or keep square (square can leave a gap at the bottom).
 var _keep_buttons_square: bool = true
 
-# Instance of temporary button that gets placed when a button is being dragged.
-var _tmp_button: MacroNoButton
+# Position of removed button when a button from a different [Macroboard] was dragged to this [Macroboard].
+var _removed_button_pos: int = -1
 
-# Current Position of the temporary button in [member _layout_instances].
-# Is -1 when [member _tmp_button] doesn't exist.
-var _tmp_button_position: int = -1
+# Current Position of the dragged button in [member _layout_instances].
+# Is -1 when no button is being dragged in this [Macroboard].
+var _dragged_button_pos: int = -1
 
 # Path where layout is stored.
 @onready var _layout_path: String = conf_dir + "layout.json"
@@ -49,6 +49,8 @@ func _init() -> void:
 func _ready() -> void:
 	super()
 
+	add_to_group("macroboards")
+
 	%RowSeparator.set("theme_override_constants/separation", BUTTON_GAP)
 
 
@@ -67,14 +69,9 @@ func load_layout() -> Array:
 
 ## "Deletes" [param button] [b]instance[/b] by replacing it with a [MacroNoButton] [b]instance[/b].
 func delete_button(button: MacroButtonBase) -> void:
-	var new_no_button: MacroNoButton = _no_button.instantiate()
-	new_no_button.set_custom_minimum_size(_button_min_size)
-	replace_button(button, new_no_button)
+	replace_button(button, _create_no_button())
 
-	# Because we are guaranteed currently in edit mode
-	new_no_button.toggle_add_button()
-
-	_save_layout()
+	save_layout()
 
 
 ## Frees [param original_button] and replaces it with [param new_button].
@@ -89,7 +86,11 @@ func replace_button(original_button: MacroButtonBase, new_button: MacroButtonBas
 	original_button.free()
 
 	_resize_buttons()
-	_save_layout()
+	save_layout()
+
+
+func add_action_button(no_button: MacroNoButton, button_dict: Dictionary) -> void:
+	replace_button(no_button, _create_action_button(button_dict))
 
 
 ## Load the saved [Macroboard] configuration from disk.
@@ -111,9 +112,29 @@ func edit_config() -> void:
 	PopupManager.init_popup([config_editor], _check_apply_and_save_config.bind(config_editor))
 
 
-# Saves layout to disk
-func _save_layout() -> void:
+## Saves the current layout to disk.
+func save_layout() -> void:
 	ConfLib.save_config(_layout_path, _create_layout_array())
+
+
+## Resets internal values associated with button dragging.
+func reset_dragging_state() -> void:
+	_dragged_button_pos = -1
+	_removed_button_pos = -1
+
+
+## Associates all required signals for a [param action_button] to this [Macroboard].
+## Also removes all previous connections.
+func associate_signals(action_button: MacroActionButton) -> void:
+	# Disconnect from previous
+	for button_signal in action_button.button_changed.get_connections():
+		action_button.button_changed.disconnect(button_signal.callable)
+	for button_signal in action_button.button_deletion_requested.get_connections():
+		action_button.button_deletion_requested.disconnect(button_signal.callable)
+
+	# Connect to this macroboard
+	action_button.button_changed.connect(save_layout)
+	action_button.button_deletion_requested.connect(delete_button.bind(action_button), CONNECT_DEFERRED)
 
 
 # Frees all current rows.
@@ -136,18 +157,9 @@ func _create_buttons(layout: Array) -> void:
 
 			# Only if an entry exists at this position we add it
 			if layout.size() > button_iterator and layout[button_iterator]:
-				var action_button: MacroActionButton = _action_button.instantiate()
-				# deserialize before connecting button_changed signal, because it emits button_changed
-				action_button.deserialize(layout[button_iterator])
-				action_button.button_changed.connect(_save_layout)
-				new_button = action_button
+				new_button = _create_action_button(layout[button_iterator])
 			else:
-				var no_button: MacroNoButton = _no_button.instantiate()
-				no_button.replace_button.connect(replace_button, CONNECT_DEFERRED)
-				new_button = no_button
-
-			new_button.button_deletion_requested.connect(delete_button.bind(new_button), CONNECT_DEFERRED)
-			new_button.set_custom_minimum_size(_button_min_size)
+				new_button = _create_no_button()
 
 			_layout_instances.append(new_button)
 
@@ -156,8 +168,25 @@ func _create_buttons(layout: Array) -> void:
 
 	_place_buttons()
 	# Since all buttons get reset, we need to account for edit mode
-	if GlobalSignals.get_edit_state():
-		_toggle_add_buttons()
+	_toggle_add_buttons(GlobalSignals.get_edit_state())
+
+
+func _create_action_button(button_dict: Dictionary) -> MacroActionButton:
+	var action_button: MacroActionButton = _action_button.instantiate()
+	# deserialize before connecting button_changed signal, because it emits button_changed
+	action_button.deserialize(button_dict)
+	associate_signals(action_button)
+	action_button.set_custom_minimum_size(_button_min_size)
+	return action_button
+
+
+func _create_no_button() -> MacroNoButton:
+	var no_button: MacroNoButton = _no_button.instantiate()
+	no_button.replace_button.connect(add_action_button, CONNECT_DEFERRED)
+	no_button.button_deletion_requested.connect(delete_button.bind(no_button), CONNECT_DEFERRED)
+	no_button.set_custom_minimum_size(_button_min_size)
+	no_button.set_add_button(GlobalSignals.get_edit_state())
+	return no_button
 
 
 # Places buttons according to [member _layout_instances].
@@ -182,11 +211,11 @@ func _place_buttons() -> void:
 
 
 # Toggles all [MacroNoButton]s.
-func _toggle_add_buttons() -> void:
+func _toggle_add_buttons(state: bool) -> void:
 	for row in %RowSeparator.get_children():
 		for button in row.get_children():
-			if button.has_method("toggle_add_button"):
-				button.toggle_add_button()
+			if button is MacroNoButton:
+				button.set_add_button(state)
 
 
 # Returns the maximum size the buttons can have based on [member _max_buttons] and current size.
@@ -213,27 +242,36 @@ func _calculate_button_size() -> Vector2:
 # Handle button dragging
 func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 	if data.has("type") and data["type"] == "macroboard_button":
+		if not _has_space() and not _layout_instances.has(data["ref"]):
+			return false
 		_handle_lifted_button(at_position, data["ref"])
 		return true
 
 	return false
 
 
-# Add button when dragging stops
-func _drop_data(_at_position: Vector2, data: Variant) -> void:
-	data["ref"].visible = true
-	_place_button(data["ref"])
+func _has_space() -> bool:
+	for button in _layout_instances:
+		if button is MacroNoButton:
+			return true
+
+	return false
 
 
 # Entry function for a button being dragged.
 # [param cursor_position]: The position of the cursor relative to this macroboard.
 # [param lifted_button]: Instance of the button itself that is calling this function.
 func _handle_lifted_button(cursor_position: Vector2, lifted_button: MacroActionButton) -> void:
-	if not _tmp_button:
-		_tmp_button = _no_button.instantiate()
-		_tmp_button.set_custom_minimum_size(_button_min_size)
-		_layout_instances[_layout_instances.find(lifted_button)] = _tmp_button
-	_place_tmp_button(_calculate_button_position(cursor_position))
+	lifted_button.set_custom_minimum_size(_button_min_size)
+	# Just started dragging
+	if not lifted_button.dragging_macroboard:
+		_removed_button_pos = _layout_instances.find(lifted_button)
+		assert(_removed_button_pos > -1)
+	if lifted_button.dragging_macroboard != self:
+		if lifted_button.dragging_macroboard:
+			lifted_button.dragging_macroboard._add_removed_button(lifted_button)
+		lifted_button.dragging_macroboard = self
+	_place_dragging_button(_calculate_button_position(cursor_position), lifted_button)
 
 
 # Calculates where in the layout array [param cursor_position] would slot in.
@@ -246,28 +284,52 @@ func _calculate_button_position(cursor_position: Vector2) -> int:
 
 # Places the [member _tmp_button] instance at [param pos] and updates [member _tmp_button_position] accordingly.
 # Note: The instance is also saved in [member _layout_instances].
-func _place_tmp_button(pos: int) -> void:
-	if pos == _tmp_button_position: return
+func _place_dragging_button(pos: int, button: MacroActionButton) -> void:
+	if pos == _dragged_button_pos: return
 
-	_layout_instances.remove_at(_layout_instances.find(_tmp_button))
-	_layout_instances.insert(pos, _tmp_button)
+	if not _layout_instances.has(button):
+		_make_space_for_dragging_button()
+		_layout_instances.insert(pos, button)
+	elif _dragged_button_pos != -1:
+		_layout_instances.remove_at(_dragged_button_pos)
+		_layout_instances.insert(pos, button)
 
-	_tmp_button_position = pos
+	_dragged_button_pos = pos
+	button.dragging_macroboard = self
 	_place_buttons()
 
 
-# Places [param button] at [member _tmp_button_position] and frees [member _tmp_button].
-func _place_button(button: MacroActionButton) -> void:
-	_layout_instances[_tmp_button_position] = button
+# Finds the first free space in reverse order and then removes that [MacroNoButton].
+# Should only be called if it has already been validated that there is space(a [MacroNoButton]) to remove.
+func _make_space_for_dragging_button() -> void:
+	if _removed_button_pos < 0:
+		for i in range(_layout_instances.size() - 1, -1, -1):
+			if _layout_instances[i] is MacroNoButton:
+				_removed_button_pos = i
+				break
+
+	assert(_removed_button_pos > -1)
+
+	# QUEUE_free() somehow is important here otherwise the engine crashes.
+	_layout_instances[_removed_button_pos].queue_free()
+	_layout_instances.remove_at(_removed_button_pos)
+
+
+# Removes the lifted button from this [Macroboard] and adds a new [MacroNoButton].
+# If [member _removed_button_pos] is set it will try to insert it at this position
+# otherwise it is appended to the end.
+func _add_removed_button(lifted_button: MacroActionButton) -> void:
+	var button: MacroNoButton = _create_no_button()
+
+	if _removed_button_pos < 0:
+		_removed_button_pos = _layout_instances.find(lifted_button)
+
+	assert(_removed_button_pos > -1)
+	_layout_instances.erase(lifted_button)
+	_layout_instances.insert(_removed_button_pos, button)
+
+	_dragged_button_pos = -1
 	_place_buttons()
-	if _tmp_button:
-		_tmp_button.free()
-	_tmp_button_position = -1
-
-	# when button is from a different macroboard it's size may need to be adjusted
-	_resize_buttons()
-
-	_save_layout()
 
 
 # Applies [member _button_min_size] to all buttons.
@@ -300,13 +362,13 @@ func _create_layout_array() -> Array:
 
 
 func _on_entered_edit_mode() -> void:
-	_toggle_add_buttons()
+	_toggle_add_buttons(true)
 
 
 func _on_exited_edit_mode() -> void:
-	_toggle_add_buttons()
+	_toggle_add_buttons(false)
 
-	_save_layout()
+	save_layout()
 	config.save()
 
 
@@ -377,6 +439,6 @@ func _check_apply_and_save_config(config_editor: Config.ConfigEditor) -> void:
 	if await _on_macroboard_config_change(config_editor.serialize()):
 		# Need to save before applying, because it applies from disk
 		# and the deleted [MacroNoButton]s weren't saved before.
-		_save_layout()
+		save_layout()
 		config_editor.apply()
 		config_editor.save()

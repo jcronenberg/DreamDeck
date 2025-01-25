@@ -2,7 +2,7 @@ class_name MacroNoButton
 extends MacroButtonBase
 
 ## Emitted when this button is supposed to be replaced by the [param new_button].
-signal replace_button(caller: MacroNoButton, new_button: MacroButtonBase)
+signal replace_button(caller: MacroNoButton, button_dict: Dictionary)
 
 
 func _init() -> void:
@@ -10,13 +10,15 @@ func _init() -> void:
 	theme_type_variation = "FixedMacroButton"
 
 
+## Toggles the add state.
 func toggle_add_button() -> void:
 	disabled = not disabled
 	$Icon.visible = not $Icon.visible
 
 
+## Sets the state of this placeholder button. [code]true[/code] for showing the add state.
 func set_add_button(value: bool) -> void:
-	disabled = value
+	disabled = not value
 	$Icon.visible = value
 
 
@@ -31,10 +33,8 @@ func _on_popup_confirmed() -> bool:
 	var serialized_actions: Array[Dictionary] = []
 	for action in actions:
 		serialized_actions.append(action.serialize())
+
 	config["actions"] = serialized_actions
 
-	var new_button: MacroActionButton = load("res://plugins/macroboard/src/buttons/macro_action_button.tscn").instantiate()
-	new_button.deserialize(config)
-
-	replace_button.emit(self, new_button)
+	replace_button.emit(self, config)
 	return true
