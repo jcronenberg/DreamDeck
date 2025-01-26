@@ -88,6 +88,10 @@ var _is_hold := false
 var _current_duration := 0.0
 var _is_using_process := false
 
+# Track global and local mouse position via _gui_input for touch plugin compatibility.
+var _local_mouse_pos: Vector2 = Vector2.ZERO
+var _global_mouse_pos: Vector2 = Vector2.ZERO
+
 
 func _ready():
 	if scroll_container == null and get_parent() is ScrollContainer:
@@ -105,10 +109,13 @@ func _ready():
 
 
 func _gui_input(event):
+	if event is InputEvent:
+		_local_mouse_pos = event.position
+		_global_mouse_pos = get_global_rect().position + _local_mouse_pos
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		for _child in get_children():
 			var child := _child as Control
-			if child.get_rect().has_point(get_local_mouse_position()) and event.is_pressed():
+			if child.get_rect().has_point(event.position) and event.is_pressed():
 				_focus_child = child
 				_is_press = true
 			elif not event.is_pressed():
@@ -180,10 +187,10 @@ func _on_node_added(node):
 
 func _handle_dragging_child_pos(delta):
 	if is_vertical:
-		var target_pos = get_local_mouse_position().y - (_focus_child.size.y / 2.0)
+		var target_pos = _local_mouse_pos.y - (_focus_child.size.y / 2.0)
 		_focus_child.position.y = lerp(_focus_child.position.y, target_pos, delta * speed)
 	else:
-		var target_pos = get_local_mouse_position().x - (_focus_child.size.x / 2.0)
+		var target_pos = _local_mouse_pos.x - (_focus_child.size.x / 2.0)
 		_focus_child.position.x = lerp(_focus_child.position.x, target_pos, delta * speed)
 
 	# Update drop zone index
@@ -198,17 +205,16 @@ func _handle_dragging_child_pos(delta):
 
 
 func _handle_auto_scroll(delta):
-	var mouse_g_pos = get_global_mouse_position()
 	var scroll_g_rect = scroll_container.get_global_rect()
 	if is_vertical:
 		var upper = scroll_g_rect.position.y + (scroll_g_rect.size.y * auto_scroll_range)
 		var lower = scroll_g_rect.position.y + (scroll_g_rect.size.y * (1.0 - auto_scroll_range))
 
-		if upper > mouse_g_pos.y:
-			var factor = (upper - mouse_g_pos.y) / (upper - scroll_g_rect.position.y)
+		if upper > _global_mouse_pos.y:
+			var factor = (upper - _global_mouse_pos.y) / (upper - scroll_g_rect.position.y)
 			scroll_container.scroll_vertical -= delta * float(auto_scroll_speed) * 150.0 * factor
-		elif lower < mouse_g_pos.y:
-			var factor = (mouse_g_pos.y - lower) / (scroll_g_rect.end.y - lower)
+		elif lower < _global_mouse_pos.y:
+			var factor = (_global_mouse_pos.y - lower) / (scroll_g_rect.end.y - lower)
 			scroll_container.scroll_vertical += delta * float(auto_scroll_speed) * 150.0 * factor
 		else:
 			scroll_container.scroll_vertical = scroll_container.scroll_vertical
@@ -216,11 +222,11 @@ func _handle_auto_scroll(delta):
 		var left = scroll_g_rect.position.x + (scroll_g_rect.size.x * auto_scroll_range)
 		var right = scroll_g_rect.position.x + (scroll_g_rect.size.x * (1.0 - auto_scroll_range))
 
-		if left > mouse_g_pos.x:
-			var factor = (left - mouse_g_pos.x) / (left - scroll_g_rect.position.x)
+		if left > _global_mouse_pos.x:
+			var factor = (left - _global_mouse_pos.x) / (left - scroll_g_rect.position.x)
 			scroll_container.scroll_horizontal -= delta * float(auto_scroll_speed) * 150.0 * factor
-		elif right < mouse_g_pos.x:
-			var factor = (mouse_g_pos.x - right) / (scroll_g_rect.end.x - right)
+		elif right < _global_mouse_pos.x:
+			var factor = (_global_mouse_pos.x - right) / (scroll_g_rect.end.x - right)
 			scroll_container.scroll_horizontal += delta * float(auto_scroll_speed) * 150.0 * factor
 		else:
 			scroll_container.scroll_horizontal = scroll_container.scroll_horizontal
