@@ -1,0 +1,40 @@
+name: "Development builds"
+
+on: [push, pull_request]
+
+env:
+  GODOT_VERSION: 4.3
+
+jobs:
+  linux-build:
+    name: Linux build
+    runs-on: ubuntu-latest
+    container:
+      image: docker://barichello/godot-ci:4.3
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Setup
+        run: |
+          mkdir -v -p ~/.local/share/godot/export_templates
+          mv /root/.local/share/godot/export_templates/${GODOT_VERSION}.stable ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+          apt update -y && apt install curl make gcc libssl-dev pkg-config -y
+      - name: Install rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Import resources
+        continue-on-error: true
+        run: godot --headless -v --import
+      - name: Linux export
+        run: |
+          make linux
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        # Only upload artifact on pull request or main repo and main branch
+        if: |
+          github.event_name == 'pull_request' ||
+          (github.repository == 'jcronenberg/DreamDeck' && github.ref == 'refs/heads/prototyping')
+        with:
+          name: dreamdeck
+          path: ./bin/

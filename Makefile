@@ -62,6 +62,10 @@ linux-rustless:
 windows-rustless:
 	$(MAKE) _build-windows-rustless
 
+linux-dist:
+	$(MAKE) linux
+	tar zcvf $(BUILD_DIR)/$(DREAMDECK_LINUX).tar.gz -C $(BUILD_DIR) $(DREAMDECK_LINUX) $(LIBDREAMDECKSSH) $(LIBDREAMDECKTOUCH)
+
 _check-godot:
 ifndef GODOT_EXECUTABLE
 	$(error "Godot executable not found. Please make sure Godot4 is installed and in your system PATH.")
