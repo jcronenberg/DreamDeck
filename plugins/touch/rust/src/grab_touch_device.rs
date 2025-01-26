@@ -268,10 +268,10 @@ impl INode for GrabTouchDevice {
                     for ev in iterator {
                         match ev.destructure() {
                             EventSummary::AbsoluteAxis(_, AbsoluteAxisCode::ABS_X, value) => {
-                                PARSE_EVENT!(self.parent.clone().unwrap(), "x_coord_event", value);
+                                PARSE_EVENT!(self.parent.clone().unwrap(), "abs_x_event", value);
                             }
                             EventSummary::AbsoluteAxis(_, AbsoluteAxisCode::ABS_Y, value) => {
-                                PARSE_EVENT!(self.parent.clone().unwrap(), "y_coord_event", value);
+                                PARSE_EVENT!(self.parent.clone().unwrap(), "abs_y_event", value);
                             }
                             EventSummary::Key(_, KeyCode::BTN_TOUCH, value) => {
                                 PARSE_EVENT!(self.parent.clone().unwrap(), "key_event", value);
