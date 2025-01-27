@@ -23,9 +23,6 @@ jobs:
           apt update -y && apt install curl make gcc libssl-dev pkg-config -y
       - name: Install rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
-      - name: Import resources
-        continue-on-error: true
-        run: godot --headless -v --import
       - name: Linux export
         run: |
           make linux
