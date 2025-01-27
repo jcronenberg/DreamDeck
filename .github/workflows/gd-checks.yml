@@ -1,0 +1,19 @@
+name: GDscript checks
+
+on: [push, pull_request]
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: Scony/godot-gdscript-toolkit@master
+      - name: Formatting checks
+        run: gdformat --diff .
+      - name: Linting checks
+        run: gdlint .
+      - name: Spell checks via codespell
+        uses: codespell-project/actions-codespell@v2
