@@ -17,3 +17,6 @@ jobs:
         run: gdlint .
       - name: Spell checks via codespell
         uses: codespell-project/actions-codespell@v2
+        with:
+          skip: ./addons,./addon_submodules,godottpd,Cargo.lock
+          ignore_words_list: couldn

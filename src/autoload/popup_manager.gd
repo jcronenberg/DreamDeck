@@ -31,9 +31,11 @@ func _process(_delta: float) -> void:
 ## [param confirm_callable] can return false if confirming should not be successful.[br]
 ## [param cancel_callable] can not be unsuccessful. It also gets called when the popup
 ## is closed.[br]
-func init_popup(scenes: Array[Control],
-		confirm_callable: Callable = func unused() -> bool: return true,
-		cancel_callable: Callable = func unused() -> void: pass) -> void:
+func init_popup(
+	scenes: Array[Control],
+	confirm_callable: Callable = func unused() -> bool: return true,
+	cancel_callable: Callable = func unused() -> void: pass
+) -> void:
 	if not scenes:
 		return
 
@@ -50,9 +52,11 @@ func init_popup(scenes: Array[Control],
 ## [param confirm_callable] can return false if confirming should not be successful.[br]
 ## [param cancel_callable] can not be unsuccessful. It also gets called when the popup
 ## is closed.[br]
-func push_stack_item(scenes: Array[Control],
-		confirm_callable: Callable = func unused() -> bool: return true,
-		cancel_callable: Callable = func unused() -> void: pass) -> void:
+func push_stack_item(
+	scenes: Array[Control],
+	confirm_callable: Callable = func unused() -> bool: return true,
+	cancel_callable: Callable = func unused() -> void: pass
+) -> void:
 	if not scenes:
 		return
 
@@ -107,7 +111,9 @@ func close_popup() -> void:
 	_popup.hide()
 
 
-func _set_current_popup(scenes: Array[Control], confirm_callable: Callable, cancel_callable: Callable) -> void:
+func _set_current_popup(
+	scenes: Array[Control], confirm_callable: Callable, cancel_callable: Callable
+) -> void:
 	for stack_item in _popup_stack:
 		stack_item.free_nodes()
 		stack_item.cancel()
@@ -117,7 +123,9 @@ func _set_current_popup(scenes: Array[Control], confirm_callable: Callable, canc
 	_popup.show()
 
 
-func _create_stack_item(scenes: Array[Control], confirm_callable: Callable, cancel_callable: Callable) -> StackItem:
+func _create_stack_item(
+	scenes: Array[Control], confirm_callable: Callable, cancel_callable: Callable
+) -> StackItem:
 	var stack_item: StackItem = StackItem.new()
 	stack_item.control_nodes = scenes
 	stack_item.confirm_callable = confirm_callable
@@ -159,7 +167,8 @@ func _on_popup_tree_exited() -> void:
 	set_process(true)
 
 
-class SimpleWindow extends Window:
+class SimpleWindow:
+	extends Window
 	signal confirmed
 	signal cancelled
 
@@ -169,7 +178,6 @@ class SimpleWindow extends Window:
 	var _margin: MarginContainer = MarginContainer.new()
 	var _vbox: VBoxContainer = VBoxContainer.new()
 	var _scene_parent: TabContainer = TabContainer.new()
-
 
 	func _init() -> void:
 		set_size(Vector2(1000, 600))
@@ -187,7 +195,6 @@ class SimpleWindow extends Window:
 		_vbox.add_theme_constant_override("separation", 10)
 		_margin.add_child(_vbox)
 
-
 	func _ready() -> void:
 		_confirm_button.text = "Confirm"
 		_confirm_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -200,7 +207,6 @@ class SimpleWindow extends Window:
 		_buttons_hbox.add_child(_confirm_button)
 		_buttons_hbox.add_child(_cancel_button)
 		_vbox.add_child(_buttons_hbox)
-
 
 	func set_scene(nodes: Array[Control]) -> void:
 		for scroll_container in _scene_parent.get_children():
@@ -228,22 +234,17 @@ class SimpleWindow extends Window:
 
 		_scene_parent.tabs_visible = nodes.size() > 1
 
-
 	func set_cancel_text(text: String) -> void:
 		_cancel_button.text = text
-
 
 	func get_selected_control_id() -> int:
 		return _scene_parent.current_tab
 
-
 	func set_selected_control_id(id: int) -> void:
 		_scene_parent.current_tab = id
 
-
 	func _on_cancel_button_pressed() -> void:
 		cancelled.emit()
-
 
 	func _on_confirm_button_pressed() -> void:
 		confirmed.emit()
@@ -256,10 +257,8 @@ class StackItem:
 	## When a stack item gets selected again, this ensures we stay on the same tab
 	var previously_selected_control_id: int = 0
 
-
 	func cancel() -> void:
 		await cancel_callable.call()
-
 
 	func confirm() -> bool:
 		var ret_val: Variant = await confirm_callable.call()
@@ -267,7 +266,6 @@ class StackItem:
 			return ret_val
 
 		return true
-
 
 	func free_nodes() -> void:
 		for control_node in control_nodes:

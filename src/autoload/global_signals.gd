@@ -4,7 +4,6 @@ signal entered_edit_mode
 signal exited_edit_mode
 signal activated_plugins_changed
 
-
 var edit_state: bool = false
 
 

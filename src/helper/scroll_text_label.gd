@@ -9,7 +9,6 @@ extends Label
 ## Use [method ScrollTextLabel.set_new_text] to modify the text.
 ## Modifying the text directly will break position and size.
 
-
 ## Scroll speed of the text.
 ## This is dependent on the length of the text.
 ## It gets passed to the tween with the calculation:
@@ -60,24 +59,40 @@ func _init_scroll():
 		return
 
 	# Determining the size of the string feels so hacky lol
-	if get_theme_default_font().get_string_size(_original_text,
-			HORIZONTAL_ALIGNMENT_CENTER,
-			-1,
-			get_theme_default_font_size()).x <= get_parent_area_size().x:
+	if (
+		(
+			get_theme_default_font()
+			. get_string_size(
+				_original_text, HORIZONTAL_ALIGNMENT_CENTER, -1, get_theme_default_font_size()
+			)
+			. x
+		)
+		<= get_parent_area_size().x
+	):
 		return
 
 	# append separator string and the duplicate text
 	set_text(_original_text + separator_string + _original_text)
 
 	_tween = get_tree().create_tween()
-	_tween.tween_property(self,
+	_tween.tween_property(
+		self,
 		"position",
-		Vector2(-get_theme_default_font().get_string_size(_original_text + separator_string,
-			HORIZONTAL_ALIGNMENT_CENTER,
-			-1,
-			get_theme_default_font_size()).x,
-			position.y),
-		_original_text.length() / scroll_speed)
+		Vector2(
+			-(
+				get_theme_default_font()
+				. get_string_size(
+					_original_text + separator_string,
+					HORIZONTAL_ALIGNMENT_CENTER,
+					-1,
+					get_theme_default_font_size()
+				)
+				. x
+			),
+			position.y
+		),
+		_original_text.length() / scroll_speed
+	)
 
 	await _tween.finished
 	_tween = null

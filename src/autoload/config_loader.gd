@@ -5,11 +5,8 @@ const DEFAULT_CONFIG := {
 	"Fullscreen": false,
 	"Hide Mouse Cursor": false,
 	"Debug": false,
-	"Window Size": {
-		"Width": 1280,
-		"Height": 800
-		},
-	}
+	"Window Size": {"Width": 1280, "Height": 800},
+}
 
 var conf_dir: String = ArgumentParser.get_conf_dir()
 var config: Config = Config.new()
@@ -67,7 +64,9 @@ func _handle_config():
 	get_window().set_transparent_background(config_data["transparent_bg"])
 
 	# Mouse cursor
-	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN if config_data["hide_mouse"] else Input.MOUSE_MODE_VISIBLE
+	Input.mouse_mode = (
+		Input.MOUSE_MODE_HIDDEN if config_data["hide_mouse"] else Input.MOUSE_MODE_VISIBLE
+	)
 
 
 func _on_config_changed():
@@ -116,7 +115,9 @@ func _unpack_config_backup(path: String) -> void:
 
 		var writer: FileAccess = FileAccess.open(conf_dir + file, FileAccess.WRITE)
 		if not writer:
-			push_error("Failed to write to file %s: %s" % [conf_dir + file, FileAccess.get_open_error()])
+			push_error(
+				"Failed to write to file %s: %s" % [conf_dir + file, FileAccess.get_open_error()]
+			)
 			continue
 
 		writer.store_buffer(reader.read_file(file))

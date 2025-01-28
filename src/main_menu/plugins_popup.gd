@@ -24,7 +24,9 @@ func populate_plugins() -> void:
 func populate_plugin_panel(plugin: PluginCoordinator.Plugin) -> void:
 	%PluginName.text = plugin.plugin_name
 	%PluginIcon.texture = plugin.get_icon()
-	%PluginDescription.text = "[center][b]Description:[/b]\n%s[/center]" % [plugin.plugin_description]
+	%PluginDescription.text = (
+		"[center][b]Description:[/b]\n%s[/center]" % [plugin.plugin_description]
+	)
 	%ActivateCheckButton.set_pressed_no_signal(plugin.is_activated())
 	%SettingsButton.visible = plugin.show_settings_button()
 
@@ -43,7 +45,7 @@ func _on_plugin_selector_list_item_selected(index: int) -> void:
 			_current_plugin = index
 			return
 
-	push_error("PluginsPopup: Couldn't find plugin \"%s\" within plugins" % [plugin_name])
+	push_error('PluginsPopup: Couldn\'t find plugin "%s" within plugins' % [plugin_name])
 
 
 func _on_activate_check_button_toggled(_toggled: bool) -> void:
@@ -53,4 +55,6 @@ func _on_activate_check_button_toggled(_toggled: bool) -> void:
 
 func _on_settings_button_pressed() -> void:
 	var settings_page: Control = _plugins[_current_plugin].get_loader().get_settings_page()
-	PopupManager.push_stack_item([settings_page], settings_page._on_settings_confirmed, settings_page._on_settings_cancelled)
+	PopupManager.push_stack_item(
+		[settings_page], settings_page._on_settings_confirmed, settings_page._on_settings_cancelled
+	)

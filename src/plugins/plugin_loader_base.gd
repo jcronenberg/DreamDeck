@@ -51,7 +51,16 @@ extends Node
 ##     var _arguments_config: Config = Config.new()
 ##     _arguments_config.add_string("Example argument 1", "example_arg1", "Default value")
 ##     _arguments_config.add_float("Example argument 2", "example_arg2", 2.0)
-##     actions = [PluginCoordinator.PluginActionDefinition.new("Example action", "example_func", "A description of what this action does", _arguments_config, "Example plugin", "ExampleController")]
+##     actions = [
+##         PluginCoordinator.PluginActionDefinition.new(
+##             "Example action",
+##             "example_func",
+##             "A description of what this action does",
+##             _arguments_config,
+##             "Example plugin",
+##             "ExampleController"
+##         )
+##     ]
 ## [/codeblock]
 ## The action calls the function in your specified controller and the arguments will be the ones you
 ## specified in the [code]args_config[/code] in the order the objects were added.[br]
@@ -76,7 +85,9 @@ var _controllers: Dictionary = {}
 # Continuous checking if a scene in [member _load_queue] is loaded.
 func _process(_delta):
 	for load_item in _load_queue:
-		var load_status: ResourceLoader.ThreadLoadStatus = ResourceLoader.load_threaded_get_status(load_item)
+		var load_status: ResourceLoader.ThreadLoadStatus = ResourceLoader.load_threaded_get_status(
+			load_item
+		)
 		if load_status == ResourceLoader.THREAD_LOAD_LOADED:
 			add_resource(load_item, ResourceLoader.load_threaded_get(load_item))
 		elif load_status == ResourceLoader.THREAD_LOAD_FAILED:

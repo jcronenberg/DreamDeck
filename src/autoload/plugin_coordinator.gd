@@ -5,16 +5,15 @@ const DEFAULT_ACTIVATED_PLUGINS := {
 	"Macroboard": true,
 }
 
+@export var layout_setup_finished: bool = false:
+	set = set_layout_setup_finished
+
 var _conf_dir: String = ArgumentParser.get_conf_dir()
-var _conf_path: String # Path for plugins.json
+var _conf_path: String  # Path for plugins.json
 var _plugins: Array[Plugin] = []
 # _scenes example:
 # {"Spotify Panel": {"Spotify Panel1": scene, "Spotify Panel2": scene}, "Macroboard": {"Macroboard": scene}}
-var _scenes: Dictionary # The already loaded scenes
-
-
-@export var layout_setup_finished: bool = false:
-	set = set_layout_setup_finished
+var _scenes: Dictionary  # The already loaded scenes
 
 
 func _ready():
@@ -37,8 +36,9 @@ func discover_plugins():
 
 	var discovered_plugins: Array = list_plugins()
 	for plugin_path in discovered_plugins:
-		var plugin_config: FileAccess = FileAccess.open("res://plugins/%s/plugin.json" % plugin_path,
-			FileAccess.READ)
+		var plugin_config: FileAccess = FileAccess.open(
+			"res://plugins/%s/plugin.json" % plugin_path, FileAccess.READ
+		)
 		if not plugin_config:
 			push_error("Plugin %s is missing it's plugin.json file" % plugin_path)
 			continue
@@ -178,8 +178,9 @@ func _add_scenes_to_panels(plugin_name: String, scene_dict: Dictionary):
 func load_plugin_scene(plugin_name: String, scene: String):
 	# If cached in _scenes directly use it
 	if _scenes.has(plugin_name) and _scenes[plugin_name].has(scene):
-		get_tree().call_group("layout_panels", "add_plugin_scene", plugin_name,
-			{scene: _scenes[plugin_name][scene]})
+		get_tree().call_group(
+			"layout_panels", "add_plugin_scene", plugin_name, {scene: _scenes[plugin_name][scene]}
+		)
 		return
 
 	var loader = get_plugin_loader(plugin_name)
@@ -267,15 +268,12 @@ class Plugin:
 	var _activated: bool = false
 	var _loader: PluginLoaderBase = null
 
-
 	func _init(dict: Dictionary, plugin_path: String):
 		deserialize(dict)
 		_plugin_path = plugin_path
 
-
 	func is_activated() -> bool:
 		return _activated
-
 
 	func set_activated(activated: bool):
 		if not is_os_allowed():
@@ -296,10 +294,8 @@ class Plugin:
 
 		_activated = activated
 
-
 	func get_loader() -> PluginLoaderBase:
 		return _loader
-
 
 	func get_icon() -> Texture2D:
 		var icon_path: String
@@ -313,16 +309,13 @@ class Plugin:
 
 		return load(icon_path)
 
-
 	func show_settings_button() -> bool:
 		return is_activated() and _has_settings
-
 
 	func is_os_allowed() -> bool:
 		if not _allowed_oses.is_empty() and not _allowed_oses.has(OS.get_name()):
 			return false
 		return true
-
 
 	## Function that populates values from a plugin's "plugin.json" file.
 	func deserialize(dict: Dictionary):
@@ -343,8 +336,14 @@ class PluginActionDefinition:
 	var func_name: String
 	var args: Config
 
-
-	func _init(_name: String, _func_name: String, _description: String, _args: Config, _plugin: String, _controller: String):
+	func _init(
+		_name: String,
+		_func_name: String,
+		_description: String,
+		_args: Config,
+		_plugin: String,
+		_controller: String
+	):
 		name = _name
 		controller = _controller
 		description = _description
@@ -353,12 +352,12 @@ class PluginActionDefinition:
 		args = _args
 
 
-class PluginActionSelector extends VBoxContainer:
+class PluginActionSelector:
+	extends VBoxContainer
 	var _plugin_selector: OptionButton = OptionButton.new()
 	var _action_selector: OptionButton = OptionButton.new()
 	var _description_label: RichTextLabel = RichTextLabel.new()
 	var _plugin_actions: Array[PluginActionDefinition] = PluginCoordinator.get_plugin_actions()
-
 
 	func _init() -> void:
 		set_anchors_preset(PRESET_FULL_RECT)
@@ -393,7 +392,6 @@ class PluginActionSelector extends VBoxContainer:
 		_description_label.bbcode_enabled = true
 		add_child(_description_label)
 
-
 	func fill_plugins() -> void:
 		var plugins: Array[String] = []
 		for plugin_action in _plugin_actions:
@@ -406,20 +404,22 @@ class PluginActionSelector extends VBoxContainer:
 
 		_plugin_selector.select(-1)
 
-
 	func get_selected_action() -> PluginActionDefinition:
 		if _plugin_selector.get_selected_id() == -1 or _action_selector.get_selected_id() == -1:
 			return null
 
-		var selected_plugin: String = _plugin_selector.get_item_text(_plugin_selector.get_selected_id())
-		var selected_name: String = _action_selector.get_item_text(_action_selector.get_selected_id())
+		var selected_plugin: String = _plugin_selector.get_item_text(
+			_plugin_selector.get_selected_id()
+		)
+		var selected_name: String = _action_selector.get_item_text(
+			_action_selector.get_selected_id()
+		)
 
 		for plugin_action in _plugin_actions:
 			if plugin_action.plugin == selected_plugin and plugin_action.name == selected_name:
 				return plugin_action
 
 		return null
-
 
 	func _get_actions_for_plugin(plugin: String) -> Array[String]:
 		var actions: Array[String] = []
@@ -429,7 +429,6 @@ class PluginActionSelector extends VBoxContainer:
 
 		return actions
 
-
 	func _on_plugin_selected(index: int) -> void:
 		var plugin: String = _plugin_selector.get_item_text(index)
 		_action_selector.clear()
@@ -437,7 +436,6 @@ class PluginActionSelector extends VBoxContainer:
 			_action_selector.add_item(action)
 
 		_on_action_selected()
-
 
 	func _on_action_selected(_index: int = -1) -> void:
 		var action: PluginActionDefinition = get_selected_action()
@@ -454,7 +452,6 @@ class PluginAction:
 	var args: Array[Variant]
 	var blocking: bool
 
-
 	func deserialize(dict: Dictionary) -> void:
 		controller = dict["controller"]
 		plugin = dict["plugin"]
@@ -462,10 +459,14 @@ class PluginAction:
 		args = dict["args"]
 		blocking = dict["blocking"]
 
-
 	func serialize() -> Dictionary:
-		return {"controller": controller, "plugin": plugin, "func_name": func_name, "args": args, "blocking": blocking}
-
+		return {
+			"controller": controller,
+			"plugin": plugin,
+			"func_name": func_name,
+			"args": args,
+			"blocking": blocking
+		}
 
 	func execute() -> void:
 		var controller_instance: PluginControllerBase

@@ -6,8 +6,8 @@ const PLUGIN_NAME = "SSH"
 ## List containing all the currently active client [Config]s.
 var client_list: Array[Config] = []
 
-@onready var _conf_path: String = conf_dir + "clients.json"
 var _thread_pool: Array[Thread] = []
+@onready var _conf_path: String = conf_dir + "clients.json"
 
 
 func _init() -> void:

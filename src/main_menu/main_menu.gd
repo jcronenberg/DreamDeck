@@ -1,7 +1,7 @@
-extends Control
 class_name MainMenu
+extends Control
 
-const plugins_popup_scene = preload("res://src/main_menu/plugins_popup.tscn")
+const PLUGINS_POPUP_SCENE = preload("res://src/main_menu/plugins_popup.tscn")
 
 var _settings_popup: Config.ConfigEditor = null
 
@@ -63,7 +63,7 @@ func _on_settings_confirmed() -> bool:
 
 
 func _on_plugins_button_pressed() -> void:
-	var plugins_popup: PluginsPopup = plugins_popup_scene.instantiate()
+	var plugins_popup: PluginsPopup = PLUGINS_POPUP_SCENE.instantiate()
 	PopupManager.init_popup([plugins_popup])
 
 
