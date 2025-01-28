@@ -1,5 +1,5 @@
-extends Resource
 class_name Config
+extends Resource
 ## A helper class for configs.
 ##
 ## Includes several helper functions and also the ability to automatically generate
@@ -15,10 +15,10 @@ class_name Config
 ## config.add_string("Example string", "example string", "Example default value")
 ## [/codeblock]
 
-const RESTORE_DEFAULT_ICON = preload("res://resources/icons/restore_default.png")
-
 ## Emitted when the config changed
 signal config_changed
+
+const RESTORE_DEFAULT_ICON = preload("res://resources/icons/restore_default.png")
 
 var _path: String:
 	set = set_config_path
@@ -127,7 +127,9 @@ func add_float(label: String, key: String, default_value: float, description: St
 ## get when running [method get_as_dict])[br]
 ## [param default_value]: Default value[br]
 ## [param description](Optional): Description for what this config object does
-func add_string(label: String, key: String, default_value: String, description: String = "") -> void:
+func add_string(
+	label: String, key: String, default_value: String, description: String = ""
+) -> void:
 	_config.append(StringObject.new(label, key, default_value, description))
 
 
@@ -144,7 +146,9 @@ func add_string(label: String, key: String, default_value: String, description: 
 ## enum Example {ENUM_VALUE1, ENUM_VALUE2}
 ## config.add_enum("Example Enum", Example.ENUM_VALUE1, Example)
 ## [/codeblock]
-func add_enum(label: String, key: String, default_value: int, enum_dict: Dictionary, description: String = "") -> void:
+func add_enum(
+	label: String, key: String, default_value: int, enum_dict: Dictionary, description: String = ""
+) -> void:
 	_config.append(EnumObject.new(label, key, default_value, enum_dict, description))
 
 
@@ -156,7 +160,13 @@ func add_enum(label: String, key: String, default_value: int, enum_dict: Diction
 ## [param default_value]: Default value[br]
 ## [param string_array]: All available values to pick from[br]
 ## [param description](Optional): Description for what this config object does[br]
-func add_string_array(label: String, key: String, default_value: String, string_array: Array[String], description: String = "") -> void:
+func add_string_array(
+	label: String,
+	key: String,
+	default_value: String,
+	string_array: Array[String],
+	description: String = ""
+) -> void:
 	_config.append(StringArrayObject.new(label, key, default_value, string_array, description))
 
 
@@ -170,7 +180,13 @@ func add_string_array(label: String, key: String, default_value: String, string_
 ## [param description](Optional): Description for what this config object does[br]
 ## [param serialize_when_default](Optional): Whether serializing/saving the object
 ## should still store the value when it is the same as the default
-func add_color(label: String, key: String, default_value: Color, description: String = "", serialize_when_default: bool = true) -> void:
+func add_color(
+	label: String,
+	key: String,
+	default_value: Color,
+	description: String = "",
+	serialize_when_default: bool = true
+) -> void:
 	_config.append(ColorObject.new(label, key, default_value, description, serialize_when_default))
 
 
@@ -182,7 +198,13 @@ func add_color(label: String, key: String, default_value: Color, description: St
 ## [param default_value]: Default value[br]
 ## [param description](Optional): Description for what this config object does[br]
 ## [param file_filters](Optional): Specify which file types are supported. See [member FileDialog.filters]
-func add_file_path(label: String, key: String, default_value: String, description: String = "", file_filters: Array[String] = []) -> void:
+func add_file_path(
+	label: String,
+	key: String,
+	default_value: String,
+	description: String = "",
+	file_filters: Array[String] = []
+) -> void:
 	_config.append(FilePathObject.new(label, key, default_value, description, file_filters))
 
 
@@ -212,12 +234,14 @@ func set_config_path(path: String) -> void:
 
 class ConfigObject:
 	var _label: String:
-		get = get_label, set = set_label
+		get = get_label,
+		set = set_label
 	var _key: String:
-		get = get_key, set = set_key
+		get = get_key,
+		set = set_key
 	var _description: String:
-		get = get_description, set = set_description
-
+		get = get_description,
+		set = set_description
 
 	func _init(label: String, key: String, description: String = ""):
 		_label = label
@@ -225,234 +249,218 @@ class ConfigObject:
 		if description != "":
 			_description = description
 
-
 	func get_label() -> String:
 		return _label
-
 
 	func set_label(value: String) -> void:
 		_label = value
 
-
 	func get_key() -> String:
 		return _key
-
 
 	func set_key(value: String) -> void:
 		_key = value
 
-
 	func get_description() -> String:
 		return _description
-
 
 	func set_description(value: String) -> void:
 		_description = value
 
-
 	func get_value() -> Variant:
 		return null
 
-
 	func set_value(_value) -> void:
 		pass
-
 
 	func serialize() -> Dictionary:
 		return {}
 
 
-class BoolObject extends ConfigObject:
+class BoolObject:
+	extends ConfigObject
 	var _value: bool:
-		set = set_value, get = get_value
-
+		set = set_value,
+		get = get_value
 
 	func _init(label: String, key: String, value: bool, description: String = ""):
 		super(label, key, description)
 		_value = value
 
-
 	func get_value() -> bool:
 		return _value
 
-
 	func set_value(value: bool):
 		_value = value
-
 
 	func serialize() -> Dictionary:
 		return {_key: _value}
 
 
-class IntObject extends ConfigObject:
+class IntObject:
+	extends ConfigObject
 	var _value: int:
-		set = set_value, get = get_value
-
+		set = set_value,
+		get = get_value
 
 	func _init(label: String, key: String, value: int, description: String = ""):
 		super(label, key, description)
 		_value = value
 
-
 	func get_value() -> int:
 		return _value
 
-
 	func set_value(value: int) -> void:
 		_value = value
-
 
 	func serialize() -> Dictionary:
 		return {_key: _value}
 
 
-class FloatObject extends ConfigObject:
+class FloatObject:
+	extends ConfigObject
 	var _value: float:
-		set = set_value, get = get_value
-
+		set = set_value,
+		get = get_value
 
 	func _init(label: String, key: String, value: float, description: String = ""):
 		super(label, key, description)
 		_value = value
 
-
 	func get_value() -> float:
 		return _value
 
-
 	func set_value(value: float):
 		_value = value
-
 
 	func serialize() -> Dictionary:
 		return {_key: _value}
 
 
-class StringObject extends ConfigObject:
+class StringObject:
+	extends ConfigObject
 	var _value: String:
-		set = set_value, get = get_value
-
+		set = set_value,
+		get = get_value
 
 	func _init(label: String, key: String, value: String, description: String = ""):
 		super(label, key, description)
 		_value = value
 
-
 	func get_value() -> String:
 		return _value
-
 
 	func set_value(value: String):
 		_value = value
 
-
 	func serialize() -> Dictionary:
 		return {_key: _value}
 
 
-class EnumObject extends ConfigObject:
+class EnumObject:
+	extends ConfigObject
 	var _value: int:
-		set = set_value, get = get_value
+		set = set_value,
+		get = get_value
 	var _enum_dict: Dictionary:
 		get = get_enum_dict
 
-
-	func _init(label: String, key: String, value: int, enum_dict: Dictionary, description: String = ""):
+	func _init(
+		label: String, key: String, value: int, enum_dict: Dictionary, description: String = ""
+	):
 		super(label, key, description)
 		_value = value
 		_enum_dict = enum_dict
 
-
 	func get_value() -> int:
 		return _value
-
 
 	func set_value(value: int):
 		_value = value
 
-
 	func get_enum_dict() -> Dictionary:
 		return _enum_dict
-
 
 	func serialize() -> Dictionary:
 		return {_key: _value}
 
 
-class StringArrayObject extends ConfigObject:
+class StringArrayObject:
+	extends ConfigObject
 	var _value: String:
-		set = set_value, get = get_value
+		set = set_value,
+		get = get_value
 	var _string_array: Array[String]:
-		set = set_string_array, get = get_string_array
+		set = set_string_array,
+		get = get_string_array
 
-
-	func _init(label: String, key: String, value: String, string_array: Array[String], description: String = ""):
+	func _init(
+		label: String,
+		key: String,
+		value: String,
+		string_array: Array[String],
+		description: String = ""
+	):
 		super(label, key, description)
 		_value = value
 		_string_array = string_array
 
-
 	func get_value() -> String:
 		return _value
-
 
 	func set_value(value: String):
 		if value in _string_array:
 			_value = value
 
-
 	func get_string_array() -> Array[String]:
 		return _string_array
 
-
 	func set_string_array(array: Array[String]) -> void:
 		_string_array = array
-
 
 	func serialize() -> Dictionary:
 		return {_key: _value}
 
 
-class ColorObject extends ConfigObject:
+class ColorObject:
+	extends ConfigObject
 	var _value: Color
 	var _default_value: Color
 	var _serialize_when_default: bool
 
-
-	func _init(label: String, key: String, value: Color, description: String = "", serialize_when_default: bool = true):
+	func _init(
+		label: String,
+		key: String,
+		value: Color,
+		description: String = "",
+		serialize_when_default: bool = true
+	):
 		super(label, key, description)
 		_value = value.to_rgba32()
 		_default_value = _value
 		_serialize_when_default = serialize_when_default
 
-
 	## Get value as rgba32
 	func get_value() -> int:
 		return _value.to_rgba32()
-
 
 	## Set value from rgba32
 	func set_value(value: int):
 		_value = Color.hex(value)
 
-
 	func get_value_color() -> Color:
 		return _value
-
 
 	func set_value_color(value: Color):
 		_value = value
 
-
 	func get_default_value() -> Color:
 		return _default_value
-
 
 	func set_default_value(value: Color) -> void:
 		if get_value() == _default_value.to_rgba32():
 			set_value_color(value)
 		_default_value = value
-
 
 	## Serialization happens with value in rgba32 format
 	func serialize() -> Dictionary:
@@ -462,11 +470,17 @@ class ColorObject extends ConfigObject:
 		return {}
 
 
-class FilePathObject extends StringObject:
+class FilePathObject:
+	extends StringObject
 	var file_filters: Array[String]
 
-
-	func _init(label: String, key: String, default_value: String, description: String = "", init_file_filters: Array[String] = []):
+	func _init(
+		label: String,
+		key: String,
+		default_value: String,
+		description: String = "",
+		init_file_filters: Array[String] = []
+	):
 		super(label, key, default_value, description)
 		file_filters = init_file_filters
 
@@ -478,7 +492,8 @@ class FilePathObject extends StringObject:
 ## A editor is always linked to a [Config] and allows directly applying and saving to
 ## the config. If you need to react to changes connect to the configs
 ## [signal Config.config_changed] signal.
-class ConfigEditor extends VBoxContainer:
+class ConfigEditor:
+	extends VBoxContainer
 
 	var _config_ref: Config
 	var _object_editors: Array[VariantEditor] = []
@@ -510,12 +525,10 @@ class ConfigEditor extends VBoxContainer:
 		for editor in _object_editors:
 			add_child(editor)
 
-
 	## Applies the current values to the config via [method Config.apply_dict].
 	## Note that this doesn't save to disk, use [method save] for this.
 	func apply() -> void:
 		_config_ref.apply_dict(serialize())
-
 
 	## Returns a key value [Dictionary] with the current values.
 	func serialize() -> Dictionary:
@@ -525,12 +538,10 @@ class ConfigEditor extends VBoxContainer:
 
 		return save_dict
 
-
 	## Saves the config via [method Config.save].
 	## Note that this doesn't apply the current editor values, use [method apply] for this.
 	func save() -> void:
 		_config_ref.save()
-
 
 	## Get a specific editor by [param key].
 	## Useful if you e.g. need to change some values for an object editor after
@@ -542,7 +553,6 @@ class ConfigEditor extends VBoxContainer:
 
 		return null
 
-
 	## Set all values at once.
 	func set_values(values: Array[Variant]) -> void:
 		if values.size() > _object_editors.size():
@@ -550,7 +560,6 @@ class ConfigEditor extends VBoxContainer:
 			return
 		for i in values.size():
 			_object_editors[i].set_value(values[i])
-
 
 	## Get all values at once.
 	func get_values() -> Array[Variant]:
@@ -560,23 +569,21 @@ class ConfigEditor extends VBoxContainer:
 
 		return ret_arr
 
-
 	## Invokes [method apply] and [method save]. Called when plugin settings get confirmed.
 	func _on_settings_confirmed() -> void:
 		apply()
 		save()
-
 
 	## Doesn't do anything. Just a stub that gets called when plugin settings get cancelled.
 	func _on_settings_cancelled() -> void:
 		pass
 
 
-class VariantEditor extends HBoxContainer:
+class VariantEditor:
+	extends HBoxContainer
 	var _key: String
 	var _name_label: Label = Label.new()
 	var _description_label: RichTextLabel
-
 
 	func _init(object: ConfigObject):
 		_key = object.get_key()
@@ -596,31 +603,26 @@ class VariantEditor extends HBoxContainer:
 
 		add_child(vbox)
 
-
 	func set_description(description: String):
 		# Making everything just [indent] is a bit of a hack, but works visually
 		_description_label.text = "[indent]%s[/indent]" % description
 
-
 	func set_label(value: String):
 		_name_label.text = value
-
 
 	func get_key() -> String:
 		return _key
 
-
 	func set_value(_value):
 		pass
-
 
 	func get_value():
 		pass
 
 
-class BoolEditor extends VariantEditor:
+class BoolEditor:
+	extends VariantEditor
 	var _value_editor: CheckBox
-
 
 	func _init(object: BoolObject):
 		super(object)
@@ -631,18 +633,16 @@ class BoolEditor extends VariantEditor:
 		add_child(_value_editor)
 		set_value(object.get_value())
 
-
 	func set_value(value: bool):
 		_value_editor.button_pressed = value
-
 
 	func get_value() -> bool:
 		return _value_editor.button_pressed
 
 
-class IntEditor extends VariantEditor:
+class IntEditor:
+	extends VariantEditor
 	var _value_editor: SpinBox
-
 
 	func _init(object: IntObject):
 		super(object)
@@ -656,18 +656,16 @@ class IntEditor extends VariantEditor:
 		add_child(_value_editor)
 		set_value(object.get_value())
 
-
 	func set_value(value: int):
 		_value_editor.value = value
-
 
 	func get_value() -> int:
 		return int(_value_editor.value)
 
 
-class FloatEditor extends VariantEditor:
+class FloatEditor:
+	extends VariantEditor
 	var _value_editor: SpinBox
-
 
 	func _init(object: FloatObject):
 		super(object)
@@ -681,18 +679,16 @@ class FloatEditor extends VariantEditor:
 		add_child(_value_editor)
 		set_value(object.get_value())
 
-
 	func set_value(value: float):
 		_value_editor.value = value
-
 
 	func get_value() -> float:
 		return _value_editor.value
 
 
-class StringEditor extends VariantEditor:
+class StringEditor:
+	extends VariantEditor
 	var _value_editor: LineEdit
-
 
 	func _init(object: StringObject):
 		super(object)
@@ -703,19 +699,17 @@ class StringEditor extends VariantEditor:
 		add_child(_value_editor)
 		set_value(object.get_value())
 
-
 	func set_value(value: String):
 		_value_editor.text = value
-
 
 	func get_value() -> String:
 		return _value_editor.text
 
 
-class EnumEditor extends VariantEditor:
+class EnumEditor:
+	extends VariantEditor
 	var _value_editor: OptionButton
 	var _enum_dict: Dictionary
-
 
 	func _init(object: EnumObject):
 		super(object)
@@ -735,12 +729,10 @@ class EnumEditor extends VariantEditor:
 		setup_value_editor()
 		set_value(object.get_value())
 
-
 	func setup_value_editor():
 		_value_editor.clear()
 		for key in _enum_dict:
 			_value_editor.add_item(key)
-
 
 	func set_value(value: int):
 		if value == -1:
@@ -763,22 +755,18 @@ class EnumEditor extends VariantEditor:
 
 		_value_editor.select(id)
 
-
 	func set_enum_dict(dict: Dictionary):
 		_enum_dict = dict
 		setup_value_editor()
 
-
 	func get_value_editor() -> OptionButton:
 		return _value_editor
-
 
 	func get_value():
 		if _value_editor.get_selected_id() == -1:
 			return -1
 
 		return _enum_dict.get(_value_editor.get_item_text(_value_editor.get_selected_id()))
-
 
 	func get_value_string() -> String:
 		var value: int = get_value()
@@ -791,15 +779,14 @@ class EnumEditor extends VariantEditor:
 
 		return ""
 
-
 	func _on_clear_button_pressed():
 		_value_editor.select(-1)
 
 
-class StringArrayEditor extends VariantEditor:
+class StringArrayEditor:
+	extends VariantEditor
 	var _value_editor: OptionButton
 	var _string_array: Array[String]
-
 
 	func _init(object: StringArrayObject) -> void:
 		super(object)
@@ -819,12 +806,10 @@ class StringArrayEditor extends VariantEditor:
 		setup_value_editor()
 		set_value(object.get_value())
 
-
 	func setup_value_editor() -> void:
 		_value_editor.clear()
 		for string in _string_array:
 			_value_editor.add_item(string)
-
 
 	func set_value(value: String) -> void:
 		if not value in _string_array:
@@ -835,15 +820,12 @@ class StringArrayEditor extends VariantEditor:
 			if _value_editor.get_item_text(i) == value:
 				_value_editor.select(i)
 
-
 	func set_string_array(array: Array[String]) -> void:
 		_string_array = array
 		setup_value_editor()
 
-
 	func get_value_editor() -> OptionButton:
 		return _value_editor
-
 
 	func get_value() -> String:
 		if _value_editor.get_selected_id() == -1:
@@ -851,16 +833,15 @@ class StringArrayEditor extends VariantEditor:
 
 		return _value_editor.get_item_text(_value_editor.get_selected_id())
 
-
 	func _on_clear_button_pressed() -> void:
 		_value_editor.select(-1)
 
 
-class ColorEditor extends VariantEditor:
+class ColorEditor:
+	extends VariantEditor
 	var _value_editor: ColorPickerButton
 	var _reset_to_default_button: TextureButton
 	var _default_value: Color
-
 
 	func _init(object: ColorObject):
 		super(object)
@@ -890,33 +871,28 @@ class ColorEditor extends VariantEditor:
 
 		add_child(color_hbox)
 
-
 	func set_value(value: int):
 		_value_editor.color = Color.hex(value)
 		_on_color_changed(Color.hex(value))
 
-
 	func get_value() -> int:
 		return _value_editor.color.to_rgba32()
-
 
 	func set_value_color(value: Color):
 		_value_editor.color = value
 		_on_color_changed(value)
 
-
 	func get_value_color() -> Color:
 		return _value_editor.color
-
 
 	func _on_color_changed(color: Color) -> void:
 		_reset_to_default_button.visible = color.to_rgba32() != _default_value.to_rgba32()
 
 
-class FilePathEditor extends VariantEditor:
+class FilePathEditor:
+	extends VariantEditor
 	var _value_editor: LineEdit
 	var _file_dialog: FileDialog
-
 
 	func _init(object: FilePathObject):
 		super(object)
@@ -951,23 +927,21 @@ class FilePathEditor extends VariantEditor:
 
 		add_child(editor_hbox)
 
-
 	func set_value(value: String):
 		_value_editor.text = value
-
 
 	func get_value() -> String:
 		return _value_editor.text
 
-
 	func _on_open_file_dialog_button_pressed() -> void:
 		var initial_path: String = get_value().get_base_dir()
 		if not initial_path.begins_with("/"):
-			initial_path = ConfLib.get_absolute_path(ArgumentParser.get_conf_dir() + get_value().get_base_dir())
+			initial_path = ConfLib.get_absolute_path(
+				ArgumentParser.get_conf_dir() + get_value().get_base_dir()
+			)
 
 		_file_dialog.current_dir = initial_path
 		_file_dialog.show()
-
 
 	func _on_file_dialog_completed(selected_path: String) -> void:
 		set_value(selected_path)

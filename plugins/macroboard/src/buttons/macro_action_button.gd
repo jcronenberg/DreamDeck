@@ -2,13 +2,16 @@ class_name MacroActionButton
 extends MacroButtonBase
 
 ## Emitted when a change to this button has happened.
-signal button_changed()
+signal button_changed
+
+## The [Macroboard] a button was/is being dragged on.
+## Used by [Macroboard] to decide if button has moved from a different one.
+var dragging_macroboard: Macroboard = null
 
 var _button_label: String = ""
 var _icon_path: String = ""
 var _show_button_label: bool = false
 var _actions: Array[PluginCoordinator.PluginAction]
-var dragging_macroboard: Macroboard = null
 
 
 func _ready() -> void:

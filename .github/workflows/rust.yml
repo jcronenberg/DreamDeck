@@ -1,0 +1,53 @@
+name: "Rust checks"
+
+on:
+  push:
+    paths:
+    - 'plugins/ssh/rust/**'
+    - 'plugins/touch/rust/**'
+  pull_request:
+    paths: 
+    - 'plugins/ssh/rust/**'
+    - 'plugins/touch/rust/**'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  touch_checks:
+    name: Rust checks for touch plugin
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+    - name: Git Checkout
+      uses: actions/checkout@v3
+    - name: Install toolchain
+      run: rustup toolchain install stable
+    - name: Install dependencies
+      run: sudo apt install libssl-dev pkg-config
+    - name: Lint tests
+      run: cargo fmt --all -- --check
+      working-directory: ./plugins/touch/rust
+    - name: Cargo clippy
+      run: cargo clippy -- --no-deps -D warnings
+      working-directory: ./plugins/touch/rust
+
+  ssh_checks:
+    name: Rust checks for ssh plugin
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+    - name: Git Checkout
+      uses: actions/checkout@v3
+    - name: Install toolchain
+      run: rustup toolchain install stable
+    - name: Install dependencies
+      run: sudo apt install libssl-dev pkg-config
+    - name: Lint tests
+      run: cargo fmt --all -- --check
+      working-directory: ./plugins/ssh/rust
+    - name: Cargo clippy
+      run: cargo clippy -- --no-deps -D warnings
+      working-directory: ./plugins/ssh/rust

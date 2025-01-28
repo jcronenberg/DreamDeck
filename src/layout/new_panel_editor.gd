@@ -44,7 +44,8 @@ func save() -> bool:
 	else:
 		_config_editor.get_editor("scene").modulate = Color.WHITE
 
-	if abort: return false
+	if abort:
+		return false
 
 	new_panel_dict["UUID"] = UUID.v4()
 	new_panel_dict["scene"] = _config_editor.get_editor("scene").get_value_string()
@@ -59,4 +60,6 @@ func _on_new_panel_plugin_selected(idx: int):
 
 	var scene_editor: Config.EnumEditor = _config_editor.get_editor("scene")
 	var plugins_editor: Config.EnumEditor = _config_editor.get_editor("plugin")
-	scene_editor.set_enum_dict(PluginCoordinator.generate_scene_enum(plugins_editor.get_value_string()))
+	scene_editor.set_enum_dict(
+		PluginCoordinator.generate_scene_enum(plugins_editor.get_value_string())
+	)

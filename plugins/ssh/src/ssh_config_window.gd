@@ -1,7 +1,9 @@
 class_name SSHConfigWindow
 extends Control
 
-var _ssh_controller: SSHController = PluginCoordinator.get_plugin_loader("SSH").get_controller("SSHController")
+var _ssh_controller: SSHController = PluginCoordinator.get_plugin_loader("SSH").get_controller(
+	"SSHController"
+)
 var _client_index: int = -1
 var _client_config: Config
 var _client_editor: Config.ConfigEditor

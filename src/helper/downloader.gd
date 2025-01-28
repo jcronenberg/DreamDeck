@@ -2,18 +2,16 @@
 # All credit to them
 # https://github.com/Nolkaloid/godot-yt-dlp
 
-extends RefCounted
 class_name Downloader
+extends RefCounted
 
 signal download_completed
 signal download_failed
 signal download_progressed(percentage)
 
 var _is_downloading: bool = false
-var _headers = PackedStringArray([
-	"User-Agent: Pirulo/1.0 (Godot)",
-	"Accept: */*"
-])
+var _headers = PackedStringArray(["User-Agent: Pirulo/1.0 (Godot)", "Accept: */*"])
+
 
 func download(url: String, file_path: String) -> void:
 	if _is_downloading:
@@ -22,7 +20,9 @@ func download(url: String, file_path: String) -> void:
 	_is_downloading = true
 
 	var url_regex = RegEx.new()
-	url_regex.compile("^(?<host>((?<protocol>https?):\\/\\/)?[^\\/]+\\.[a-z]{2,})(?<path>(?>\\/.*)*)$")
+	url_regex.compile(
+		"^(?<host>((?<protocol>https?):\\/\\/)?[^\\/]+\\.[a-z]{2,})(?<path>(?>\\/.*)*)$"
+	)
 
 	var host: String
 	var path: String

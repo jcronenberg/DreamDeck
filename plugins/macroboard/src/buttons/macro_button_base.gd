@@ -2,7 +2,7 @@ class_name MacroButtonBase
 extends Button
 
 ## Emitted when this button is supposed to be deleted.
-signal button_deletion_requested()
+signal button_deletion_requested
 
 const THEME_VARIATION = "MacroButton"
 const DEFAULT_FONT_COLOR = Color(1, 1, 1)
@@ -17,7 +17,13 @@ var _config: Config = Config.new()
 
 func _init() -> void:
 	_config.add_string("Button label", "button_label", "")
-	_config.add_file_path("Icon path", "icon_path", "", "[i]Can also be relative to config directory[/i]", ["*.png,*.jpg,*.jpeg;Supported images", "*;All files"])
+	_config.add_file_path(
+		"Icon path",
+		"icon_path",
+		"",
+		"[i]Can also be relative to config directory[/i]",
+		["*.png,*.jpg,*.jpeg;Supported images", "*;All files"]
+	)
 	_config.add_bool("Show button label", "show_button_label", false)
 	_config.add_color("Normal background color", "bg_color", DEFAULT_BG_COLOR, "", false)
 	_config.add_color("Pressed background color", "pressed_color", DEFAULT_PRESSED_COLOR, "", false)
@@ -29,10 +35,18 @@ func _init() -> void:
 func open_editor(new_button: bool = false) -> void:
 	# Load default colors
 	var macro_theme: Theme = load("res://plugins/macroboard/themes/theme.tres")
-	_config.get_object("bg_color").set_default_value(macro_theme.get_stylebox("normal", THEME_VARIATION).bg_color)
-	_config.get_object("pressed_color").set_default_value(macro_theme.get_stylebox("pressed", THEME_VARIATION).bg_color)
-	_config.get_object("font_color").set_default_value(macro_theme.get_color("font_color", THEME_VARIATION))
-	_config.get_object("font_pressed_color").set_default_value(macro_theme.get_color("font_pressed_color", THEME_VARIATION))
+	_config.get_object("bg_color").set_default_value(
+		macro_theme.get_stylebox("normal", THEME_VARIATION).bg_color
+	)
+	_config.get_object("pressed_color").set_default_value(
+		macro_theme.get_stylebox("pressed", THEME_VARIATION).bg_color
+	)
+	_config.get_object("font_color").set_default_value(
+		macro_theme.get_color("font_color", THEME_VARIATION)
+	)
+	_config.get_object("font_pressed_color").set_default_value(
+		macro_theme.get_color("font_pressed_color", THEME_VARIATION)
+	)
 
 	var settings_vbox: VBoxContainer = VBoxContainer.new()
 	settings_vbox.name = "Settings"
@@ -61,7 +75,9 @@ func _on_popup_new_action_confirmed() -> bool:
 	if not _new_action_selector:
 		return true
 
-	var action: PluginCoordinator.PluginActionDefinition = _new_action_selector.get_selected_action()
+	var action: PluginCoordinator.PluginActionDefinition = (
+		_new_action_selector.get_selected_action()
+	)
 	if action:
 		_actions_editor.add_action(action)
 
@@ -90,13 +106,13 @@ func _on_confirm_deletion() -> void:
 	button_deletion_requested.emit()
 
 
-class ActionsEditor extends VBoxContainer:
+class ActionsEditor:
+	extends VBoxContainer
 	signal new_action_requested
 
 	var _scroll_container: ScrollContainer = ScrollContainer.new()
 	var _reorder_vbox: ReorderableVBox = ReorderableVBox.new()
 	var _add_button: Button = Button.new()
-
 
 	func _init() -> void:
 		add_theme_constant_override("separation", 10)
@@ -111,8 +127,11 @@ class ActionsEditor extends VBoxContainer:
 		_add_button.connect("pressed", _on_add_button_pressed)
 		add_child(_add_button)
 
-
-	func add_action(action_def: PluginCoordinator.PluginActionDefinition, args_values: Array[Variant] = [], blocking: bool = false) -> void:
+	func add_action(
+		action_def: PluginCoordinator.PluginActionDefinition,
+		args_values: Array[Variant] = [],
+		blocking: bool = false
+	) -> void:
 		var action_editor: ActionEditor = ActionEditor.new(action_def.args.generate_editor())
 		action_editor.args_editor.set_values(args_values)
 		action_editor.plugin = action_def.plugin
@@ -121,7 +140,6 @@ class ActionsEditor extends VBoxContainer:
 		action_editor.blocking = blocking
 		_reorder_vbox.add_child(action_editor)
 
-
 	func populate_actions(actions: Array[PluginCoordinator.PluginAction]) -> void:
 		for child in _reorder_vbox.get_children():
 			child.queue_free()
@@ -129,10 +147,12 @@ class ActionsEditor extends VBoxContainer:
 		var action_definitions = PluginCoordinator.get_plugin_actions()
 		for action in actions:
 			for action_definition in action_definitions:
-				if action_definition.plugin == action.plugin and action_definition.func_name == action.func_name:
+				if (
+					action_definition.plugin == action.plugin
+					and action_definition.func_name == action.func_name
+				):
 					add_action(action_definition, action.args, action.blocking)
 					break
-
 
 	func deserialize() -> Array[PluginCoordinator.PluginAction]:
 		var ret_array: Array[PluginCoordinator.PluginAction] = []
@@ -142,12 +162,12 @@ class ActionsEditor extends VBoxContainer:
 
 		return ret_array
 
-
 	func _on_add_button_pressed() -> void:
 		new_action_requested.emit()
 
 
-class ActionEditor extends HBoxContainer:
+class ActionEditor:
+	extends HBoxContainer
 	var args_editor: Config.ConfigEditor
 	var plugin: String
 	var controller: String
@@ -160,7 +180,6 @@ class ActionEditor extends HBoxContainer:
 	var _editor_vbox: VBoxContainer = VBoxContainer.new()
 	var _blocking_editor: Config.BoolEditor
 	var _delete_button: Button = Button.new()
-
 
 	func _init(editor: Config.ConfigEditor) -> void:
 		set("theme_override_constants/separation", 10)
@@ -180,20 +199,20 @@ class ActionEditor extends HBoxContainer:
 		args_editor.mouse_filter = Control.MOUSE_FILTER_STOP
 		_editor_vbox.add_child(args_editor)
 
-		_blocking_editor = Config.BoolEditor.new(Config.BoolObject.new("Wait to finish", "blocking", false))
+		_blocking_editor = Config.BoolEditor.new(
+			Config.BoolObject.new("Wait to finish", "blocking", false)
+		)
 		_editor_vbox.add_child(_blocking_editor)
 
 		_delete_button.text = "X"
 		_delete_button.connect("pressed", _on_delete_button_pressed)
 		add_child(_delete_button)
 
-
 	func _ready() -> void:
 		# Special cases
 		if plugin == "DreamDeck" and func_name == "wait_time":
 			_blocking_editor.queue_free()
 			_blocking_editor = null
-
 
 	func to_action() -> PluginCoordinator.PluginAction:
 		var action: PluginCoordinator.PluginAction = PluginCoordinator.PluginAction.new()
@@ -205,11 +224,9 @@ class ActionEditor extends HBoxContainer:
 
 		return action
 
-
 	func set_blocking(value: bool) -> void:
 		blocking = value
 		_blocking_editor.set_value(value)
-
 
 	func _on_delete_button_pressed() -> void:
 		self.queue_free()

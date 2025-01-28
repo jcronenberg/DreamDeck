@@ -2,11 +2,20 @@ class_name Macroboard
 extends PluginSceneBase
 ## A board that contains [ShellButton]s which can execute all kind of functions.
 
+## WARNING! Should pretty much never be used outside of the [Macroboard] instance itself.[br][br]
+## Signal that gets emitted when confirm dialog gets closed
+## with the bool value representing true if confirmed, otherwise false.[br]
+## This is necessary because awaiting both [ConfirmationDialog] signals,
+## confirmed and canceled is not possible.
+signal confirm_dialog_closed(bool)
+
 # TODO make it a config setting
 ## The gap between buttons
 const BUTTON_GAP = 10
 
-var _action_button: PackedScene = load("res://plugins/macroboard/src/buttons/macro_action_button.tscn")
+var _action_button: PackedScene = load(
+	"res://plugins/macroboard/src/buttons/macro_action_button.tscn"
+)
 var _no_button: PackedScene = load("res://plugins/macroboard/src/buttons/macro_no_button.tscn")
 
 # The amount of rows and columns this [Macroboard] is supposed to have.
@@ -19,10 +28,12 @@ var _button_min_size: Vector2
 # Array that contains the instances of all buttons.
 var _layout_instances: Array[MacroButtonBase] = []
 
-# Flag if buttons are supposed to be maximum size or keep square (square can leave a gap at the bottom).
+# Flag if buttons are supposed to be maximum size or keep square
+# (square can leave a gap at the bottom).
 var _keep_buttons_square: bool = true
 
-# Position of removed button when a button from a different [Macroboard] was dragged to this [Macroboard].
+# Position of removed button when a button from a different [Macroboard]
+# was dragged to this [Macroboard].
 var _removed_button_pos: int = -1
 
 # Current Position of the dragged button in [member _layout_instances].
@@ -31,13 +42,6 @@ var _dragged_button_pos: int = -1
 
 # Path where layout is stored.
 @onready var _layout_path: String = conf_dir + "layout.json"
-
-## WARNING! Should pretty much never be used outside of the [Macroboard] instance itself.[br][br]
-## Signal that gets emitted when confirm dialog gets closed
-## with the bool value representing true if confirmed, otherwise false.[br]
-## This is necessary because awaiting both [ConfirmationDialog] signals,
-## confirmed and canceled is not possible.
-signal _confirm_dialog_closed(bool)
 
 
 func _init() -> void:
@@ -134,7 +138,9 @@ func associate_signals(action_button: MacroActionButton) -> void:
 
 	# Connect to this macroboard
 	action_button.button_changed.connect(save_layout)
-	action_button.button_deletion_requested.connect(delete_button.bind(action_button), CONNECT_DEFERRED)
+	action_button.button_deletion_requested.connect(
+		delete_button.bind(action_button), CONNECT_DEFERRED
+	)
 
 
 # Frees all current rows.
@@ -164,7 +170,6 @@ func _create_buttons(layout: Array) -> void:
 			_layout_instances.append(new_button)
 
 			button_iterator += 1
-
 
 	_place_buttons()
 	# Since all buttons get reset, we need to account for edit mode
@@ -223,8 +228,12 @@ func _toggle_add_buttons(state: bool) -> void:
 func _calculate_button_size() -> Vector2:
 	var macroboard_size: Vector2 = get_size()
 	var button_size: Vector2 = Vector2()
-	button_size.x = int(((macroboard_size.x - _max_buttons.x * BUTTON_GAP) + BUTTON_GAP) / _max_buttons.x)
-	button_size.y = int(((macroboard_size.y - _max_buttons.y * BUTTON_GAP) + BUTTON_GAP) / _max_buttons.y)
+	button_size.x = int(
+		((macroboard_size.x - _max_buttons.x * BUTTON_GAP) + BUTTON_GAP) / _max_buttons.x
+	)
+	button_size.y = int(
+		((macroboard_size.y - _max_buttons.y * BUTTON_GAP) + BUTTON_GAP) / _max_buttons.y
+	)
 
 	# Only return positive values
 	if button_size.abs() != button_size:
@@ -277,15 +286,18 @@ func _handle_lifted_button(cursor_position: Vector2, lifted_button: MacroActionB
 # Calculates where in the layout array [param cursor_position] would slot in.
 func _calculate_button_position(cursor_position: Vector2) -> int:
 	var pos: Vector2 = floor(cursor_position / (_button_min_size + Vector2(BUTTON_GAP, BUTTON_GAP)))
-	if pos.y >= _max_buttons.y: pos.y = _max_buttons.y - 1
-	if pos.x >= _max_buttons.x: pos.x = _max_buttons.x - 1
+	if pos.y >= _max_buttons.y:
+		pos.y = _max_buttons.y - 1
+	if pos.x >= _max_buttons.x:
+		pos.x = _max_buttons.x - 1
 	return int(pos.y * _max_buttons.x + pos.x)
 
 
 # Makes space and places the [param button] at [param pos].
 # Note: The instance is also saved in [member _layout_instances].
 func _place_dragging_button(pos: int, button: MacroActionButton) -> void:
-	if pos == _dragged_button_pos: return
+	if pos == _dragged_button_pos:
+		return
 
 	if not _layout_instances.has(button):
 		_make_space_for_dragging_button()
@@ -300,7 +312,8 @@ func _place_dragging_button(pos: int, button: MacroActionButton) -> void:
 
 
 # Finds the first free space in reverse order and then removes that [MacroNoButton].
-# Should only be called if it has already been validated that there is space(a [MacroNoButton]) to remove.
+# Should only be called if it has already been validated that there is space(a [MacroNoButton])
+# to remove.
 func _make_space_for_dragging_button() -> void:
 	if _removed_button_pos < 0:
 		for i in range(_layout_instances.size() - 1, -1, -1):
@@ -339,7 +352,8 @@ func _resize_buttons() -> void:
 			child.set_custom_minimum_size(_button_min_size)
 
 
-# Called when size of the [Macroboard] changes. Updates [member _button_min_size] and resizes buttons.
+# Called when size of the [Macroboard] changes.
+# Updates [member _button_min_size] and resizes buttons.
 func _on_size_changed() -> void:
 	var new_button_min_size: Vector2 = _calculate_button_size()
 	if _button_min_size == new_button_min_size:
@@ -392,8 +406,9 @@ func _remove_no_buttons(count: int) -> bool:
 
 # Checks if config changes can be applied without losing any buttons.
 # In case it can't, it shows a deletion warning.
-# If either the deletion warning was confirmed or changes can be applied without losing buttons,
-# it frees as many [MacroNoButton]s as it can/needs to from the scene and also from [member _layout_instances].
+# If either the deletion warning was confirmed or changes can be applied without
+# losing buttons, it frees as many [MacroNoButton]s as it can/needs to from the
+# scene and also from [member _layout_instances].
 # Returns false if user declined the deletion warning.
 # Note: this only deletes [MacroNoButton]s, it will never delete any other buttons.
 func _on_macroboard_config_change(new_config_dict: Dictionary) -> bool:
@@ -405,33 +420,38 @@ func _on_macroboard_config_change(new_config_dict: Dictionary) -> bool:
 			if await _show_button_deletion_warning():
 				_remove_no_buttons(max_buttons_diff)
 				return true
-			else:
-				return false
 
-		else:
-			_remove_no_buttons(max_buttons_diff)
+			return false
+
+		_remove_no_buttons(max_buttons_diff)
 
 	return true
 
 
-# Shows and returns the value of a [ConfirmationDialog], warning the user of imminent button deletion.
+# Shows and returns the value of a [ConfirmationDialog],
+# warning the user of imminent button deletion.
 func _show_button_deletion_warning() -> bool:
 	var confirm_dialog: ConfirmationDialog = ConfirmationDialog.new()
-	confirm_dialog.dialog_text = "WARNING!\nExisting buttons will be deleted by the size change (starting from the back).\nAre you certain you want to continue?"
+	confirm_dialog.dialog_text = """[center]WARNING!
+Existing buttons will be deleted by the size change (starting from the back).
+Are you certain you want to continue?[/center]
+"""
 	add_child(confirm_dialog)
 	confirm_dialog.initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_PRIMARY_SCREEN
 	confirm_dialog.show()
 	confirm_dialog.confirmed.connect(_on_confirm_dialog_confirmed)
 	confirm_dialog.canceled.connect(_on_confirm_dialog_canceled)
-	return await _confirm_dialog_closed
+	var ret: bool = await confirm_dialog_closed
+	confirm_dialog.queue_free()
+	return ret
 
 
 func _on_confirm_dialog_confirmed() -> void:
-	_confirm_dialog_closed.emit(true)
+	confirm_dialog_closed.emit(true)
 
 
 func _on_confirm_dialog_canceled() -> void:
-	_confirm_dialog_closed.emit(false)
+	confirm_dialog_closed.emit(false)
 
 
 # Function for [method Macroboard.edit_config] when popup gets confirmed.

@@ -1,7 +1,7 @@
 ## Handler for all the builtin actions.
 extends Node
 
-var _layout: Layout # Meant to be set by Layout itself
+var _layout: Layout  # Meant to be set by Layout itself
 var _switch_panel_config: Config = Config.new()
 var _available_panels: Array[String] = []
 var _actions: Array[PluginCoordinator.PluginActionDefinition]
@@ -82,10 +82,31 @@ func _setup_actions() -> void:
 	_switch_panel_config.add_string_array("Panel name", "panel_name", "", _available_panels)
 
 	_actions = [
-		PluginCoordinator.PluginActionDefinition.new("Execute command", "exec_cmd", "Execute a command on this device", exec_cmd_args_config, "DreamDeck", ""),
-		PluginCoordinator.PluginActionDefinition.new("Timer", "wait_time", "Delays the execution of the next action by configured time in seconds", timer_args_config, "DreamDeck", ""),
-		PluginCoordinator.PluginActionDefinition.new("Switch panel", "switch_panel", "Show the panel with the configured name", _switch_panel_config, "DreamDeck", "")
-		]
+		PluginCoordinator.PluginActionDefinition.new(
+			"Execute command",
+			"exec_cmd",
+			"Execute a command on this device",
+			exec_cmd_args_config,
+			"DreamDeck",
+			""
+		),
+		PluginCoordinator.PluginActionDefinition.new(
+			"Timer",
+			"wait_time",
+			"Delays the execution of the next action by configured time in seconds",
+			timer_args_config,
+			"DreamDeck",
+			""
+		),
+		PluginCoordinator.PluginActionDefinition.new(
+			"Switch panel",
+			"switch_panel",
+			"Show the panel with the configured name",
+			_switch_panel_config,
+			"DreamDeck",
+			""
+		)
+	]
 
 
 ## Creates an array of strings from a single command string.
@@ -143,10 +164,8 @@ class CommandProcess:
 
 	var _pid: int = -1
 
-
 	func _init(init_command: String):
 		command = init_command
-
 
 	## Executes the [member command].[br]
 	## Returns 2 threads that monitor and print stdio and stderr of the [member command].
@@ -169,7 +188,6 @@ class CommandProcess:
 
 		return threads
 
-
 	## Prints the exit code nicely formatted or an error message if it was never started.
 	func print_exit_code() -> void:
 		if _pid < 0:
@@ -179,17 +197,20 @@ class CommandProcess:
 		var exit_code: int = OS.get_process_exit_code(_pid)
 		_print_dbg_msg("exited with code %s" % exit_code, "red" if exit_code != 0 else "green")
 
-
 	func _read(file: FileAccess, color_code: String = "white") -> void:
 		if is_instance_valid(file):
-				while file.is_open() and file.get_error() == OK:
-					var line: String = file.get_line()
-					if line != "":
-						_print_dbg_msg(line, color_code)
-
+			while file.is_open() and file.get_error() == OK:
+				var line: String = file.get_line()
+				if line != "":
+					_print_dbg_msg(line, color_code)
 
 	func _print_dbg_msg(msg: String, color_code: String = "white"):
 		# The second color code is there because when msg contains newlines the color delimiter seems to break
 		# and be written as plain text into the output.
 		# To circumvent this we just print a white color again before the delimiter
-		print_rich("[color=%s]%s \"%s\": %s[color=white][/color]" % [color_code, Time.get_datetime_string_from_system(), command, msg])
+		print_rich(
+			(
+				'[color=%s]%s "%s": %s[color=white][/color]'
+				% [color_code, Time.get_datetime_string_from_system(), command, msg]
+			)
+		)

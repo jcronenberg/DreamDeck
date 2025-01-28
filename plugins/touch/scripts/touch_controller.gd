@@ -9,20 +9,20 @@ extends PluginControllerBase
 
 const PLUGIN_NAME = "Touch"
 
-var _grab_touch_devices_script: GrabTouchDevice = null # Touch device grabber.
-var _x_coord: float = -1 # Absolute X coordinate.
-var _y_coord: float = -1 # Absolute Y coordinate.
-var _x_diff: float = 0 # X coordinate delta to previous.
-var _y_diff: float = 0 # Y coordinate delta to previous.
-var _pressed: bool = false # Touch down state.
-var _device_max_abs_x: int = 0 # Device's maximum value for ABS_X events.
-var _device_max_abs_y: int = 0 # Device's maximum value for ABS_X events.
-var _divide_x_by: float = 0.0 # Amount to divide X by based on screen size and device's max values.
-var _divide_y_by: float = 0.0 # Amount to divide Y by based on screen size and device's max values.
-var _window_area_min: Vector2 = Vector2(0, 0) # Top left position of window in current screen.
-var _window_area_max: Vector2 = Vector2(0, 0) # Bottom right position of window in current screen.
-var _default_device: String # Default device string.
-var _debug_cursor: ColorRect = null # Debug cursor instance. Will only be set if in editor.
+var _grab_touch_devices_script: GrabTouchDevice = null  # Touch device grabber.
+var _x_coord: float = -1  # Absolute X coordinate.
+var _y_coord: float = -1  # Absolute Y coordinate.
+var _x_diff: float = 0  # X coordinate delta to previous.
+var _y_diff: float = 0  # Y coordinate delta to previous.
+var _pressed: bool = false  # Touch down state.
+var _device_max_abs_x: int = 0  # Device's maximum value for ABS_X events.
+var _device_max_abs_y: int = 0  # Device's maximum value for ABS_X events.
+var _divide_x_by: float = 0.0  # Amount to divide X by based on screen size and device's max values.
+var _divide_y_by: float = 0.0  # Amount to divide Y by based on screen size and device's max values.
+var _window_area_min: Vector2 = Vector2(0, 0)  # Top left position of window in current screen.
+var _window_area_max: Vector2 = Vector2(0, 0)  # Bottom right position of window in current screen.
+var _default_device: String  # Default device string.
+var _debug_cursor: ColorRect = null  # Debug cursor instance. Will only be set if in editor.
 
 
 func _init() -> void:
@@ -124,9 +124,17 @@ func _handle_event() -> void:
 	if _x_coord > -1 and _y_coord > -1:
 		# If window is not fullscreen we have to calculate if the touch was within the area of the window
 		# If it wasn't we skip the event
-		if _pressed and (not ((get_window().mode == Window.MODE_EXCLUSIVE_FULLSCREEN) or (get_window().mode == Window.MODE_FULLSCREEN))) and \
-				((_x_coord > _window_area_max.x or _x_coord < _window_area_min.x) or \
-				 (_y_coord > _window_area_max.y or _y_coord < _window_area_min.y)):
+		if (
+			_pressed
+			and (not (
+				(get_window().mode == Window.MODE_EXCLUSIVE_FULLSCREEN)
+				or (get_window().mode == Window.MODE_FULLSCREEN)
+			))
+			and (
+				(_x_coord > _window_area_max.x or _x_coord < _window_area_min.x)
+				or (_y_coord > _window_area_max.y or _y_coord < _window_area_min.y)
+			)
+		):
 			return
 
 		Input.parse_input_event(_construct_touch_event())
@@ -165,10 +173,15 @@ func _calculate_divide_by() -> void:
 # Calculates [member _window_area_min] and [member _window_area_max].
 func _calculate_window_area() -> void:
 	_window_area_min = get_window().get_position() - DisplayServer.screen_get_position()
-	_window_area_max = get_window().get_position() + get_window().get_size() - DisplayServer.screen_get_position()
+	_window_area_max = (
+		get_window().get_position() + get_window().get_size() - DisplayServer.screen_get_position()
+	)
 
 
 func _on_main_window_resized() -> void:
 	_calculate_divide_by()
-	if not ((get_window().mode == Window.MODE_EXCLUSIVE_FULLSCREEN) or (get_window().mode == Window.MODE_FULLSCREEN)):
+	if not (
+		(get_window().mode == Window.MODE_EXCLUSIVE_FULLSCREEN)
+		or (get_window().mode == Window.MODE_FULLSCREEN)
+	):
 		_calculate_window_area()

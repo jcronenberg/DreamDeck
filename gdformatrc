@@ -1,0 +1,5 @@
+excluded_directories: !!set
+  .git: null
+  addons: null
+  addon_submodules: null
+  godottpd: null

@@ -1,47 +1,39 @@
 extends PluginSceneBase
 
-# Plugin
 const PLUGIN_NAME = "Spotify Panel"
+const BASE_API_URL: String = "https://api.spotify.com/v1"
+# Repeat states
+const REPEAT_MODES = ["off", "context", "track"]
 
 # Downloader instance
 var downloader: Downloader
 
-# Plugin state
-
 # Metadata refresh timer
-var metadata_refresh := 1.0 # state_refresh needs to be not evenly divisible by this
+var metadata_refresh := 1.0  # state_refresh needs to be not evenly divisible by this
 var metadata_delta := 1.0
 # Device refresh timers
-var devices_refresh := 5.2 # TODO this is pretty ugly. Implement a queue
+var devices_refresh := 5.2  # TODO this is pretty ugly. Implement a queue
 var devices_delta := 4.0
 # Skips one metadata update, useful for e.g. play/pause button
 # as if we don't skip, it can end up being updated by the metadata refresh to the wrong state
 var wait_to_update: bool = false
 
-# Repeat resources
-# States
-const repeat_modes = [
-	"off",
-	"context",
-	"track"
-	]
 # Texture resources
-var repeat_textures := [
+var repeat_textures: Array = [
 	load("res://plugins/spotify_panel/resources/repeat.tres"),
 	load("res://plugins/spotify_panel/resources/repeat_selected.tres"),
 	load("res://plugins/spotify_panel/resources/repeat_1_selected.tres")
 ]
 
 # Spotify API variables
-var refresh_token: String # The token with which a new access_token can be generated
-var access_token: String # The token with which the requests get made, expires after 1 hour
-var encoded_client: String # Base64 encoded client_id and client_secret
-const base_api_url: String = "https://api.spotify.com/v1"
+var refresh_token: String  # The token with which a new access_token can be generated
+var access_token: String  # The token with which the requests get made, expires after 1 hour
+var encoded_client: String  # Base64 encoded client_id and client_secret
 
 # State vars
 # Playback
-var cur_data # Current data from state requests, used to check if changes happened
-var repeat_state: int = 0 # Song repeat state, value between 0 and 2, see repeat_modes
+var cur_data  # Current data from state requests, used to check if changes happened
+var repeat_state: int = 0  # Song repeat state, value between 0 and 2, see REPEAT_MODES
 var play_state: bool = false
 var shuffle_state: bool = false
 var volume_state: float = 0.0
@@ -50,23 +42,24 @@ var artist: String
 var track_name: String
 var art_url: String
 # Devices
-var cur_device_data # Current device data, used to check if changes happened
-var device_list := []
-var playback_active := true # This gets set to false when the api doesn't provide playback-state anymore
+var cur_device_data  # Current device data, used to check if changes happened
+var device_list: Array = []
+# This gets set to false when the api doesn't provide playback-state anymore
+var playback_active: bool = true
 
 # Config vars
-var authenticated: bool = false # Stop all calls while not authenticated
-
-# Nodes
-@onready var http_get := get_node("HTTPGet")
-@onready var http_post := get_node("HTTPPost")
-@onready var http_get_devices := get_node("HTTPGetDevices")
-
-# Download cache
-@onready var cache_dir_path: String = PluginCoordinator.get_cache_dir(PLUGIN_NAME)
+var authenticated: bool = false  # Stop all calls while not authenticated
 
 # Configs
 var _credentials_config: Config = Config.new()
+
+# Nodes
+@onready var http_get: HTTPRequest = get_node("HTTPGet")
+@onready var http_post: HTTPRequest = get_node("HTTPPost")
+@onready var http_get_devices: HTTPRequest = get_node("HTTPGetDevices")
+
+# Download cache
+@onready var cache_dir_path: String = PluginCoordinator.get_cache_dir(PLUGIN_NAME)
 
 
 func _init():
@@ -108,7 +101,9 @@ func _physics_process(delta):
 	devices_delta += delta
 	if devices_delta >= devices_refresh and access_token:
 		var headers = ["Authorization: Bearer " + access_token, "Content-Type: application/json"]
-		http_get_devices.request(base_api_url + "/me/player/devices", headers, 0, "")
+		http_get_devices.request(
+			BASE_API_URL + "/me/player/devices", headers, HTTPClient.METHOD_GET, ""
+		)
 		devices_delta = 0.0
 
 
@@ -121,7 +116,12 @@ func edit_config() -> void:
 	auth_wizard.name = "Authentication Wizard"
 	auth_wizard.auth_completed.connect(_on_auth_wizard_auth_completed)
 
-	PopupManager.init_popup([config_editor, auth_wizard], func apply_and_save() -> void: config_editor.apply(); config_editor.save())
+	PopupManager.init_popup(
+		[config_editor, auth_wizard],
+		func apply_and_save() -> void:
+			config_editor.apply()
+			config_editor.save()
+	)
 
 
 func handle_config():
@@ -183,33 +183,45 @@ func generate_device_list(data):
 	$Background/Controls/DeviceOptions.select(device_list.find(active_device))
 
 
-func set_output_device(device, play=true):
+func set_output_device(device, play = true):
 	if playback_active:
-		send_command("/me/player", 3, true, JSON.stringify({"device_ids":[device.id],"play":play}))
+		send_command(
+			"/me/player", 3, true, JSON.stringify({"device_ids": [device.id], "play": play})
+		)
 	elif play:
-		# Above api endpoint seems currently broken when trying to transfer inactive playback to a device.
-		# Previously this would work in order to restart the previous playback.
-		# Now it uses the start/resume playback endpoint with a device_id (empty brackets body is for some reason important)
-		send_command("/me/player/play?device_id=%s" % device_list[$Background/Controls/DeviceOptions.selected].id, 3, true, "{}")
+		# Above api endpoint seems currently broken when trying to transfer inactive playback to a
+		# device. Previously this would work in order to restart the previous playback. Now it
+		# uses the start/resume playback endpoint with a device_id (empty brackets body is for some
+		# reason important)
+		send_command(
+			(
+				"/me/player/play?device_id=%s"
+				% device_list[$Background/Controls/DeviceOptions.selected].id
+			),
+			3,
+			true,
+			"{}"
+		)
 		playback_active = true
 
 
 func request_new_token():
-	var headers = ["Content-Type: application/x-www-form-urlencoded", \
-				   "Authorization: Basic " + encoded_client]
+	var headers = [
+		"Content-Type: application/x-www-form-urlencoded", "Authorization: Basic " + encoded_client
+	]
 	var data = "grant_type=refresh_token&refresh_token=" + refresh_token
 	send_get_command("https://accounts.spotify.com/api/token", headers, 2, data)
 
 
 func request_state():
-	# If we don't have a access token we either have to request one or just don't execute while we wait
-	# for a refresh token to be generated
+	# If we don't have a access token we either have to request one or just don't execute while
+	# we wait for a refresh token to be generated
 	if not access_token:
 		if refresh_token:
 			request_new_token()
 		return
 	var headers = ["Authorization: Bearer " + access_token, "Content-Type: application/json"]
-	send_get_command(base_api_url + "/me/player", headers)
+	send_get_command(BASE_API_URL + "/me/player", headers)
 
 
 func _on_get_request_completed(_result, response_code, _headers, body):
@@ -219,11 +231,11 @@ func _on_get_request_completed(_result, response_code, _headers, body):
 		request_new_token()
 		return
 	# This code happens when state is requested but playback is not active
-	elif response_code == 204:
+	if response_code == 204:
 		playback_active = false
 		return
 	# Error handling/Unexpected response
-	elif response_code != 200:
+	if response_code != 200:
 		if OS.has_feature("editor"):
 			print("Unexpected response code: " + str(response_code))
 			print("Body: " + body.get_string_from_utf8())
@@ -270,7 +282,7 @@ func set_state(data):
 	$Background/Controls/ShuffleButton.button_pressed = shuffle_state
 
 	# Repeat
-	repeat_state = repeat_modes.find(data["repeat_state"])
+	repeat_state = REPEAT_MODES.find(data["repeat_state"])
 	$Background/Controls/RepeatButton.texture_normal = repeat_textures[repeat_state]
 
 	# Play/Pause
@@ -313,7 +325,7 @@ func set_song_state(data):
 # Sends a http get request
 # This is basically an abstraction for the standard godot http request
 # only that it checks if the http client is free
-func send_get_command(url, headers, method=0, body=""):
+func send_get_command(url, headers, method = 0, body = ""):
 	if http_get.get_http_client_status() != 0:
 		if OS.has_feature("editor"):
 			push_warning("You're sending signals faster than we can handle")
@@ -322,10 +334,10 @@ func send_get_command(url, headers, method=0, body=""):
 
 
 # Sends a http post/put request (isn't enforced to be only post/put)
-# endpoint:  the api endpoint, base_api_url gets added before it
+# endpoint:  the api endpoint, BASE_API_URL gets added before it
 # method:    the method to send for the http request
 # no_update: if the next metadata_refresh is meant to be skipped
-func send_command(endpoint, method, no_update=true, body=""):
+func send_command(endpoint, method, no_update = true, body = ""):
 	# TODO maybe create a queue
 	if http_post.get_http_client_status() != 0:
 		if OS.has_feature("editor"):
@@ -337,7 +349,7 @@ func send_command(endpoint, method, no_update=true, body=""):
 		headers = ["Content-Length: 0", "Authorization: Bearer " + access_token]
 	else:
 		headers = ["Authorization: Bearer " + access_token]
-	http_post.request(base_api_url + endpoint, headers, method, body)
+	http_post.request(BASE_API_URL + endpoint, headers, method, body)
 
 
 func download_cover():
@@ -396,7 +408,7 @@ func _on_SkipBackButton_pressed():
 	send_command("/me/player/previous", 2, false)
 
 
-func _on_DeviceOptions_item_selected(index:int):
+func _on_DeviceOptions_item_selected(index: int):
 	set_output_device(device_list[index], play_state)
 
 
@@ -406,10 +418,10 @@ func _on_SkipForwardButton_pressed():
 
 func _on_RepeatButton_pressed():
 	repeat_state += 1
-	if repeat_state >= len(repeat_modes):
+	if repeat_state >= len(REPEAT_MODES):
 		repeat_state = 0
 	$Background/Controls/RepeatButton.texture_normal = repeat_textures[repeat_state]
-	send_command("/me/player/repeat?state=" + repeat_modes[repeat_state], 3)
+	send_command("/me/player/repeat?state=" + REPEAT_MODES[repeat_state], 3)
 
 
 func _on_ShuffleButton_pressed():
@@ -441,17 +453,22 @@ func _on_exited_edit_mode():
 	config.save()
 
 
-func _on_auth_wizard_auth_completed(new_encoded_client: String, new_refresh_token: String, new_access_token: String) -> void:
+func _on_auth_wizard_auth_completed(
+	new_encoded_client: String, new_refresh_token: String, new_access_token: String
+) -> void:
 	encoded_client = new_encoded_client
 	refresh_token = new_refresh_token
 	access_token = new_access_token
-	_credentials_config.apply_dict({"refresh_token": refresh_token, "encoded_client": encoded_client})
+	_credentials_config.apply_dict(
+		{"refresh_token": refresh_token, "encoded_client": encoded_client}
+	)
 	_credentials_config.save()
 	authenticated = true
 
 
 ## Handles authentication setup for the spotify client.
-class AuthWizard extends VBoxContainer:
+class AuthWizard:
+	extends VBoxContainer
 	## Signal emitted when the authentication is complete with all the relevant infos.
 	signal auth_completed(encoded_client: String, refresh_token: String, access_token: String)
 
@@ -476,7 +493,6 @@ class AuthWizard extends VBoxContainer:
 	var _encoded_client: String
 	var _authorization_code: String
 	var _auth_request: HTTPRequest
-
 
 	func _init(auth_status: bool) -> void:
 		add_theme_constant_override("separation", 20)
@@ -514,7 +530,6 @@ class AuthWizard extends VBoxContainer:
 		_auth_info_vbox.visible = false
 		add_child(_auth_info_vbox)
 
-
 	## Handler for the auth callback http server
 	func handle_get(request, response):
 		if request.query.has("code"):
@@ -524,21 +539,21 @@ class AuthWizard extends VBoxContainer:
 			_http_server.queue_free()
 			_http_server = null
 		else:
-			response.send(200, "Something went wrong, failed to extract authorization code from request url")
-
+			response.send(
+				200, "Something went wrong, failed to extract authorization code from request url"
+			)
 
 	func _on_setup_auth_button_pressed() -> void:
 		_auth_status_vbox.visible = false
 		_new_auth_vbox.visible = true
-
 
 	func _on_show_dev_setup_button_pressed() -> void:
 		var dev_setup_label: RichTextLabel = RichTextLabel.new()
 		dev_setup_label.bbcode_enabled = true
 		dev_setup_label.selection_enabled = true
 		dev_setup_label.meta_clicked.connect(_on_meta_clicked)
-		dev_setup_label.text = \
-"""For this you will need Spotify Premium and create a developer account.
+		dev_setup_label.text = (
+			"""For this you will need Spotify Premium and create a developer account.
 
 [ol type=1]
 Go to the Spotify dashboard: [color=lightblue][url]https://developer.spotify.com/dashboard/applications[/url][/color]
@@ -548,9 +563,10 @@ Click on \"Save\"
 Click on \"Settings\" in the top right
 Copy your \"Client ID\" and \"Client secret\" into DreamDeck
 [/ol]
-""" % REDIRECT_URI
+"""
+			% REDIRECT_URI
+		)
 		PopupManager.push_stack_item([dev_setup_label])
-
 
 	func _on_start_auth_button_pressed() -> void:
 		_credentials_editor.apply()
@@ -571,10 +587,11 @@ Copy your \"Client ID\" and \"Client secret\" into DreamDeck
 		if abort:
 			return
 
-		_encoded_client = Marshalls.utf8_to_base64("%s:%s" % [creds["client_id"], creds["client_secret"]])
+		_encoded_client = Marshalls.utf8_to_base64(
+			"%s:%s" % [creds["client_id"], creds["client_secret"]]
+		)
 		_setup_http_server()
 		_show_auth_info(creds["client_id"])
-
 
 	func _setup_http_server() -> void:
 		if _http_server and is_instance_valid(_http_server):
@@ -586,25 +603,38 @@ Copy your \"Client ID\" and \"Client secret\" into DreamDeck
 		add_child(_http_server)
 		_http_server.start()
 
-
 	func _request_authorization():
-		var headers: Array = ["Content-Type: application/x-www-form-urlencoded", "Authorization: Basic %s" % _encoded_client]
-		var data: String = "grant_type=authorization_code&code=%s&redirect_uri=%s" % [_authorization_code, REDIRECT_URI]
+		var headers: Array = [
+			"Content-Type: application/x-www-form-urlencoded",
+			"Authorization: Basic %s" % _encoded_client
+		]
+		var data: String = (
+			"grant_type=authorization_code&code=%s&redirect_uri=%s"
+			% [_authorization_code, REDIRECT_URI]
+		)
 		if _auth_request and is_instance_valid(_auth_request):
 			_auth_request.free()
 
 		_auth_request = HTTPRequest.new()
 		add_child(_auth_request)
 		_auth_request.request_completed.connect(_on_auth_request_completed)
-		_auth_request.request("https://accounts.spotify.com/api/token", headers, HTTPClient.METHOD_POST, data)
+		_auth_request.request(
+			"https://accounts.spotify.com/api/token", headers, HTTPClient.METHOD_POST, data
+		)
 
-
-	func _on_auth_request_completed(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+	func _on_auth_request_completed(
+		result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray
+	) -> void:
 		if result != HTTPRequest.RESULT_SUCCESS:
 			push_error("Auth request failed with result %s" % result)
 			return
 		if response_code != HTTPClient.RESPONSE_OK:
-			push_error("Auth request failed with response code %s: %s" % [response_code, body.get_string_from_utf8()])
+			push_error(
+				(
+					"Auth request failed with response code %s: %s"
+					% [response_code, body.get_string_from_utf8()]
+				)
+			)
 			return
 
 		var json: JSON = JSON.new()
@@ -614,19 +644,22 @@ Copy your \"Client ID\" and \"Client secret\" into DreamDeck
 			return
 
 		if json.data.has("refresh_token"):
-			auth_completed.emit(_encoded_client, json.data["refresh_token"], json.data["access_token"])
+			auth_completed.emit(
+				_encoded_client, json.data["refresh_token"], json.data["access_token"]
+			)
 			_hide_auth_setup()
 
 		_auth_request.queue_free()
 		_auth_request = null
 
-
 	func _show_auth_info(client_id: String) -> void:
 		var auth_link: String = _create_auth_link(client_id)
-		_auth_info_label.text = "Click this [color=lightblue][b][url=%s]link[/url][/b][/color]\nor copy the link below into your browser." % auth_link
+		_auth_info_label.text = (
+			"Click this [color=lightblue][b][url=%s]link[/url][/b][/color]\nor copy the link below into your browser."
+			% auth_link
+		)
 		_auth_info_text_edit.text = auth_link
 		_auth_info_vbox.visible = true
-
 
 	func _hide_auth_setup() -> void:
 		_new_auth_vbox.visible = false
@@ -636,10 +669,11 @@ Copy your \"Client ID\" and \"Client secret\" into DreamDeck
 
 		_auth_status_vbox.visible = true
 
-
 	func _create_auth_link(client_id: String) -> String:
-		return "https://accounts.spotify.com/authorize?client_id=%s&response_type=code&scope=%s&redirect_uri=%s" % [client_id, SCOPE, REDIRECT_URI]
-
+		return (
+			"https://accounts.spotify.com/authorize?client_id=%s&response_type=code&scope=%s&redirect_uri=%s"
+			% [client_id, SCOPE, REDIRECT_URI]
+		)
 
 	func _on_meta_clicked(meta: Variant) -> void:
 		OS.shell_open(str(meta))

@@ -2,6 +2,7 @@ class_name ConfLib
 extends RefCounted
 ## Helper class for [Config] and custom configs
 
+
 ## Load config at [param path]. If it doesn't exist a new config is created.
 static func load_config(path: String) -> Variant:
 	var config_file: FileAccess
@@ -32,7 +33,7 @@ static func save_config(path: String, new_data: Variant) -> bool:
 	# Save new_data
 	config_file = FileAccess.open(path, FileAccess.WRITE)
 	if not config_file:
-		push_error("Failed to open file ", path, ": " , str(FileAccess.get_open_error()))
+		push_error("Failed to open file ", path, ": ", str(FileAccess.get_open_error()))
 		return false
 	config_file.store_string(JSON.stringify(new_data, "\t"))
 

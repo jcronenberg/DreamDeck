@@ -20,7 +20,7 @@ define NO_CARGO_MESSAGE
 	$(info INFO: No cargo found, building without rust)
 endef
 
-.PHONY: all windows linux _check-godot _check-godot-version _build-linux _build-windows rust clean rust-clean install uninstall
+.PHONY: all windows linux _check-godot _check-godot-version _build-linux _build-windows rust clean rust-clean install uninstall linux-dist _godot-import
 
 all:
 ifdef CARGO
@@ -62,6 +62,10 @@ linux-rustless:
 windows-rustless:
 	$(MAKE) _build-windows-rustless
 
+linux-dist:
+	$(MAKE) linux
+	tar zcvf $(BUILD_DIR)/$(DREAMDECK_LINUX).tar.gz -C $(BUILD_DIR) $(DREAMDECK_LINUX) $(LIBDREAMDECKSSH) $(LIBDREAMDECKTOUCH)
+
 _check-godot:
 ifndef GODOT_EXECUTABLE
 	$(error "Godot executable not found. Please make sure Godot4 is installed and in your system PATH.")
@@ -73,19 +77,27 @@ ifneq "$(GODOT_VERSION)" "4"
 	$(error "Found Godot version: $(GODOT_VERSION), but a version starting with 4 is required.")
 endif
 
+_godot-import:
+	@$(GODOT_EXECUTABLE) --headless --import || true
+
 _build-linux: _check-godot
+	$(MAKE) _godot-import
 	@$(GODOT_EXECUTABLE) --headless --export-release "Linux"
 
 _build-linux-debug: _check-godot
+	$(MAKE) _godot-import
 	@$(GODOT_EXECUTABLE) --headless --export-release "Linux"
 
 _build-windows: _check-godot
+	$(MAKE) _godot-import
 	@$(GODOT_EXECUTABLE) --headless --export-release "Windows Desktop"
 
 _build-linux-rustless: _check-godot
+	$(MAKE) _godot-import
 	@$(GODOT_EXECUTABLE) --headless --export-release "Linux without rust"
 
 _build-windows-rustless: _check-godot
+	$(MAKE) _godot-import
 	@$(GODOT_EXECUTABLE) --headless --export-release "Windows Desktop without rust"
 
 rust:

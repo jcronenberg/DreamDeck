@@ -84,7 +84,12 @@ func _on_config_changed() -> void:
 func edit_config() -> void:
 	if config:
 		var config_editor: Config.ConfigEditor = config.generate_editor()
-		PopupManager.init_popup([config_editor], func apply_and_save() -> void: config_editor.apply(); config_editor.save())
+		PopupManager.init_popup(
+			[config_editor],
+			func apply_and_save() -> void:
+				config_editor.apply()
+				config_editor.save()
+		)
 
 
 ## Called when the scene gets shown.

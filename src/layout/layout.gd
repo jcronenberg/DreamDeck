@@ -2,11 +2,11 @@ class_name Layout
 extends DockableContainer
 
 const SAVE_FILENAME = "layout.json"
+const LAYOUT_PANEL = preload("res://src/layout/layout_panel.tscn")
 
-@onready var _conf_path: String = PluginCoordinator.get_conf_dir("") + SAVE_FILENAME
-var _new_panel_leaf: DockableLayoutPanel: # Parent for new panel
+var _new_panel_leaf: DockableLayoutPanel:  # Parent for new panel
 	set = set_new_panel_leaf
-const _layout_panel = preload("res://src/layout/layout_panel.tscn")
+@onready var _conf_path: String = PluginCoordinator.get_conf_dir("") + SAVE_FILENAME
 
 
 func _ready():
@@ -47,7 +47,7 @@ func load_layout() -> bool:
 	var config: Variant = ConfLib.load_config(_conf_path)
 	if not config:
 		return false
-	elif typeof(config) != TYPE_DICTIONARY:
+	if typeof(config) != TYPE_DICTIONARY:
 		push_error("Failed to parse %s: Wrong type" % _conf_path)
 		return false
 
@@ -66,7 +66,7 @@ func load_layout() -> bool:
 	# Layout setup from config
 	_layout.from_dict(config["Layout"])
 	for panel in config["Panels"]:
-		var panel_instance: LayoutPanel = _layout_panel.instantiate()
+		var panel_instance: LayoutPanel = LAYOUT_PANEL.instantiate()
 		panel_instance.deserialize(panel)
 		add_child(panel_instance)
 
@@ -79,11 +79,13 @@ func add_panel(panel_config: Dictionary):
 	if get_node_or_null("/root/Main/FirstTimeLaunch"):
 		get_node("/root/Main/FirstTimeLaunch").queue_free()
 
-	var panel_instance: LayoutPanel = _layout_panel.instantiate()
+	var panel_instance: LayoutPanel = LAYOUT_PANEL.instantiate()
 	add_child(panel_instance)
 	panel_instance.deserialize(panel_config)
 	if _new_panel_leaf:
-		layout.move_node_to_leaf(panel_instance, _new_panel_leaf, _new_panel_leaf.get_names().size())
+		layout.move_node_to_leaf(
+			panel_instance, _new_panel_leaf, _new_panel_leaf.get_names().size()
+		)
 
 	save()
 	DreamdeckBuiltinActions.update_available_panels(get_panel_names())
