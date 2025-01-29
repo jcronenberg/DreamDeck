@@ -17,7 +17,7 @@ var _scenes: Dictionary  # The already loaded scenes
 
 
 func _ready():
-	_conf_path = _conf_dir + FILENAME
+	_conf_path = _conf_dir.path_join(FILENAME)
 
 	discover_plugins()
 	load_activated_plugins()
@@ -52,8 +52,8 @@ func discover_plugins():
 
 
 func _runtime_load_plugins():
-	ConfLib.ensure_dir_exists(_conf_dir + "plugins")
-	var file_list = ConfLib.list_files_in_dir(_conf_dir + "plugins")
+	ConfLib.ensure_dir_exists(_conf_dir.path_join("plugins"))
+	var file_list = ConfLib.list_files_in_dir(_conf_dir.path_join("plugins"))
 	for file in file_list:
 		if not ProjectSettings.load_resource_pack(file):
 			push_error("Failed to load plugin %s" % file)
@@ -133,7 +133,7 @@ func list_plugins() -> Array:
 
 
 func get_plugin_path(plugin_name) -> String:
-	return "%s/plugin_configs/%s/" % [_conf_dir, plugin_name]
+	return _conf_dir.path_join("plugin_configs").path_join(plugin_name)
 
 
 ## Returns loader of [param plugin_name]. Null if plugin doesn't exist or isn't loaded.

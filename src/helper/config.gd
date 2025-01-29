@@ -937,7 +937,7 @@ class FilePathEditor:
 		var initial_path: String = get_value().get_base_dir()
 		if not initial_path.begins_with("/"):
 			initial_path = ConfLib.get_absolute_path(
-				ArgumentParser.get_conf_dir() + get_value().get_base_dir()
+				ArgumentParser.get_conf_dir().path_join(get_value().get_base_dir())
 			)
 
 		_file_dialog.current_dir = initial_path

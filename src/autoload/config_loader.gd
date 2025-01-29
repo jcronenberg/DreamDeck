@@ -17,7 +17,7 @@ func _ready():
 		# So in editor we don't overwrite logs in normal config
 		ProjectSettings.set_setting("application/config/use_custom_user_dir", false)
 
-	config.set_config_path(conf_dir + "config.json")
+	config.set_config_path(conf_dir.path_join("config.json"))
 	config.add_bool("Transparent background", "transparent_bg", false)
 	config.add_bool("Fullscreen", "fullscreen", false)
 	config.add_bool("Hide mouse cursor", "hide_mouse", false)
@@ -111,12 +111,12 @@ func _unpack_config_backup(path: String) -> void:
 
 	var files: PackedStringArray = reader.get_files()
 	for file in files:
-		ConfLib.ensure_dir_exists((conf_dir + file).get_base_dir())
+		ConfLib.ensure_dir_exists((conf_dir.path_join(file)).get_base_dir())
 
-		var writer: FileAccess = FileAccess.open(conf_dir + file, FileAccess.WRITE)
+		var writer: FileAccess = FileAccess.open(conf_dir.path_join(file), FileAccess.WRITE)
 		if not writer:
 			push_error(
-				"Failed to write to file %s: %s" % [conf_dir + file, FileAccess.get_open_error()]
+				"Failed to write to file %s: %s" % [conf_dir.path_join(file), FileAccess.get_open_error()]
 			)
 			continue
 

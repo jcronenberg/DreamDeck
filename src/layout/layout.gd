@@ -6,7 +6,7 @@ const LAYOUT_PANEL = preload("res://src/layout/layout_panel.tscn")
 
 var _new_panel_leaf: DockableLayoutPanel:  # Parent for new panel
 	set = set_new_panel_leaf
-@onready var _conf_path: String = PluginCoordinator.get_conf_dir("") + SAVE_FILENAME
+@onready var _conf_path: String = PluginCoordinator.get_conf_dir("").path_join(SAVE_FILENAME)
 
 
 func _ready():

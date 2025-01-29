@@ -91,7 +91,7 @@ func set_image() -> void:
 	if _icon_path:
 		var absolute_icon_path: String = _icon_path
 		if not absolute_icon_path.begins_with("/"):
-			absolute_icon_path = ArgumentParser.get_conf_dir() + _icon_path
+			absolute_icon_path = ArgumentParser.get_conf_dir().path_join(_icon_path)
 		var image: Image = Image.load_from_file(absolute_icon_path)
 		$Icon.texture = ImageTexture.create_from_image(image)
 

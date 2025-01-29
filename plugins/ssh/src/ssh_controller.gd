@@ -7,7 +7,7 @@ const PLUGIN_NAME = "SSH"
 var client_list: Array[Config] = []
 
 var _thread_pool: Array[Thread] = []
-@onready var _conf_path: String = conf_dir + "clients.json"
+@onready var _conf_path: String = conf_dir.path_join("clients.json")
 
 
 func _init() -> void:

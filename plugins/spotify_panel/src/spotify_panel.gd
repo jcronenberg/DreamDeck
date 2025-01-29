@@ -73,7 +73,7 @@ func _ready():
 	ConfLib.ensure_dir_exists(cache_dir_path)
 
 	# Load credentials
-	_credentials_config.set_config_path(conf_dir + "credentials.json")
+	_credentials_config.set_config_path(conf_dir.path_join("credentials.json"))
 	_credentials_config.add_string("Refresh token", "refresh_token", "")
 	_credentials_config.add_string("Encoded client", "encoded_client", "")
 	load_credentials()
@@ -359,7 +359,7 @@ func download_cover():
 	downloader = Downloader.new()
 
 	# Download and wait for completion
-	downloader.download(art_url, cache_dir_path + filename)
+	downloader.download(art_url, cache_dir_path.path_join(filename))
 	await downloader.download_completed
 
 	change_cover(filename)
@@ -372,7 +372,7 @@ func create_texture_from_image(image_path):
 
 
 func change_cover(filename):
-	var complete_cover_path = cache_dir_path + filename
+	var complete_cover_path = cache_dir_path.path_join(filename)
 	$Background/AlbumArt.texture = create_texture_from_image(complete_cover_path)
 
 

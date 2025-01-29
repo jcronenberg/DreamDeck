@@ -41,7 +41,7 @@ var _removed_button_pos: int = -1
 var _dragged_button_pos: int = -1
 
 # Path where layout is stored.
-@onready var _layout_path: String = conf_dir + "layout.json"
+@onready var _layout_path: String = conf_dir.path_join("layout.json")
 
 
 func _init() -> void:

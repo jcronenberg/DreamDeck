@@ -26,8 +26,6 @@ func _init() -> void:
 
 		new_conf_dir = new_conf_dir.path_join("dreamdeck")
 
-	if not new_conf_dir.ends_with("/"):
-		new_conf_dir = new_conf_dir + "/"
 	_conf_dir = new_conf_dir
 
 

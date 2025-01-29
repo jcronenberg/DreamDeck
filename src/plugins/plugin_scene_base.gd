@@ -47,7 +47,7 @@ func _init_config() -> void:
 	if config.get_objects().size() <= 0:
 		return
 
-	config.set_config_path(conf_dir + "config.json")
+	config.set_config_path(conf_dir.path_join("config.json"))
 	config.load_config()
 	config.connect("config_changed", _on_config_changed)
 
