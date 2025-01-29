@@ -110,8 +110,9 @@ func get_conf_dir(plugin_name: String) -> String:
 
 
 func get_cache_dir(plugin_name: String):
-	ConfLib.ensure_dir_exists("%s/cache/%s/" % [_conf_dir, plugin_name.to_snake_case()])
-	return "%s/cache/%s/" % [_conf_dir, plugin_name.to_snake_case()]
+	var cache_dir: String = OS.get_user_data_dir().path_join("cache").path_join(plugin_name.to_snake_case())
+	ConfLib.ensure_dir_exists(cache_dir)
+	return cache_dir
 
 
 func list_plugins() -> Array:
