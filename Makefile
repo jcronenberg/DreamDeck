@@ -3,20 +3,26 @@ ifdef GODOT_EXECUTABLE
 	GODOT_VERSION := $(shell $(GODOT_EXECUTABLE) --version 2>/dev/null | cut -d'.' -f1)
 endif
 CARGO := $(shell command -v cargo 2> /dev/null)
-RUST_DIRS = plugins/ssh/rust/ plugins/touch/rust/
-INSTALL_BIN = /usr/local/bin/
-INSTALL_LIB = /usr/local/lib/
-ICON_DIR = /usr/local/share/icons/hicolor/256x256/apps/
-DESKTOP_DIR = /usr/local/share/applications/
-BUILD_DIR = bin
-DREAMDECK_LINUX = dreamdeck
-DREAMDECK_WINDOWS = dreamdeck.exe
-LIBDREAMDECKTOUCH = libdreamdeck_touch.so
-LIBDREAMDECKSSH = libdreamdeck_ssh.so
-RESOURCE_PATH = resources/
-DREAMDECK_ICON = icons/dreamdeck.png
-DESKTOP_FILE = dreamdeck.desktop
-define NO_CARGO_MESSAGE 
+RUST_DIRS ?= plugins/ssh/rust/ plugins/touch/rust/
+
+DESTDIR ?=
+PREFIX ?= /usr/local
+
+bindir ?= $(PREFIX)/bin/
+# TODO change to lib64 once that is supported by godot
+libdir ?= $(PREFIX)/lib/
+icondir ?= $(PREFIX)/share/icons/hicolor/256x256/apps/
+desktopdir ?= $(PREFIX)/share/applications/
+builddir = bin
+appname = dreamdeck
+linuxbinary = dreamdeck
+windowsbinary = dreamdeck.exe
+touchlib = libdreamdeck_touch.so
+sshlib = libdreamdeck_ssh.so
+iconfile = dreamdeck.png
+desktopfile = dreamdeck.desktop
+
+define NO_CARGO_MESSAGE
 	$(info INFO: No cargo found, building without rust)
 endef
 
@@ -64,7 +70,7 @@ windows-rustless:
 
 linux-dist:
 	$(MAKE) linux
-	tar zcvf $(BUILD_DIR)/$(DREAMDECK_LINUX).tar.gz -C $(BUILD_DIR) $(DREAMDECK_LINUX) $(LIBDREAMDECKSSH) $(LIBDREAMDECKTOUCH)
+	tar zcvf $(builddir)/$(appname).tar.gz -C $(builddir) $(linuxbinary) $(sshlib) $(touchlib)
 
 _check-godot:
 ifndef GODOT_EXECUTABLE
@@ -113,10 +119,11 @@ endif
 	for dir in $(RUST_DIRS); do cargo build --manifest-path $${dir}/Cargo.toml; done
 
 clean: rust-clean
-	rm -f $(BUILD_DIR)/$(DREAMDECK_LINUX)
-	rm -f $(BUILD_DIR)/$(DREAMDECK_WINDOWS)
-	rm -f $(BUILD_DIR)/$(LIBDREAMDECKSSH)
-	rm -f $(BUILD_DIR)/$(LIBDREAMDECKTOUCH)
+	rm -f $(builddir)/$(linuxbinary)
+	rm -f $(builddir)/$(windowsbinary)
+	rm -f $(builddir)/$(sshlib)
+	rm -f $(builddir)/$(touchlib)
+	rm -f $(builddir)/$(appname).tar.gz
 
 rust-clean:
 ifdef CARGO
@@ -124,19 +131,19 @@ ifdef CARGO
 endif
 
 install:
-	install -D bin/$(DREAMDECK_LINUX) $(INSTALL_BIN)$(DREAMDECK_LINUX)
-ifneq ($(wildcard bin/$(LIBDREAMDECKSSH)),)
-	install -D bin/$(LIBDREAMDECKSSH) $(INSTALL_LIB)$(LIBDREAMDECKSSH)
+	install -D $(builddir)/$(linuxbinary) $(DESTDIR)$(bindir)$(linuxbinary)
+ifneq ($(wildcard $(builddir)/$(sshlib)),)
+	install -D $(builddir)/$(sshlib) $(DESTDIR)$(libdir)$(sshlib)
 endif
-ifneq ($(wildcard bin/$(LIBDREAMDECKTOUCH)),)
-	install -D bin/$(LIBDREAMDECKTOUCH) $(INSTALL_LIB)$(LIBDREAMDECKTOUCH)
+ifneq ($(wildcard bin/$(touchlib)),)
+	install -D $(builddir)/$(touchlib) $(DESTDIR)$(libdir)$(touchlib)
 endif
-	install -D $(RESOURCE_PATH)$(DREAMDECK_ICON) $(ICON_DIR)$(DREAMDECK_ICON)
-	install -D $(RESOURCE_PATH)$(DESKTOP_FILE) $(DESKTOP_DIR)$(DESKTOP_FILE)
+	install -D resources/icons/$(iconfile) $(DESTDIR)$(icondir)$(iconfile)
+	install -D resources/$(desktopfile) $(DESTDIR)$(desktopdir)$(desktopfile)
 
 uninstall:
-	rm -f $(INSTALL_BIN)$(DREAMDECK_LINUX)
-	rm -f $(INSTALL_LIB)$(LIBDREAMDECKSSH)
-	rm -f $(INSTALL_LIB)$(LIBDREAMDECKTOUCH)
-	rm -f $(ICON_DIR)$(DREAMDECK_ICON)
-	rm -f $(DESKTOP_DIR)$(DESKTOP_FILE)
+	rm -f $(DESTDIR)$(bindir)$(linuxbinary)
+	rm -f $(DESTDIR)$(libdir)$(sshlib)
+	rm -f $(DESTDIR)$(libdir)$(touchlib)
+	rm -f $(DESTDIR)$(icondir)$(iconfile)
+	rm -f $(DESTDIR)$(desktopdir)$(desktopfile)
