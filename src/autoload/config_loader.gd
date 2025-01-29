@@ -116,7 +116,10 @@ func _unpack_config_backup(path: String) -> void:
 		var writer: FileAccess = FileAccess.open(conf_dir.path_join(file), FileAccess.WRITE)
 		if not writer:
 			push_error(
-				"Failed to write to file %s: %s" % [conf_dir.path_join(file), FileAccess.get_open_error()]
+				(
+					"Failed to write to file %s: %s"
+					% [conf_dir.path_join(file), FileAccess.get_open_error()]
+				)
 			)
 			continue
 
