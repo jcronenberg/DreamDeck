@@ -1,7 +1,7 @@
 extends Node
 
 var _arguments: Dictionary
-var _conf_dir: String = OS.get_user_data_dir() + "/"
+var _conf_dir: String = OS.get_user_data_dir()
 
 
 func _init() -> void:
