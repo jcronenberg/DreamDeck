@@ -16,12 +16,12 @@ static func load_config(path: String) -> Variant:
 		var json = JSON.new()
 		var error = json.parse(config_file.get_as_text())
 		if error != OK:
-			push_error("JSON Parse Error: ", json.get_error_message())
+			push_error("JSON Parse Error: %s" % json.get_error_message())
 			return {}
 		config_data = json.data
 	else:
 		if not save_config(path, config_data):
-			push_error("Couldn't create config at " + path)
+			push_error("Couldn't create config at %s" % path)
 
 	return config_data
 
@@ -33,7 +33,7 @@ static func save_config(path: String, new_data: Variant) -> bool:
 	# Save new_data
 	config_file = FileAccess.open(path, FileAccess.WRITE)
 	if not config_file:
-		push_error("Failed to open file ", path, ": ", str(FileAccess.get_open_error()))
+		push_error("Failed to open file %s: %s", [path, str(FileAccess.get_open_error())])
 		return false
 	config_file.store_string(JSON.stringify(new_data, "\t"))
 
@@ -45,7 +45,7 @@ static func ensure_dir_exists(path: String):
 	var dir := DirAccess.open(path)
 	if not dir:
 		if DirAccess.make_dir_recursive_absolute(path) != OK:
-			push_warning("Couldn't create " + path + " dir")
+			push_warning("Couldn't create %s dir" % path)
 
 
 ## Merges [param dict2] into [param dict1], overwriting the values in [param dict1] recursively for Dictionaries. [br]
@@ -77,9 +77,9 @@ static func list_files_in_dir(path: String) -> Array[String]:
 	var file_name: String = dir.get_next()
 	while file_name != "":
 		if dir.current_is_dir():
-			file_list.append_array(list_files_in_dir(path + "/" + file_name))
+			file_list.append_array(list_files_in_dir(path.path_join(file_name)))
 		else:
-			file_list.append(path + "/" + file_name)
+			file_list.append(path.path_join(file_name))
 
 		file_name = dir.get_next()
 
@@ -102,8 +102,8 @@ static func list_dirs_in_dir(path: String) -> Array[String]:
 	var dir_name: String = dir.get_next()
 	while dir_name != "":
 		if dir.current_is_dir():
-			dir_list.append_array(list_dirs_in_dir(path + "/" + dir_name))
-			dir_list.append(path + "/" + dir_name)
+			dir_list.append_array(list_dirs_in_dir(path.path_join(dir_name)))
+			dir_list.append(path.path_join(dir_name))
 
 		dir_name = dir.get_next()
 
