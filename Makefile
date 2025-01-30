@@ -12,7 +12,7 @@ bindir ?= $(PREFIX)/bin/
 # TODO change to lib64 once that is supported by godot
 libdir ?= $(PREFIX)/lib/
 icondir ?= $(PREFIX)/share/icons/hicolor/256x256/apps/
-desktopdir ?= $(PREFIX)/share/applications/
+applicationsdir ?= $(PREFIX)/share/applications/
 builddir = bin
 appname = dreamdeck
 linuxbinary = dreamdeck
@@ -139,11 +139,12 @@ ifneq ($(wildcard bin/$(touchlib)),)
 	install -D $(builddir)/$(touchlib) $(DESTDIR)$(libdir)$(touchlib)
 endif
 	install -D resources/icons/$(iconfile) $(DESTDIR)$(icondir)$(iconfile)
-	install -D resources/$(desktopfile) $(DESTDIR)$(desktopdir)$(desktopfile)
+	mkdir -p $(DESTDIR)$(applicationsdir)
+	sed "s|@PREFIX@|$(PREFIX)|g" resources/$(desktopfile).in > $(DESTDIR)$(applicationsdir)$(desktopfile)
 
 uninstall:
 	rm -f $(DESTDIR)$(bindir)$(linuxbinary)
 	rm -f $(DESTDIR)$(libdir)$(sshlib)
 	rm -f $(DESTDIR)$(libdir)$(touchlib)
 	rm -f $(DESTDIR)$(icondir)$(iconfile)
-	rm -f $(DESTDIR)$(desktopdir)$(desktopfile)
+	rm -f $(DESTDIR)$(applicationsdir)$(desktopfile)
