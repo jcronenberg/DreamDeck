@@ -84,7 +84,7 @@ func _create_config_zip_at(path: String) -> void:
 
 	var files: Array = ConfLib.list_files_in_dir(conf_dir)
 	for file in files:
-		writer.start_file(file.trim_prefix(conf_dir))
+		writer.start_file(file.trim_prefix(conf_dir).trim_prefix("/"))
 		writer.write_file(FileAccess.get_file_as_bytes(file))
 		var error: Error = FileAccess.get_open_error()
 		if error != OK:
@@ -105,9 +105,9 @@ func _unpack_config_backup(path: String) -> void:
 	# Remove current config
 	var dir: DirAccess = DirAccess.open(conf_dir)
 	for file in ConfLib.list_files_in_dir(conf_dir):
-		dir.remove(file.trim_prefix(conf_dir))
+		dir.remove(file.trim_prefix(conf_dir).trim_prefix("/"))
 	for delete_dir in ConfLib.list_dirs_in_dir(conf_dir):
-		dir.remove(delete_dir.trim_prefix(conf_dir))
+		dir.remove(delete_dir.trim_prefix(conf_dir).trim_prefix("/"))
 
 	var files: PackedStringArray = reader.get_files()
 	for file in files:
