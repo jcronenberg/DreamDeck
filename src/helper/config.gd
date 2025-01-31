@@ -604,6 +604,7 @@ class VariantEditor:
 		add_child(vbox)
 
 	func set_description(description: String):
+		_description_label.visible = description != ""
 		# Making everything just [indent] is a bit of a hack, but works visually
 		_description_label.text = "[indent]%s[/indent]" % description
 
@@ -708,23 +709,30 @@ class StringEditor:
 
 class EnumEditor:
 	extends VariantEditor
+	var _value_editor_hbox: HBoxContainer = HBoxContainer.new()
 	var _value_editor: OptionButton
 	var _enum_dict: Dictionary
 
 	func _init(object: EnumObject):
 		super(object)
 
+		_value_editor_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_value_editor_hbox.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		add_child(_value_editor_hbox)
+
 		_enum_dict = object.get_enum_dict()
 		_value_editor = OptionButton.new()
 		_value_editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		_value_editor.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		add_child(_value_editor)
+		_value_editor.theme_type_variation = "ConfigEditorOptionButton"
+		_value_editor_hbox.add_child(_value_editor)
 
-		var clear_button = Button.new()
-		clear_button.text = "X"
-		clear_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		add_child(clear_button)
-		clear_button.connect("pressed", _on_clear_button_pressed)
+		var clear_button: TextureButton = TextureButton.new()
+		clear_button.texture_normal = RESTORE_DEFAULT_ICON
+		clear_button.ignore_texture_size = true
+		clear_button.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+		clear_button.custom_minimum_size = Vector2(25, 28)
+		clear_button.pressed.connect(_on_clear_button_pressed)
+		_value_editor_hbox.add_child(clear_button)
 
 		setup_value_editor()
 		set_value(object.get_value())
@@ -785,23 +793,30 @@ class EnumEditor:
 
 class StringArrayEditor:
 	extends VariantEditor
+	var _value_editor_hbox: HBoxContainer = HBoxContainer.new()
 	var _value_editor: OptionButton
 	var _string_array: Array[String]
 
 	func _init(object: StringArrayObject) -> void:
 		super(object)
 
+		_value_editor_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_value_editor_hbox.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		add_child(_value_editor_hbox)
+
 		_string_array = object.get_string_array()
 		_value_editor = OptionButton.new()
 		_value_editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		_value_editor.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		add_child(_value_editor)
+		_value_editor.theme_type_variation = "ConfigEditorOptionButton"
+		_value_editor_hbox.add_child(_value_editor)
 
-		var clear_button = Button.new()
-		clear_button.text = "X"
-		clear_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		add_child(clear_button)
-		clear_button.connect("pressed", _on_clear_button_pressed)
+		var clear_button: TextureButton = TextureButton.new()
+		clear_button.texture_normal = RESTORE_DEFAULT_ICON
+		clear_button.ignore_texture_size = true
+		clear_button.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+		clear_button.custom_minimum_size = Vector2(25, 28)
+		clear_button.pressed.connect(_on_clear_button_pressed)
+		_value_editor_hbox.add_child(clear_button)
 
 		setup_value_editor()
 		set_value(object.get_value())
