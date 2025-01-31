@@ -244,7 +244,6 @@ HSlider/styles/grabber_area_highlight = SubResource("8")
 HSlider/styles/slider = SubResource("9")
 HSplitContainer/constants/autohide = 0
 LayoutTabContainer/base_type = &"TabContainer"
-LayoutTabContainer/constants/side_margin = 80
 LayoutTabContainer/styles/panel = SubResource("StyleBoxEmpty_j0ya6")
 LineEdit/styles/focus = SubResource("24")
 LineEdit/styles/normal = SubResource("24")
