@@ -432,9 +432,9 @@ func _on_macroboard_config_change(new_config_dict: Dictionary) -> bool:
 # warning the user of imminent button deletion.
 func _show_button_deletion_warning() -> bool:
 	var confirm_dialog: ConfirmationDialog = ConfirmationDialog.new()
-	confirm_dialog.dialog_text = """[center]WARNING!
+	confirm_dialog.dialog_text = """WARNING!
 Existing buttons will be deleted by the size change (starting from the back).
-Are you certain you want to continue?[/center]
+Are you certain you want to continue?
 """
 	add_child(confirm_dialog)
 	confirm_dialog.initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_PRIMARY_SCREEN
