@@ -604,6 +604,7 @@ class VariantEditor:
 		add_child(vbox)
 
 	func set_description(description: String):
+		_description_label.visible = description != ""
 		# Making everything just [indent] is a bit of a hack, but works visually
 		_description_label.text = "[indent]%s[/indent]" % description
 
