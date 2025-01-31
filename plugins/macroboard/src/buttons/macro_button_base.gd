@@ -8,6 +8,7 @@ const THEME_VARIATION = "MacroButton"
 const DEFAULT_FONT_COLOR = Color(1, 1, 1)
 const DEFAULT_BG_COLOR = Color(1, 1, 1, 0.11)
 const DEFAULT_PRESSED_COLOR = Color(1, 1, 1, 0.196)
+const DELETE_ICON = preload("res://resources/icons/trash.svg")
 
 var _actions_editor: ActionsEditor
 var _new_action_selector: PluginCoordinator.PluginActionSelector
@@ -118,6 +119,7 @@ class ActionsEditor:
 		add_theme_constant_override("separation", 10)
 
 		_reorder_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_reorder_vbox.separation = 24
 		_scroll_container.add_child(_reorder_vbox)
 
 		_scroll_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -179,10 +181,10 @@ class ActionEditor:
 	var _reorder_icon_png: CompressedTexture2D = preload("res://resources/icons/hamburger_menu.png")
 	var _editor_vbox: VBoxContainer = VBoxContainer.new()
 	var _blocking_editor: Config.BoolEditor
-	var _delete_button: Button = Button.new()
+	var _delete_button: TextureButton = TextureButton.new()
 
 	func _init(editor: Config.ConfigEditor) -> void:
-		set("theme_override_constants/separation", 10)
+		add_theme_constant_override("separation", 10)
 
 		_reorder_icon.texture = _reorder_icon_png
 		_reorder_icon.custom_minimum_size = Vector2(20, 0)
@@ -191,6 +193,7 @@ class ActionEditor:
 		add_child(_reorder_icon)
 
 		_editor_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_editor_vbox.add_theme_constant_override("separation", 10)
 		add_child(_editor_vbox)
 
 		args_editor = editor
@@ -204,8 +207,11 @@ class ActionEditor:
 		)
 		_editor_vbox.add_child(_blocking_editor)
 
-		_delete_button.text = "X"
-		_delete_button.connect("pressed", _on_delete_button_pressed)
+		_delete_button.texture_normal = DELETE_ICON
+		_delete_button.ignore_texture_size = true
+		_delete_button.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+		_delete_button.custom_minimum_size = Vector2(24, 24)
+		_delete_button.pressed.connect(_on_delete_button_pressed)
 		add_child(_delete_button)
 
 	func _ready() -> void:
