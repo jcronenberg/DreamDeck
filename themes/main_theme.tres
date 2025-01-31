@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=45 format=3 uid="uid://duea6v8sw5cfx"]
+[gd_resource type="Theme" load_steps=46 format=3 uid="uid://duea6v8sw5cfx"]
 
 [ext_resource type="FontFile" uid="uid://dnvsausndgsb2" path="res://fonts/roboto/roboto_bold.ttf" id="1_dkosj"]
 [ext_resource type="FontFile" uid="uid://cbcdnmy2og275" path="res://fonts/roboto/roboto_regular.ttf" id="1_orbee"]
@@ -110,6 +110,15 @@ corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mmqy6"]
+content_margin_left = 4.0
+content_margin_right = 4.0
+bg_color = Color(1, 1, 1, 0.109804)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mfpw8"]
 bg_color = Color(0, 0.74902, 0.603922, 1)
@@ -239,6 +248,11 @@ CheckButton/styles/pressed = SubResource("14")
 ColorPickerButton/styles/hover = SubResource("StyleBoxFlat_4o1sf")
 ColorPickerButton/styles/normal = SubResource("StyleBoxFlat_wlx3a")
 ColorPickerButton/styles/pressed = SubResource("StyleBoxFlat_s1pb2")
+ConfigEditorOptionButton/base_type = &"OptionButton"
+ConfigEditorOptionButton/styles/focus = SubResource("StyleBoxFlat_mmqy6")
+ConfigEditorOptionButton/styles/hover = SubResource("StyleBoxFlat_mmqy6")
+ConfigEditorOptionButton/styles/normal = SubResource("StyleBoxFlat_mmqy6")
+ConfigEditorOptionButton/styles/pressed = SubResource("StyleBoxFlat_mmqy6")
 HSlider/styles/grabber_area = SubResource("StyleBoxFlat_mfpw8")
 HSlider/styles/grabber_area_highlight = SubResource("8")
 HSlider/styles/slider = SubResource("9")
