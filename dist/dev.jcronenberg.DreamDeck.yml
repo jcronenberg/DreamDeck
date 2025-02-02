@@ -1,0 +1,42 @@
+app-id: dev.jcronenberg.DreamDeck
+base: org.godotengine.godot.BaseApp
+base-version: "4.3-24.08"
+runtime: org.freedesktop.Platform
+runtime-version: "24.08"
+sdk: org.freedesktop.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
+build-options:
+  append-path: /usr/lib/sdk/rust-stable/bin
+command: dreamdeck
+rename-icon: dreamdeck
+
+finish-args:
+  - --share=ipc
+  - --share=network
+  - --socket=x11
+  - --socket=wayland
+  - --filesystem=home
+  - --device=dri
+  - --device=input
+
+modules:
+  - name: dreamdeck
+    buildsystem: simple
+
+    sources:
+      - cargo-source1.json
+      - cargo-source2.json
+      # Add checked out source from CI
+      - type: dir
+        path: ../
+      - type: script
+        dest-filename: dreamdeck
+        commands:
+          - /app/bin/godot-runner --audio-driver Dummy --main-pack /app/bin/dreamdeck.pck "$@"
+
+    build-commands:
+      - source /usr/lib/sdk/rust-stable/enable.sh
+      - make rust CARGO_FLAGS="--config cargo/config --offline"
+      - mv dreamdeck bin/dreamdeck
+      - make install-flatpak PREFIX=/app
