@@ -7,6 +7,7 @@ RUST_DIRS ?= plugins/ssh/rust/ plugins/touch/rust/
 
 DESTDIR ?=
 PREFIX ?= /usr/local
+CARGO_FLAGS ?=
 
 bindir ?= $(PREFIX)/bin/
 # TODO change to lib64 once that is supported by godot
@@ -26,7 +27,7 @@ define NO_CARGO_MESSAGE
 	$(info INFO: No cargo found, building without rust)
 endef
 
-.PHONY: all windows linux _check-godot _check-godot-version _build-linux _build-windows rust clean rust-clean install uninstall linux-dist _godot-import
+.PHONY: all windows linux _check-godot _check-godot-version _build-linux _build-windows rust clean rust-clean install uninstall linux-dist _godot-import install-flatpak
 
 all:
 ifdef CARGO
@@ -110,13 +111,13 @@ rust:
 ifndef CARGO
 	$(error "Cargo not installed, rust is required")
 endif
-	for dir in $(RUST_DIRS); do cargo build --manifest-path $${dir}/Cargo.toml --release; done
+	for dir in $(RUST_DIRS); do cargo build --manifest-path $${dir}/Cargo.toml --release $(CARGO_FLAGS); done
 
 rust-debug:
 ifndef CARGO
 	$(error "Cargo not installed, rust is required")
 endif
-	for dir in $(RUST_DIRS); do cargo build --manifest-path $${dir}/Cargo.toml; done
+	for dir in $(RUST_DIRS); do cargo build --manifest-path $${dir}/Cargo.toml $(CARGO_FLAGS); done
 
 clean: rust-clean
 	rm -f $(builddir)/$(linuxbinary)
@@ -131,16 +132,25 @@ ifdef CARGO
 endif
 
 install:
-	install -D $(builddir)/$(linuxbinary) $(DESTDIR)$(bindir)$(linuxbinary)
+	install -Dm 755 $(builddir)/$(linuxbinary) $(DESTDIR)$(bindir)$(linuxbinary)
 ifneq ($(wildcard $(builddir)/$(sshlib)),)
-	install -D $(builddir)/$(sshlib) $(DESTDIR)$(libdir)$(sshlib)
+	install -Dm 755 $(builddir)/$(sshlib) $(DESTDIR)$(libdir)$(sshlib)
 endif
 ifneq ($(wildcard bin/$(touchlib)),)
-	install -D $(builddir)/$(touchlib) $(DESTDIR)$(libdir)$(touchlib)
+	install -Dm 755 $(builddir)/$(touchlib) $(DESTDIR)$(libdir)$(touchlib)
 endif
-	install -D resources/icons/$(iconfile) $(DESTDIR)$(icondir)$(iconfile)
+	install -Dm 644 resources/icons/$(iconfile) $(DESTDIR)$(icondir)$(iconfile)
 	mkdir -p $(DESTDIR)$(applicationsdir)
-	sed "s|@PREFIX@|$(PREFIX)|g" resources/$(desktopfile).in > $(DESTDIR)$(applicationsdir)$(desktopfile)
+	sed "s|@PREFIX@|$(PREFIX)|g" dist/$(desktopfile).in > $(DESTDIR)$(applicationsdir)$(desktopfile)
+
+install-flatpak:
+	install -Dm 755 $(builddir)/$(linuxbinary) $(DESTDIR)$(bindir)$(linuxbinary)
+	install -Dm 755 plugins/ssh/rust/target/release/$(sshlib) $(DESTDIR)$(libdir)$(sshlib)
+	install -Dm 755 plugins/touch/rust/target/release/$(touchlib) $(DESTDIR)$(libdir)$(touchlib)
+	install -Dm 644 resources/icons/$(iconfile) $(DESTDIR)$(icondir)$(iconfile)
+	mkdir -p $(DESTDIR)$(applicationsdir)
+	sed "s|@PREFIX@|$(PREFIX)|g" dist/$(desktopfile).in > $(DESTDIR)$(applicationsdir)dev.jcronenberg.DreamDeck.desktop
+	install -Dm 644 dreamdeck.pck $(DESTDIR)$(bindir)dreamdeck.pck
 
 uninstall:
 	rm -f $(DESTDIR)$(bindir)$(linuxbinary)
