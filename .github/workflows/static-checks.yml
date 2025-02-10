@@ -1,0 +1,103 @@
+name: "Static checks"
+
+on:
+  workflow_call:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      touch: ${{ steps.filter.outputs.touch }}
+      ssh: ${{ steps.filter.outputs.ssh }}
+    steps:
+    - name: Git Checkout
+      uses: actions/checkout@v4
+    - name: Check changed files
+      uses: dorny/paths-filter@v3
+      id: filter
+      with:
+        filters: |
+          touch:
+            - 'plugins/ssh/rust/**'
+          ssh:
+            - 'plugins/touch/rust/**'
+          gdscript:
+            - 'plugins/**'
+            - 'src/**'
+
+  rust_touch_checks:
+    name: Rust checks for touch plugin
+    needs: changes
+    if: ${{ needs.changes.outputs.touch == 'true' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+    - name: Git Checkout
+      uses: actions/checkout@v4
+    - name: Install toolchain
+      run: rustup toolchain install stable
+    - name: Install dependencies
+      run: sudo apt install libssl-dev pkg-config
+    - name: Lint tests
+      run: cargo fmt --all -- --check
+      working-directory: ./plugins/touch/rust
+    - name: Cargo clippy
+      run: cargo clippy -- --no-deps -D warnings
+      working-directory: ./plugins/touch/rust
+
+  rust_ssh_checks:
+    name: Rust checks for ssh plugin
+    needs: changes
+    if: ${{ needs.changes.outputs.ssh == 'true' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+    - name: Git Checkout
+      uses: actions/checkout@v4
+    - name: Install toolchain
+      run: rustup toolchain install stable
+    - name: Install dependencies
+      run: sudo apt install libssl-dev pkg-config
+    - name: Lint tests
+      run: cargo fmt --all -- --check
+      working-directory: ./plugins/ssh/rust
+    - name: Cargo clippy
+      run: cargo clippy -- --no-deps -D warnings
+      working-directory: ./plugins/ssh/rust
+
+  gd_checks:
+    name: GDScript checks
+    needs: changes
+    if: ${{ needs.changes.outputs.gdscript == 'true' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: Scony/godot-gdscript-toolkit@master
+      - name: Formatting checks
+        run: gdformat --diff .
+      - name: Linting checks
+        run: gdlint .
+
+  spell_checks:
+    name: Spell checks
+    needs: changes
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Spell checks via codespell
+        uses: codespell-project/actions-codespell@v2
+        with:
+          skip: ./addons,./addon_submodules,godottpd,Cargo.lock
+          ignore_words_list: couldn

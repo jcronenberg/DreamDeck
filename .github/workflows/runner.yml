@@ -1,0 +1,24 @@
+name: Github Actions
+on: [push, pull_request]
+
+concurrency:
+  group: ${{ github.workflow }}|${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  static-checks:
+    name: Static checks
+    uses: ./.github/workflows/static-checks.yml
+
+  dev-builds:
+    name: Development builds
+    needs: static-checks
+    uses: ./.github/workflows/dev-builds.yml
+
+  flatpak-build:
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.repository == 'jcronenberg/DreamDeck' && github.ref == 'refs/heads/prototyping')
+    name: Flatpak build
+    needs: static-checks
+    uses: ./.github/workflows/flatpak-build.yml
