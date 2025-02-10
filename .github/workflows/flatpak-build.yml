@@ -1,10 +1,7 @@
 name: "Flatpak build"
 
 on:
-  pull_request:
-  push:
-    branches:
-      - prototyping
+  workflow_call:
 
 jobs:
   flatpak-build:
