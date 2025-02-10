@@ -49,3 +49,6 @@ jobs:
       - name: Commit to OBS
         run: osc commit -m "$GITHUB_SHA"
         working-directory: ./dreamdeck-package
+      - name: Watch OBS result
+        run: osc results -w -F
+        working-directory: ./dreamdeck-package
