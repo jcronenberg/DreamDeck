@@ -22,3 +22,12 @@ jobs:
     name: Flatpak build
     needs: static-checks
     uses: ./.github/workflows/flatpak-build.yml
+
+  obs-build:
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.repository == 'jcronenberg/DreamDeck' && github.ref == 'refs/heads/prototyping')
+    name: OBS build
+    needs: static-checks
+    uses: ./.github/workflows/obs-build.yml
+    secrets: inherit

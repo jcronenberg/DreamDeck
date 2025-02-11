@@ -12,4 +12,5 @@ fi
 
 TEMPLATE=$(dirname "${BASH_SOURCE[0]}")/oscrc.template
 mkdir -p $(dirname "$CONFIG_FILE")
-sed -e "s/@OBS_USER@/$OBS_USER/g" -e "s/@OBS_PASSWORD@/$OBS_PASSWORD/g" "$TEMPLATE" > "$CONFIG_FILE"
+echo "Creating $CONFIG_FILE"
+sed -e "s/@OBS_USER@/$OBS_USER/g" -e "s/@OBS_PASSWORD@/$OBS_PW/g" "$TEMPLATE" > "$CONFIG_FILE"
