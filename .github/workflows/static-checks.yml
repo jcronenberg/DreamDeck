@@ -13,6 +13,7 @@ jobs:
     outputs:
       touch: ${{ steps.filter.outputs.touch }}
       ssh: ${{ steps.filter.outputs.ssh }}
+      gdscript: ${{ steps.filter.outputs.gdscript }}
     steps:
     - name: Git Checkout
       uses: actions/checkout@v4
@@ -22,12 +23,12 @@ jobs:
       with:
         filters: |
           touch:
-            - 'plugins/ssh/rust/**'
+            - 'plugins/ssh/rust/**/*.rs'
           ssh:
-            - 'plugins/touch/rust/**'
+            - 'plugins/touch/rust/**/*.rs'
           gdscript:
-            - 'plugins/**'
-            - 'src/**'
+            - 'plugins/**/*.gd'
+            - 'src/**/*.gd'
 
   rust_touch_checks:
     name: Rust checks for touch plugin
