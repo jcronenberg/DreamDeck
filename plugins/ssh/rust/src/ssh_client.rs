@@ -1,18 +1,16 @@
 use anyhow::anyhow;
-use async_ssh2_tokio::{AuthMethod, ServerCheckMethod};
 use async_std::future;
 use async_std::task::block_on;
-use async_trait::async_trait;
 use chrono::Local;
 use godot::prelude::*;
+use keys::PrivateKeyWithHashAlg;
 use osshkeys::keys::KeyPair;
 use russh::client::Handle;
 use russh::*;
-use russh_keys::*;
-use std::fs;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
+use std::{fs, io};
 
 // TODO make blocking an option
 // because right now we just log the received data,
@@ -21,6 +19,78 @@ use std::time::Duration;
 // but that means for every command there needs to be a SSHClient spawned
 // or we could implement session management and allow opening multiple sessions per SSHClient
 
+#[derive(thiserror::Error, Debug)]
+#[non_exhaustive]
+pub enum SSHError {
+    // #[error("Keyboard-interactive authentication failed")]
+    // KeyboardInteractiveAuthFailed,
+    // #[error("No keyboard-interactive response for prompt: {0}")]
+    // KeyboardInteractiveNoResponseForPrompt(String),
+    // #[error("Key authentication failed")]
+    // KeyAuthFailed,
+    // #[error("Unable to load key, bad format or passphrase: {0}")]
+    // KeyInvalid(russh_keys::Error),
+    // #[error("Password authentication failed")]
+    // PasswordWrong,
+    // #[error("Invalid address was provided: {0}")]
+    // AddressInvalid(io::Error),
+    // #[error("The executed command didn't send an exit code")]
+    // CommandDidntExit,
+    #[error("Server check failed")]
+    ServerCheckFailed,
+    #[error("Ssh error occurred: {0}")]
+    SshError(#[from] russh::Error),
+    #[error("Send error")]
+    SendError(#[from] russh::SendError),
+    #[error("Agent auth error")]
+    AgentAuthError(#[from] russh::AgentAuthError),
+    #[error("I/O error")]
+    IoError(#[from] io::Error),
+}
+
+#[derive(Clone)]
+#[allow(dead_code)]
+pub enum ServerCheckMethod {
+    NoCheck,
+    /// base64 encoded key without the type prefix or hostname suffix (type is already encoded)
+    DefaultKnownHostsFile,
+    PublicKey(String),
+    PublicKeyFile(String),
+    KnownHostsFile(String),
+}
+
+// struct PromptResponse {
+//     exact: bool,
+//     prompt: String,
+//     response: String,
+// }
+
+// struct AuthKeyboardInteractive {
+//     /// Hnts to the server the preferred methods to be used for authentication.
+//     submethods: Option<String>,
+//     responses: Vec<PromptResponse>,
+// }
+
+#[derive(Clone, PartialEq)]
+#[allow(dead_code)]
+enum AuthMethod {
+    None,
+    Password(String),
+    PrivateKey {
+        /// entire contents of private key file
+        key_data: String,
+        key_pass: Option<String>,
+    },
+    PrivateKeyFile {
+        key_file_path: PathBuf,
+        key_pass: Option<String>,
+    },
+    PublicKeyFile {
+        key_file_path: PathBuf,
+    },
+    // KeyboardInteractive(AuthKeyboardInteractive),
+}
+
 struct Client {
     debug: bool,
     ip: String,
@@ -28,46 +98,44 @@ struct Client {
     server_check: ServerCheckMethod,
 }
 
-#[async_trait]
 impl client::Handler for Client {
     type Error = anyhow::Error;
 
     async fn check_server_key(
         &mut self,
-        server_public_key: &key::PublicKey,
+        server_public_key: &russh::keys::PublicKey,
     ) -> Result<bool, Self::Error> {
         match &self.server_check {
             ServerCheckMethod::NoCheck => Ok(true),
             ServerCheckMethod::PublicKey(key) => {
-                let pk = russh_keys::parse_public_key_base64(key)
-                    .map_err(|_| async_ssh2_tokio::Error::ServerCheckFailed)?;
+                let pk = russh::keys::parse_public_key_base64(key)
+                    .map_err(|_| SSHError::ServerCheckFailed)?;
 
                 Ok(pk == *server_public_key)
             }
             ServerCheckMethod::PublicKeyFile(key_file_name) => {
-                let pk = russh_keys::load_public_key(key_file_name)
-                    .map_err(|_| async_ssh2_tokio::Error::ServerCheckFailed)?;
+                let pk = russh::keys::load_public_key(key_file_name)
+                    .map_err(|_| SSHError::ServerCheckFailed)?;
 
                 Ok(pk == *server_public_key)
             }
             ServerCheckMethod::KnownHostsFile(known_hosts_path) => {
-                let result = russh_keys::check_known_hosts_path(
+                let result = russh::keys::check_known_hosts_path(
                     &self.ip,
                     self.port,
                     server_public_key,
                     known_hosts_path,
                 )
-                .map_err(|_| async_ssh2_tokio::Error::ServerCheckFailed)?;
+                .map_err(|_| SSHError::ServerCheckFailed)?;
 
                 Ok(result)
             }
             ServerCheckMethod::DefaultKnownHostsFile => {
-                let result = russh_keys::check_known_hosts(&self.ip, self.port, server_public_key)
-                    .map_err(|_| async_ssh2_tokio::Error::ServerCheckFailed)?;
+                let result = russh::keys::check_known_hosts(&self.ip, self.port, server_public_key)
+                    .map_err(|_| SSHError::ServerCheckFailed)?;
 
                 Ok(result)
-            }
-            _ => Err(anyhow!(async_ssh2_tokio::Error::ServerCheckFailed)),
+            } //_ => Err(anyhow!(SSHError::ServerCheckFailed)),
         }
     }
 
@@ -137,7 +205,7 @@ impl client::Handler for Client {
 pub struct SSHClient {
     debug: bool,
     session: Option<Handle<Client>>,
-    auth_method: Option<AuthMethod>,
+    auth_method: AuthMethod,
     server_check: ServerCheckMethod,
     user: Option<String>,
     ip: Option<String>,
@@ -151,7 +219,7 @@ pub impl INode for SSHClient {
         Self {
             debug: false,
             session: None,
-            auth_method: None,
+            auth_method: AuthMethod::None,
             server_check: ServerCheckMethod::NoCheck,
             user: None,
             ip: None,
@@ -227,7 +295,7 @@ pub impl SSHClient {
         if let AuthMethod::PrivateKeyFile {
             key_file_path,
             key_pass,
-        } = self.auth_method.clone().unwrap()
+        } = self.auth_method.clone()
         {
             passphrase = key_pass;
             key_path = key_file_path;
@@ -238,7 +306,7 @@ pub impl SSHClient {
         // Since we can't log in with the currently set auth_method
         // we simply store it and replace it temporarily with a password
         let auth_method_store = self.auth_method.clone();
-        self.auth_method = Some(AuthMethod::Password(password.into()));
+        self.auth_method = AuthMethod::Password(password.into());
 
         // With the extracted values we can generate a KeyPair which can give as the publickey string
         let key_pair = match KeyPair::from_keystr(
@@ -275,18 +343,18 @@ pub impl SSHClient {
     fn set_auth_method(&mut self, method: GString, key_path: GString, password: GString) {
         match method.to_string().as_str() {
             "key_file" => {
-                self.auth_method = Some(AuthMethod::PrivateKeyFile {
+                self.auth_method = AuthMethod::PrivateKeyFile {
                     key_file_path: PathBuf::from(key_path.to_string()),
                     key_pass: if password.to_string() != *"" {
                         Some(password.to_string())
                     } else {
                         None
                     },
-                })
+                }
             }
-            "password" => self.auth_method = Some(AuthMethod::Password(password.to_string())),
+            "password" => self.auth_method = AuthMethod::Password(password.to_string()),
             _ => {
-                self.auth_method = None;
+                self.auth_method = AuthMethod::None;
             }
         }
     }
@@ -363,7 +431,7 @@ pub impl SSHClient {
     }
 
     async fn _open_session(&mut self) -> Result<Handle<Client>, anyhow::Error> {
-        if self.auth_method.is_none() {
+        if self.auth_method == AuthMethod::None {
             return Err(anyhow!("No authentication method set"));
         } else if self.ip.is_none() || self.user.is_none() {
             return Err(anyhow!("Client not configured"));
@@ -405,11 +473,7 @@ pub impl SSHClient {
         }?;
 
         let result = match self
-            ._authenticate(
-                &mut session,
-                &self.user.clone().unwrap(),
-                self.auth_method.clone().unwrap(),
-            )
+            ._authenticate(&mut session, &self.user.clone().unwrap())
             .await
         {
             Ok(_) => Ok(session),
@@ -442,9 +506,8 @@ pub impl SSHClient {
         &mut self,
         handle: &mut Handle<Client>,
         username: &String,
-        auth: AuthMethod,
     ) -> Result<(), anyhow::Error> {
-        match auth {
+        match &self.auth_method {
             AuthMethod::Password(password) => {
                 if handle
                     .authenticate_password(username, password)
@@ -457,38 +520,48 @@ pub impl SSHClient {
             }
             AuthMethod::PrivateKey { key_data, key_pass } => {
                 let cprivk =
-                    match russh_keys::decode_secret_key(key_data.as_str(), key_pass.as_deref()) {
+                    match russh::keys::decode_secret_key(key_data.as_str(), key_pass.as_deref()) {
                         Ok(kp) => kp,
                         Err(e) => return Err(anyhow!(e)),
                     };
 
-                if handle
-                    .authenticate_publickey(username, Arc::new(cprivk))
-                    .await
-                    .is_ok()
-                {
-                    return Ok(());
-                };
-                Err(anyhow!("Private key auth failed"))
+                let result = handle
+                    .authenticate_publickey(
+                        username,
+                        PrivateKeyWithHashAlg::new(
+                            Arc::new(cprivk),
+                            handle.best_supported_rsa_hash().await?.flatten(),
+                        ),
+                    )
+                    .await?;
+                match result {
+                    client::AuthResult::Success => Ok(()),
+                    _ => Err(anyhow!("Private key auth failed")),
+                }
             }
             AuthMethod::PrivateKeyFile {
                 key_file_path,
                 key_pass,
             } => {
-                let cprivk = match russh_keys::load_secret_key(key_file_path, key_pass.as_deref()) {
+                let cprivk = match russh::keys::load_secret_key(key_file_path, key_pass.as_deref())
+                {
                     Ok(kp) => kp,
                     Err(e) => return Err(anyhow!(e)),
                 };
 
-                if let Ok(is_authenticated) = handle
-                    .authenticate_publickey(username, Arc::new(cprivk))
-                    .await
-                {
-                    if is_authenticated {
-                        return Ok(());
-                    }
-                };
-                Err(anyhow!("Private key auth failed"))
+                let result = handle
+                    .authenticate_publickey(
+                        username,
+                        PrivateKeyWithHashAlg::new(
+                            Arc::new(cprivk),
+                            handle.best_supported_rsa_hash().await?.flatten(),
+                        ),
+                    )
+                    .await?;
+                match result {
+                    client::AuthResult::Success => Ok(()),
+                    _ => Err(anyhow!("Private key auth failed")),
+                }
             }
             _ => Err(anyhow!("Private key auth failed")),
         }
