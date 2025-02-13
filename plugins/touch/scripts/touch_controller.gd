@@ -15,8 +15,8 @@ var _y_coord: float = -1  # Absolute Y coordinate.
 var _x_diff: float = 0  # X coordinate delta to previous.
 var _y_diff: float = 0  # Y coordinate delta to previous.
 var _pressed: bool = false  # Touch down state.
-var _device_max_abs_x: int = 0  # Device's maximum value for ABS_X events.
-var _device_max_abs_y: int = 0  # Device's maximum value for ABS_X events.
+var _device_max_abs_x: int = -1  # Device's maximum value for ABS_X events.
+var _device_max_abs_y: int = -1  # Device's maximum value for ABS_X events.
 var _divide_x_by: float = 0.0  # Amount to divide X by based on screen size and device's max values.
 var _divide_y_by: float = 0.0  # Amount to divide Y by based on screen size and device's max values.
 var _window_area_min: Vector2 = Vector2(0, 0)  # Top left position of window in current screen.
@@ -60,36 +60,38 @@ func get_default_device() -> String:
 
 ## Try to reconnect current device.
 func reconnect_device() -> void:
-	_grab_touch_devices_script.call("reconnect_device")
+	_grab_touch_devices_script.reconnect_device()
 
 
 ## Get all allowed/touch devices.
 func get_devices() -> PackedStringArray:
-	return _grab_touch_devices_script.call("get_devices")
+	return _grab_touch_devices_script.get_devices()
 
 
 ## Grabs current device.
 func grab_device() -> void:
-	var ret: Variant = _grab_touch_devices_script.call("grab_device")
+	var ret: Variant = _grab_touch_devices_script.grab_device()
 	if typeof(ret) == TYPE_STRING:
 		push_warning("Failed grabbing device: " + ret)
 
 
 ## Ungrabs current device.
 func ungrab_device() -> void:
-	_grab_touch_devices_script.call("ungrab_device")
+	_grab_touch_devices_script.ungrab_device()
 
 
 ## Tries to set device to [param device_name].[br]
 ## NOTE: Also tries to grab new device immediately.
 func set_device(device_name: String) -> void:
-	var ret: Variant = _grab_touch_devices_script.call("set_device", device_name)
+	var ret: Variant = _grab_touch_devices_script.set_device(device_name)
 	if typeof(ret) == TYPE_STRING:
 		push_warning("Failed setting device: " + ret)
 		return
 	grab_device()
-	_device_max_abs_x = _grab_touch_devices_script.call("get_device_max_abs_x")
-	_device_max_abs_y = _grab_touch_devices_script.call("get_device_max_abs_y")
+	_device_max_abs_x = _grab_touch_devices_script.get_device_max_abs_x()
+	_device_max_abs_y = _grab_touch_devices_script.get_device_max_abs_y()
+	if _device_max_abs_x == -1 or _device_max_abs_y == -1:
+		push_warning("Failed to get device's maximum absolute values")
 	_calculate_divide_by()
 
 
@@ -166,6 +168,10 @@ func _construct_touch_event() -> InputEvent:
 
 # Calculates [member _divide_x_by] and [member _divide_y_by].
 func _calculate_divide_by() -> void:
+	# If _device_max_abs_{x, y} are not set/failed to set just divide by 1
+	if _device_max_abs_x == -1 or _device_max_abs_y == -1:
+		_divide_x_by = 1
+		_divide_y_by = 1
 	_divide_x_by = _device_max_abs_x / float(DisplayServer.screen_get_size().x)
 	_divide_y_by = _device_max_abs_y / float(DisplayServer.screen_get_size().y)
 

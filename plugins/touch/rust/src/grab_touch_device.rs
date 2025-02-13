@@ -34,10 +34,6 @@ pub struct GrabTouchDevice {
     device_name: Option<GString>,
     /// Current /dev/input dir, used to detect input device changes
     input_dir: GString,
-    /// The maximum absolute x axis value of current device
-    device_max_abs_x: i32,
-    /// The maximum absolute y axis value of current device
-    device_max_abs_y: i32,
     parent: Option<Gd<Node>>,
 
     base: Base<Node>,
@@ -58,14 +54,30 @@ fn read_input_dir() -> String {
 
 #[godot_api]
 impl GrabTouchDevice {
+    /// Returns -1 on failure
     #[func]
     fn get_device_max_abs_x(&mut self) -> i32 {
-        self.device_max_abs_x
+        if let Some(device) = &self.device {
+            if let Ok(abs_state) = device.get_abs_state() {
+                if let Some(abs_state_y) = abs_state.first() {
+                    return abs_state_y.maximum;
+                }
+            }
+        }
+        -1
     }
 
+    /// Returns -1 on failure
     #[func]
     fn get_device_max_abs_y(&mut self) -> i32 {
-        self.device_max_abs_y
+        if let Some(device) = &self.device {
+            if let Ok(abs_state) = device.get_abs_state() {
+                if let Some(abs_state_y) = abs_state.get(1) {
+                    return abs_state_y.maximum;
+                }
+            }
+        }
+        -1
     }
 
     /// Internal function to set self.device to matching self.device_name
@@ -99,10 +111,6 @@ impl GrabTouchDevice {
         let epoll = epoll::Epoll::new(epoll::EpollCreateFlags::EPOLL_CLOEXEC)?;
         let event = epoll::EpollEvent::new(epoll::EpollFlags::EPOLLIN, 0);
         epoll.add(&device, event)?;
-
-        // get and store max absolute axis values for the device
-        self.device_max_abs_x = device.get_abs_state().unwrap()[0].maximum;
-        self.device_max_abs_y = device.get_abs_state().unwrap()[1].maximum;
 
         // store device so we can fetch events in _process
         self.device = Some(device);
@@ -215,8 +223,6 @@ impl INode for GrabTouchDevice {
             try_grab: false,
             device_name: None,
             input_dir: GString::new(),
-            device_max_abs_x: 0,
-            device_max_abs_y: 0,
             parent: None,
             base,
         }
