@@ -22,20 +22,6 @@ use std::{fs, io};
 #[derive(thiserror::Error, Debug)]
 #[non_exhaustive]
 pub enum SSHError {
-    // #[error("Keyboard-interactive authentication failed")]
-    // KeyboardInteractiveAuthFailed,
-    // #[error("No keyboard-interactive response for prompt: {0}")]
-    // KeyboardInteractiveNoResponseForPrompt(String),
-    // #[error("Key authentication failed")]
-    // KeyAuthFailed,
-    // #[error("Unable to load key, bad format or passphrase: {0}")]
-    // KeyInvalid(russh_keys::Error),
-    // #[error("Password authentication failed")]
-    // PasswordWrong,
-    // #[error("Invalid address was provided: {0}")]
-    // AddressInvalid(io::Error),
-    // #[error("The executed command didn't send an exit code")]
-    // CommandDidntExit,
     #[error("Server check failed")]
     ServerCheckFailed,
     #[error("Ssh error occurred: {0}")]
@@ -59,18 +45,6 @@ pub enum ServerCheckMethod {
     KnownHostsFile(String),
 }
 
-// struct PromptResponse {
-//     exact: bool,
-//     prompt: String,
-//     response: String,
-// }
-
-// struct AuthKeyboardInteractive {
-//     /// Hnts to the server the preferred methods to be used for authentication.
-//     submethods: Option<String>,
-//     responses: Vec<PromptResponse>,
-// }
-
 #[derive(Clone, PartialEq)]
 #[allow(dead_code)]
 enum AuthMethod {
@@ -88,7 +62,6 @@ enum AuthMethod {
     PublicKeyFile {
         key_file_path: PathBuf,
     },
-    // KeyboardInteractive(AuthKeyboardInteractive),
 }
 
 struct Client {
@@ -135,7 +108,7 @@ impl client::Handler for Client {
                     .map_err(|_| SSHError::ServerCheckFailed)?;
 
                 Ok(result)
-            } //_ => Err(anyhow!(SSHError::ServerCheckFailed)),
+            }
         }
     }
 
