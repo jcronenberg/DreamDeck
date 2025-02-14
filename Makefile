@@ -3,7 +3,8 @@ ifdef GODOT_EXECUTABLE
 	GODOT_VERSION := $(shell $(GODOT_EXECUTABLE) --version 2>/dev/null | cut -d'.' -f1)
 endif
 CARGO := $(shell command -v cargo 2> /dev/null)
-RUST_DIRS ?= plugins/ssh/rust/ plugins/touch/rust/
+TOUCH_MANIFEST ?= plugins/touch/rust/Cargo.toml
+SSH_MANIFEST ?= plugins/ssh/rust/Cargo.toml
 
 DESTDIR ?=
 PREFIX ?= /usr/local
@@ -27,97 +28,88 @@ define NO_CARGO_MESSAGE
 	$(info INFO: No cargo found, building without rust)
 endef
 
-.PHONY: all windows linux _check-godot _check-godot-version _build-linux _build-windows rust clean rust-clean install uninstall linux-dist _godot-import install-flatpak
+.PHONY: all windows linux _check-godot _check-godot-version godot-build-linux godot-build-windows rust clean rust-clean install uninstall linux-dist godot-import install-flatpak
 
 all:
 ifdef CARGO
 	$(MAKE) rust
-	$(MAKE) _build-linux
-	$(MAKE) _build-windows
+	$(MAKE) build-linux
+	$(MAKE) build-windows
 else
 	$(NO_CARGO_MESSAGE)
-	$(MAKE) _build-linux-rustless
-	$(MAKE) _build-windows-rustless
+	$(MAKE) godot-build-linux-rustless
+	$(MAKE) godot-build-windows-rustless
 endif
 
 
 windows:
 ifdef CARGO
-	$(MAKE) rust
-	$(MAKE) _build-windows
+	$(MAKE) rust-ssh-release
+	$(MAKE) godot-build-windows
 else
 	$(NO_CARGO_MESSAGE)
-	$(MAKE) _build-windows-rustless
+	$(MAKE) godot-build-windows-rustless
 endif
 
 linux:
 ifdef CARGO
 	$(MAKE) rust
-	$(MAKE) _build-linux
+	$(MAKE) godot-build-linux
 else
 	$(NO_CARGO_MESSAGE)
-	$(MAKE) _build-linux-rustless
+	$(MAKE) godot-build-linux-rustless
 endif
 
 linux-debug:
 	$(MAKE) rust-debug
-	$(MAKE) _build-linux-debug
+	$(MAKE) godot-build-linux-debug
 
 linux-rustless:
-	$(MAKE) _build-linux-rustless
+	$(MAKE) godot-build-linux-rustless
 
 windows-rustless:
-	$(MAKE) _build-windows-rustless
+	$(MAKE) godot-build-windows-rustless
 
 linux-dist:
 	$(MAKE) linux
 	tar zcvf $(builddir)/$(appname).tar.gz -C $(builddir) $(linuxbinary) $(sshlib) $(touchlib)
 
-_check-godot:
-ifndef GODOT_EXECUTABLE
-	$(error "Godot executable not found. Please make sure Godot4 is installed and in your system PATH.")
-endif
-	@$(MAKE) _check-godot-version
-
-_check-godot-version:
-ifneq "$(GODOT_VERSION)" "4"
-	$(error "Found Godot version: $(GODOT_VERSION), but a version starting with 4 is required.")
-endif
-
-_godot-import:
+godot-import:
 	@$(GODOT_EXECUTABLE) --headless --import || true
 
-_build-linux: _check-godot
-	$(MAKE) _godot-import
+godot-build-linux: _check-godot
+	$(MAKE) godot-import
 	@$(GODOT_EXECUTABLE) --headless --export-release "Linux"
 
-_build-linux-debug: _check-godot
-	$(MAKE) _godot-import
+godot-build-linux-debug: _check-godot
+	$(MAKE) godot-import
 	@$(GODOT_EXECUTABLE) --headless --export-release "Linux"
 
-_build-windows: _check-godot
-	$(MAKE) _godot-import
+godot-build-windows: _check-godot
+	$(MAKE) godot-import
 	@$(GODOT_EXECUTABLE) --headless --export-release "Windows Desktop"
 
-_build-linux-rustless: _check-godot
-	$(MAKE) _godot-import
+godot-build-linux-rustless: _check-godot
+	$(MAKE) godot-import
 	@$(GODOT_EXECUTABLE) --headless --export-release "Linux without rust"
 
-_build-windows-rustless: _check-godot
-	$(MAKE) _godot-import
+godot-build-windows-rustless: _check-godot
+	$(MAKE) godot-import
 	@$(GODOT_EXECUTABLE) --headless --export-release "Windows Desktop without rust"
 
 rust:
 ifndef CARGO
 	$(error "Cargo not installed, rust is required")
 endif
-	for dir in $(RUST_DIRS); do cargo build --manifest-path $${dir}/Cargo.toml --release $(CARGO_FLAGS); done
+	$(MAKE) rust-touch-release
+	$(MAKE) rust-ssh-release
 
 rust-debug:
 ifndef CARGO
 	$(error "Cargo not installed, rust is required")
 endif
-	for dir in $(RUST_DIRS); do cargo build --manifest-path $${dir}/Cargo.toml $(CARGO_FLAGS); done
+	$(MAKE) rust-touch-debug
+	$(MAKE) rust-ssh-debug
 
 clean: rust-clean
 	rm -f $(builddir)/$(linuxbinary)
@@ -127,9 +119,19 @@ clean: rust-clean
 	rm -f $(builddir)/$(appname).tar.gz
 
 rust-clean:
-ifdef CARGO
-	for dir in $(RUST_DIRS); do cargo clean --manifest-path $${dir}/Cargo.toml; done
-endif
+	for manifest in $(TOUCH_MANIFEST) $(SSH_MANIFEST); do $(CARGO) clean --manifest-path $${manifest}; done
+
+rust-touch-release:
+	@$(CARGO) build --manifest-path $(TOUCH_MANIFEST) --release $(CARGO_FLAGS)
+
+rust-touch-debug:
+	@$(CARGO) build --manifest-path $(TOUCH_MANIFEST) $(CARGO_FLAGS)
+
+rust-ssh-release:
+	@$(CARGO) build --manifest-path $(SSH_MANIFEST) --release $(CARGO_FLAGS)
+
+rust-ssh-debug:
+	@$(CARGO) build --manifest-path $(SSH_MANIFEST) $(CARGO_FLAGS)
 
 install:
 	install -Dm 755 $(builddir)/$(linuxbinary) $(DESTDIR)$(bindir)$(linuxbinary)
@@ -158,3 +160,14 @@ uninstall:
 	rm -f $(DESTDIR)$(libdir)$(touchlib)
 	rm -f $(DESTDIR)$(icondir)$(iconfile)
 	rm -f $(DESTDIR)$(applicationsdir)$(desktopfile)
+
+_check-godot:
+ifndef GODOT_EXECUTABLE
+	$(error "Godot executable not found. Please make sure Godot4 is installed and in your system PATH.")
+endif
+	@$(MAKE) _check-godot-version
+
+_check-godot-version:
+ifneq "$(GODOT_VERSION)" "4"
+	$(error "Found Godot version: $(GODOT_VERSION), but a version starting with 4 is required.")
+endif
