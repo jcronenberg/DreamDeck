@@ -16,7 +16,10 @@ func _init() -> void:
 	# Connect the plugin enum editor here, because we need to populate
 	# the scene enum with the available scenes from the selected plugin
 	var plugins_editor: Config.StringArrayEditor = _config_editor.get_editor("plugin")
+	plugins_editor.set_default_button_disabled(true)
 	plugins_editor.get_value_editor().connect("item_selected", _on_new_panel_plugin_selected)
+	var scene_editor: Config.StringArrayEditor = _config_editor.get_editor("scene")
+	scene_editor.set_default_button_disabled(true)
 
 	add_child(_config_editor)
 
