@@ -207,9 +207,9 @@ pub impl INode for SSHClient {
 #[godot_api]
 pub impl SSHClient {
     #[func]
-    fn setup(&mut self, user: GString, ip: GString, port: i64) {
-        self.user = Some(user.into());
-        self.ip = Some(ip.clone().into());
+    fn setup(&mut self, user: String, ip: String, port: i64) {
+        self.user = Some(user);
+        self.ip = Some(ip);
         self.port = port as u16;
     }
 
@@ -219,7 +219,7 @@ pub impl SSHClient {
     }
 
     #[func]
-    fn exec(&mut self, cmd: GString) -> bool {
+    fn exec(&mut self, cmd: String) -> bool {
         if self.session.is_none() {
             let result = self.open_session();
             if !result.is_nil() {
@@ -227,7 +227,7 @@ pub impl SSHClient {
                 return false;
             }
         }
-        block_on(self._exec_ssh(cmd.to_string()))
+        block_on(self._exec_ssh(cmd))
     }
 
     #[func]
@@ -352,9 +352,12 @@ pub impl SSHClient {
         self.auth_method = AuthMethod::Password(password);
     }
 
+    /// Sets the method by which to check the server against.
+    ///
+    /// * `method` - Currently supported: "known_hosts_file" or "no_check".
     #[func]
-    fn set_server_check_method(&mut self, method: GString) {
-        match method.to_string().as_str() {
+    fn set_server_check_method(&mut self, method: String) {
+        match method.as_str() {
             "known_hosts_file" => self.server_check = ServerCheckMethod::DefaultKnownHostsFile,
             "no_check" => self.server_check = ServerCheckMethod::NoCheck,
             _ => {
