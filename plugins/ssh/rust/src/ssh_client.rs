@@ -24,7 +24,7 @@ use std::{fs, io};
 pub enum SSHError {
     #[error("Server check failed")]
     ServerCheckFailed,
-    #[error("Ssh error occurred: {0}")]
+    #[error("SSH error occurred: {0}")]
     SshError(#[from] russh::Error),
     #[error("Send error")]
     SendError(#[from] russh::SendError),
@@ -72,7 +72,7 @@ struct Client {
 }
 
 impl client::Handler for Client {
-    type Error = anyhow::Error;
+    type Error = SSHError;
 
     async fn check_server_key(
         &mut self,
@@ -220,23 +220,23 @@ pub impl SSHClient {
 
     #[func]
     fn exec(&mut self, cmd: GString) -> bool {
-        if self.session.is_none() && !self.open_session() {
-            return false;
+        if self.session.is_none() {
+            let result = self.open_session();
+            if !result.is_nil() {
+                godot_error!("Failed to open session: {}", result);
+                return false;
+            }
         }
         block_on(self._exec_ssh(cmd.to_string()))
     }
 
     #[func]
-    fn open_session(&mut self) -> bool {
-        match block_on(self._open_session()) {
-            Ok(session) => self.session = Some(session),
-            Err(error) => {
-                self.session = None;
-                godot_error!("Failed to open ssh session: {}", error);
-                return false;
-            }
-        }
-        true
+    fn open_session(&mut self) -> Variant {
+        self.session = Some(match block_on(self._open_session()) {
+            Ok(session) => session,
+            Err(error) => return Variant::from(error.to_string()),
+        });
+        Variant::nil()
     }
 
     #[func]
@@ -403,11 +403,12 @@ pub impl SSHClient {
         true
     }
 
+    /// Open a new session with current client settings
     async fn _open_session(&mut self) -> Result<Handle<Client>, anyhow::Error> {
         if self.auth_method == AuthMethod::None {
-            return Err(anyhow!("No authentication method set"));
+            anyhow::bail!("No authentication method set");
         } else if self.ip.is_none() || self.user.is_none() {
-            return Err(anyhow!("Client not configured"));
+            anyhow::bail!("Client not configured");
         }
 
         let config = russh::client::Config {
@@ -441,16 +442,12 @@ pub impl SSHClient {
         {
             Ok(channel) => channel,
             Err(_) => {
-                return Err(anyhow!("Timed out when trying to open channel"));
+                anyhow::bail!("Timed out when trying to open channel");
             }
         }?;
 
-        let result = match self
-            ._authenticate(&mut session, &self.user.clone().unwrap())
-            .await
-        {
-            Ok(_) => Ok(session),
-            Err(e) => return Err(anyhow!(e)),
+        if let Err(e) = self._authenticate(&mut session).await {
+            anyhow::bail!(e);
         };
 
         if self.debug {
@@ -461,10 +458,10 @@ pub impl SSHClient {
             );
         }
 
-        result
+        Ok(session)
     }
 
-    /// Disconnects a session
+    /// Disconnects current session
     async fn _disconnect_session(&mut self) -> Result<(), russh::Error> {
         if let Some(session) = &self.session {
             session
@@ -475,14 +472,14 @@ pub impl SSHClient {
     }
 
     /// This takes a handle and performs authentication with the given method.
-    async fn _authenticate(
-        &mut self,
-        handle: &mut Handle<Client>,
-        username: &String,
-    ) -> Result<(), anyhow::Error> {
+    async fn _authenticate(&mut self, session: &mut Handle<Client>) -> Result<(), anyhow::Error> {
+        let username = match &self.user {
+            None => anyhow::bail!("No user set"),
+            Some(user) => user,
+        };
         match &self.auth_method {
             AuthMethod::Password(password) => {
-                if handle
+                if session
                     .authenticate_password(username, password)
                     .await
                     .is_ok()
@@ -498,12 +495,12 @@ pub impl SSHClient {
                         Err(e) => return Err(anyhow!(e)),
                     };
 
-                let result = handle
+                let result = session
                     .authenticate_publickey(
                         username,
                         PrivateKeyWithHashAlg::new(
                             Arc::new(cprivk),
-                            handle.best_supported_rsa_hash().await?.flatten(),
+                            session.best_supported_rsa_hash().await?.flatten(),
                         ),
                     )
                     .await?;
@@ -522,12 +519,12 @@ pub impl SSHClient {
                     Err(e) => return Err(anyhow!(e)),
                 };
 
-                let result = handle
+                let result = session
                     .authenticate_publickey(
                         username,
                         PrivateKeyWithHashAlg::new(
                             Arc::new(cprivk),
-                            handle.best_supported_rsa_hash().await?.flatten(),
+                            session.best_supported_rsa_hash().await?.flatten(),
                         ),
                     )
                     .await?;
