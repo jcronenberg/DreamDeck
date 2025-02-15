@@ -21,9 +21,19 @@ jobs:
         run: |
           mkdir -v -p ~/.local/share/godot/export_templates
           mv /root/.local/share/godot/export_templates/${GODOT_VERSION}.stable ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
-          apt update -y && apt install curl make gcc libssl-dev pkg-config -y
+          apt update -y && apt install curl make gcc -y
       - name: Install rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            plugins/touch/rust/target/
+            plugins/ssh/rust/target/
+          key: dev-build-linux-cargo-${{ hashFiles('plugins/touch/rust/Cargo.lock', 'plugins/ssh/rust/Cargo.lock') }}
       - name: Linux export
         run: |
           make linux

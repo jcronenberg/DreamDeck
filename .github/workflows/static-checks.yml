@@ -42,8 +42,15 @@ jobs:
       uses: actions/checkout@v4
     - name: Install toolchain
       run: rustup toolchain install stable
-    - name: Install dependencies
-      run: sudo apt install libssl-dev pkg-config
+    - uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          plugins/touch/rust/target/
+        key: static-touch-cargo-${{ hashFiles('plugins/touch/rust/Cargo.lock') }}
     - name: Lint tests
       run: cargo fmt --all -- --check
       working-directory: ./plugins/touch/rust
@@ -63,8 +70,15 @@ jobs:
       uses: actions/checkout@v4
     - name: Install toolchain
       run: rustup toolchain install stable
-    - name: Install dependencies
-      run: sudo apt install libssl-dev pkg-config
+    - uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          plugins/ssh/rust/target/
+        key: static-ssh-cargo-${{ hashFiles('plugins/ssh/rust/Cargo.lock') }}
     - name: Lint tests
       run: cargo fmt --all -- --check
       working-directory: ./plugins/ssh/rust
