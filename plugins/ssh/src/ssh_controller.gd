@@ -3,8 +3,9 @@ extends PluginControllerBase
 
 const PLUGIN_NAME = "SSH"
 
-## List containing all the currently active client [Config]s.
-var client_list: Array[Config] = []
+## List containing all the currently active clients.
+## A client's [Dictionary] contains [code]config[/code] and [code]node[/code].
+var client_list: Array[Dictionary] = []
 
 var _thread_pool: Array[Thread] = []
 @onready var _conf_path: String = conf_dir.path_join("clients.json")
@@ -54,20 +55,20 @@ func load_clients() -> void:
 ## Saves clients to disk.
 func save_clients() -> void:
 	var serialized_client_list: Array[Dictionary] = []
-	for client_config in client_list:
-		serialized_client_list.append(client_config.get_as_dict())
+	for client in client_list:
+		serialized_client_list.append(client.config.get_as_dict())
 		ConfLib.save_config(_conf_path, serialized_client_list)
 
 
 ## Adds a new client with the [param client_config].
 func add_client(client_config: Config) -> void:
-	client_list.push_back(client_config)
-
 	var ssh_client: SSHClient = SSHClient.new()
-	var client_dict: Dictionary = client_config.get_as_dict()
-	ssh_client.name = client_dict["name"]
+	ssh_client.name = client_config.get_as_dict().name
 	add_child(ssh_client)
-	edit_client_config(get_child_count() - 1)
+
+	var client_dict: Dictionary = {"config": client_config, "node": ssh_client}
+	client_list.push_back(client_dict)
+	edit_client_config(client_list.size() - 1)
 	update_loader_client_list()
 
 
@@ -75,7 +76,7 @@ func add_client(client_config: Config) -> void:
 func update_loader_client_list() -> void:
 	var clients: Array[String] = []
 	for client in client_list:
-		clients.append(client.get_object("name").get_value())
+		clients.append(client.config.get_object("name").get_value())
 	PluginCoordinator.get_plugin_loader("SSH").set_client_config(clients)
 
 
@@ -84,18 +85,20 @@ func update_loader_client_list() -> void:
 func edit_client_config(index: int) -> void:
 	assert(client_list.size() > index)
 
-	var ssh_client: SSHClient = get_child(index)
-	if not ssh_client:
+	var client_dict: Dictionary = client_list[index]
+	if not client_dict:
 		push_error("SSHClient not found")
 		return
 
-	var client_dict: Dictionary = client_list[index].get_as_dict()
-	ssh_client.disconnect_session()
-	ssh_client.setup(client_dict["user"], client_dict["ip"], int(client_dict["port"]))
-	ssh_client.set_auth_method("key_file", client_dict["key_path"], "")
-	ssh_client.set_server_check_method("known_hosts_file")
-	ssh_client.set_debug(client_dict["debug"])
-	ssh_client.open_session()
+	var client_config: Dictionary = client_dict.config.get_as_dict()
+	client_dict.node.disconnect_session()
+	client_dict.node.setup(client_config["user"], client_config["ip"], int(client_config["port"]))
+	client_dict.node.set_auth_method("key_file", client_config["key_path"], "")
+	client_dict.node.set_server_check_method("known_hosts_file")
+	client_dict.node.set_debug(client_config["debug"])
+	var error: Variant = client_dict.node.open_session()
+	if error:
+		push_error("Failed to open session for client \"%s\": %s" % [client_config["name"], error])
 
 	save_clients()
 
@@ -103,7 +106,7 @@ func edit_client_config(index: int) -> void:
 ## Get a SSH client identified by [param client_name]
 func get_client(client_name: String) -> SSHClient:
 	for client_id in client_list.size():
-		if client_name == client_list[client_id].get_object("name").get_value():
+		if client_name == client_list[client_id].config.get_object("name").get_value():
 			return get_child(client_id)
 
 	return null
@@ -112,13 +115,10 @@ func get_client(client_name: String) -> SSHClient:
 ## Removes a SSH client identified by [param client_name]
 ## from both the client list and the [SSHClient] child.
 func remove_client(client_name: String) -> void:
-	var ssh_client: SSHClient = get_client(client_name)
-	if ssh_client:
-		ssh_client.queue_free()
-
-	for client_config in client_list:
-		if client_config.get_object("name").get_value() == client_name:
-			client_list.erase(client_config)
+	for client in client_list:
+		if client.config.get_object("name").get_value() == client_name:
+			client.node.queue_free()
+			client_list.erase(client)
 
 
 # maybe switch away from identifier client_name to index, but having the same name is

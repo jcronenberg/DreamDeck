@@ -17,7 +17,7 @@ func _ready() -> void:
 func edit_client(index: int) -> void:
 	if _ssh_controller.client_list.size() != index:
 		_client_index = index
-		_client_config = _ssh_controller.client_list[index]
+		_client_config = _ssh_controller.client_list[index].config
 	else:
 		_client_config = _ssh_controller.generate_default_client_config()
 
@@ -39,7 +39,7 @@ func edit_client(index: int) -> void:
 func populate_list() -> void:
 	%SSHClientList.clear()
 	for ssh_client in _ssh_controller.client_list:
-		%SSHClientList.add_item(ssh_client.get_object("name").get_value())
+		%SSHClientList.add_item(ssh_client.config.get_object("name").get_value())
 
 	%SSHClientList.add_item("+")
 
@@ -87,7 +87,7 @@ func _on_cancel_client_editor() -> void:
 func _ensure_unique_name(client_name: String) -> bool:
 	var i: int = 0
 	for ssh_client in _ssh_controller.client_list:
-		if ssh_client.get_object("name").get_value() == client_name and _client_index != i:
+		if ssh_client.config.get_object("name").get_value() == client_name and _client_index != i:
 			return false
 
 		i += 1
