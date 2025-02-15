@@ -362,6 +362,9 @@ class EnumObject:
 	var _value: int:
 		set = set_value,
 		get = get_value
+	var _default_value: int:
+		get = get_default_value,
+		set = set_default_value
 	var _enum_dict: Dictionary:
 		get = get_enum_dict
 
@@ -369,14 +372,27 @@ class EnumObject:
 		label: String, key: String, value: int, enum_dict: Dictionary, description: String = ""
 	):
 		super(label, key, description)
-		_value = value
 		_enum_dict = enum_dict
+		_value = value
+		_default_value = _value
 
 	func get_value() -> int:
 		return _value
 
 	func set_value(value: int):
-		_value = value
+		if _enum_dict.values().has(value):
+			_value = value
+		else:
+			push_error("Value not in enum")
+
+	func get_default_value() -> int:
+		return _default_value
+
+	func set_default_value(value: int) -> void:
+		if _enum_dict.values().has(value):
+			_default_value = value
+		else:
+			push_error("Default value not in enum")
 
 	func get_enum_dict() -> Dictionary:
 		return _enum_dict
@@ -390,6 +406,9 @@ class StringArrayObject:
 	var _value: String:
 		set = set_value,
 		get = get_value
+	var _default_value: String:
+		get = get_default_value,
+		set = set_default_value
 	var _string_array: Array[String]:
 		set = set_string_array,
 		get = get_string_array
@@ -402,8 +421,9 @@ class StringArrayObject:
 		description: String = ""
 	):
 		super(label, key, description)
-		_value = value
 		_string_array = string_array
+		_value = value
+		_default_value = value
 
 	func get_value() -> String:
 		return _value
@@ -411,6 +431,12 @@ class StringArrayObject:
 	func set_value(value: String):
 		if value in _string_array:
 			_value = value
+
+	func get_default_value() -> String:
+		return _default_value
+
+	func set_default_value(value: String) -> void:
+		_default_value = value
 
 	func get_string_array() -> Array[String]:
 		return _string_array
@@ -711,6 +737,8 @@ class EnumEditor:
 	extends VariantEditor
 	var _value_editor_hbox: HBoxContainer = HBoxContainer.new()
 	var _value_editor: OptionButton
+	var _default_button: TextureButton
+	var _default_value: int
 	var _enum_dict: Dictionary
 
 	func _init(object: EnumObject):
@@ -724,17 +752,21 @@ class EnumEditor:
 		_value_editor = OptionButton.new()
 		_value_editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_value_editor.theme_type_variation = "ConfigEditorOptionButton"
+		_value_editor.custom_minimum_size = Vector2(0, 28)
+		_value_editor.item_selected.connect(_on_value_editor_item_selected)
 		_value_editor_hbox.add_child(_value_editor)
 
-		var clear_button: TextureButton = TextureButton.new()
-		clear_button.texture_normal = RESTORE_DEFAULT_ICON
-		clear_button.ignore_texture_size = true
-		clear_button.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
-		clear_button.custom_minimum_size = Vector2(25, 28)
-		clear_button.pressed.connect(_on_clear_button_pressed)
-		_value_editor_hbox.add_child(clear_button)
+		_default_button = TextureButton.new()
+		_default_button.texture_normal = RESTORE_DEFAULT_ICON
+		_default_button.ignore_texture_size = true
+		_default_button.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+		_default_button.custom_minimum_size = Vector2(25, 28)
+		_default_button.pressed.connect(_on_default_button_pressed)
+		_default_button.visible = false
+		_value_editor_hbox.add_child(_default_button)
 
 		setup_value_editor()
+		_default_value = object.get_default_value()
 		set_value(object.get_value())
 
 	func setup_value_editor():
@@ -743,12 +775,8 @@ class EnumEditor:
 			_value_editor.add_item(key)
 
 	func set_value(value: int):
-		if value == -1:
-			_value_editor.select(-1)
-			return
-
 		var id: int = -1
-		var value_string = _enum_dict.find_key(value)
+		var value_string: Variant = _enum_dict.find_key(value)
 		if value_string == null:
 			push_error("Value not found in enum")
 			return
@@ -762,6 +790,7 @@ class EnumEditor:
 			return
 
 		_value_editor.select(id)
+		_default_button.visible = value != _default_value
 
 	func set_enum_dict(dict: Dictionary):
 		_enum_dict = dict
@@ -771,30 +800,31 @@ class EnumEditor:
 		return _value_editor
 
 	func get_value():
-		if _value_editor.get_selected_id() == -1:
-			return -1
-
 		return _enum_dict.get(_value_editor.get_item_text(_value_editor.get_selected_id()))
 
 	func get_value_string() -> String:
 		var value: int = get_value()
-		if value == -1:
-			return ""
-
 		for item in _enum_dict:
 			if _enum_dict[item] == value:
 				return item
 
 		return ""
 
-	func _on_clear_button_pressed():
-		_value_editor.select(-1)
+	func _on_default_button_pressed() -> void:
+		set_value(_default_value)
+
+	func _on_value_editor_item_selected(index: int) -> void:
+		_default_button.visible = _enum_dict[_value_editor.get_item_text(index)] != _default_value
 
 
 class StringArrayEditor:
 	extends VariantEditor
 	var _value_editor_hbox: HBoxContainer = HBoxContainer.new()
 	var _value_editor: OptionButton
+	var _default_button: TextureButton
+	var _default_value: String
+	var _default_button_disabled: bool = false:
+		set = set_default_button_disabled
 	var _string_array: Array[String]
 
 	func _init(object: StringArrayObject) -> void:
@@ -808,17 +838,21 @@ class StringArrayEditor:
 		_value_editor = OptionButton.new()
 		_value_editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_value_editor.theme_type_variation = "ConfigEditorOptionButton"
+		_value_editor.custom_minimum_size = Vector2(0, 28)
+		_value_editor.item_selected.connect(_on_value_editor_item_selected)
 		_value_editor_hbox.add_child(_value_editor)
 
-		var clear_button: TextureButton = TextureButton.new()
-		clear_button.texture_normal = RESTORE_DEFAULT_ICON
-		clear_button.ignore_texture_size = true
-		clear_button.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
-		clear_button.custom_minimum_size = Vector2(25, 28)
-		clear_button.pressed.connect(_on_clear_button_pressed)
-		_value_editor_hbox.add_child(clear_button)
+		_default_button = TextureButton.new()
+		_default_button.texture_normal = RESTORE_DEFAULT_ICON
+		_default_button.ignore_texture_size = true
+		_default_button.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+		_default_button.custom_minimum_size = Vector2(25, 28)
+		_default_button.pressed.connect(_on_default_button_pressed)
+		_default_button.visible = false
+		_value_editor_hbox.add_child(_default_button)
 
 		setup_value_editor()
+		_default_value = object.get_default_value()
 		set_value(object.get_value())
 
 	func setup_value_editor() -> void:
@@ -827,6 +861,9 @@ class StringArrayEditor:
 			_value_editor.add_item(string)
 
 	func set_value(value: String) -> void:
+		if not _default_button_disabled:
+			_default_button.visible = value != _default_value
+
 		if not value in _string_array:
 			_value_editor.select(-1)
 			return
@@ -848,8 +885,17 @@ class StringArrayEditor:
 
 		return _value_editor.get_item_text(_value_editor.get_selected_id())
 
-	func _on_clear_button_pressed() -> void:
-		_value_editor.select(-1)
+	func set_default_button_disabled(value: bool) -> void:
+		_default_button_disabled = value
+		if _default_button:
+			_default_button.visible = false
+
+	func _on_default_button_pressed() -> void:
+		set_value(_default_value)
+
+	func _on_value_editor_item_selected(index: int) -> void:
+		if not _default_button_disabled:
+			_default_button.visible = _value_editor.get_item_text(index) != _default_value
 
 
 class ColorEditor:
