@@ -67,8 +67,8 @@ func get_plugins():
 	return plugins
 
 
-func get_activated_plugins() -> Array:
-	var ret_array: Array = []
+func get_activated_plugins() -> Array[String]:
+	var ret_array: Array[String] = []
 	for plugin in _plugins:
 		if plugin.is_activated():
 			ret_array.push_back(plugin.plugin_name)
@@ -203,26 +203,6 @@ func edit_panel(panel: LayoutPanel):
 	var instance: PluginSceneBase = panel.get_plugin_instance()
 	if instance:
 		instance.edit_config()
-
-
-func generate_plugins_enum() -> Dictionary:
-	var ret_dict: Dictionary = {}
-	var i: int = 0
-	for plugin in get_activated_plugins():
-		ret_dict[plugin] = i
-		i += 1
-
-	return ret_dict
-
-
-func generate_scene_enum(plugin: String) -> Dictionary:
-	var ret_dict: Dictionary = {}
-	var i: int = 0
-	for scene in get_plugin_loader(plugin).scenes:
-		ret_dict[scene] = i
-		i += 1
-
-	return ret_dict
 
 
 func get_plugin_actions() -> Array[PluginActionDefinition]:
