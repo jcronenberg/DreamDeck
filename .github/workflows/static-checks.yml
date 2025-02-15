@@ -23,9 +23,9 @@ jobs:
       with:
         filters: |
           touch:
-            - 'plugins/ssh/rust/**/*.rs'
-          ssh:
             - 'plugins/touch/rust/**/*.rs'
+          ssh:
+            - 'plugins/ssh/rust/**/*.rs'
           gdscript:
             - 'plugins/**/*.gd'
             - 'src/**/*.gd'
