@@ -1,6 +1,11 @@
 class_name SSHController
 extends PluginControllerBase
 
+enum ServerCheckMethod {
+	NO_CHECK,
+	KNOWN_HOSTS,
+}
+
 const PLUGIN_NAME = "SSH"
 
 ## List containing all the currently active clients.
@@ -35,6 +40,13 @@ func generate_default_client_config() -> Config:
 	client_config.add_int("Server port", "port", 22)
 	client_config.add_string("Username", "user", "")
 	client_config.add_file_path("Secret key path", "key_path", "")
+	client_config.add_enum(
+		"Server check method",
+		"server_check_method",
+		ServerCheckMethod.KNOWN_HOSTS,
+		ServerCheckMethod,
+		"Whether the server should be checked against the known hosts"
+	)
 	client_config.add_bool("Debug", "debug", false)
 	return client_config
 
@@ -94,11 +106,18 @@ func edit_client_config(index: int) -> void:
 	client_dict.node.disconnect_session()
 	client_dict.node.setup(client_config["user"], client_config["ip"], int(client_config["port"]))
 	client_dict.node.set_auth_method("key_file", client_config["key_path"], "")
-	client_dict.node.set_server_check_method("known_hosts_file")
+	match client_config["server_check_method"]:
+		ServerCheckMethod.NO_CHECK:
+			client_dict.node.set_server_check_method("no_check")
+		ServerCheckMethod.KNOWN_HOSTS:
+			client_dict.node.set_server_check_method("known_hosts_file")
+		_:
+			push_error("Unknown server check method, setting to known hosts file")
+			client_dict.node.set_server_check_method("known_hosts_file")
 	client_dict.node.set_debug(client_config["debug"])
 	var error: Variant = client_dict.node.open_session()
 	if error:
-		push_error("Failed to open session for client \"%s\": %s" % [client_config["name"], error])
+		push_error('Failed to open session for client "%s": %s' % [client_config["name"], error])
 
 	save_clients()
 
