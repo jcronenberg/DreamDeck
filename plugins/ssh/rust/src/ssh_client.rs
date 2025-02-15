@@ -366,6 +366,31 @@ pub impl SSHClient {
         }
     }
 
+    /// Generate a key pair. Returns [private_key, public_key] on success or [] on failure.
+    ///
+    /// * `key_type` - Currently supported: "ED25519" or "RSA".
+    /// * `key_size` - Size of the key. Recommended values are 2048 for RSA and 256 for ED25519.
+    #[func]
+    fn generate_key(key_type: String, key_size: i64) -> PackedStringArray {
+        let key_type = match key_type.as_str() {
+            "ED25519" => KeyType::ED25519,
+            "RSA" => KeyType::RSA,
+            _ => {
+                godot_error!("Unknown key type: {}", key_type);
+                return [].into();
+            }
+        };
+        match generate_key(key_type, key_size as usize) {
+            Ok((private_key, public_key)) => {
+                vec![GString::from(private_key), GString::from(public_key)].into()
+            }
+            Err(e) => {
+                godot_error!("Failed to generate key: {}", e);
+                [].into()
+            }
+        }
+    }
+
     async fn _exec_ssh(&mut self, cmd: String) -> bool {
         if self.session.is_none() {
             if self.debug {
@@ -564,31 +589,11 @@ pub impl SSHClient {
     }
 }
 
-// TODO this part is for the future to generate a ssh key pair
-// use osshkeys::KeyType;
-// use std::os::unix::prelude::PermissionsExt;
-//
-// fn generate_key(key_path: String) {
-//     let key_pair = KeyPair::generate(KeyType::ED25519, 0).unwrap();
-//     let pub_key_path = format!("{}.pub", &key_path);
-//     let _ = fs::write(
-//         &key_path,
-//         key_pair
-//             .serialize_openssh(None, osshkeys::cipher::Cipher::Aes256_Ctr)
-//             .unwrap(),
-//     );
-//     let _ = set_perm(&key_path);
-//     let _ = fs::write(
-//         &pub_key_path,
-//         format!("{}\n", key_pair.serialize_publickey().unwrap()),
-//     );
-//     let _ = set_perm(&pub_key_path);
-// }
-
-// // TODO investigate if how this works for non-linux oses
-// fn set_perm(path: &str) -> std::io::Result<()> {
-//     let mut perms = fs::metadata(path)?.permissions();
-//     perms.set_mode(0o600);
-//     fs::set_permissions(path, perms)?;
-//     Ok(())
-// }
+/// Returns (private_key, public_key)
+fn generate_key(key_type: KeyType, key_size: usize) -> anyhow::Result<(String, String)> {
+    let key_pair = KeyPair::generate(key_type, key_size)?;
+    Ok((
+        key_pair.serialize_openssh(None, osshkeys::cipher::Cipher::Null)?,
+        key_pair.serialize_publickey()?,
+    ))
+}
