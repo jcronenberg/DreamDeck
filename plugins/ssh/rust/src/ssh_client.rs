@@ -464,9 +464,12 @@ pub impl SSHClient {
     /// Disconnects current session
     async fn _disconnect_session(&mut self) -> Result<(), russh::Error> {
         if let Some(session) = &self.session {
-            session
-                .disconnect(russh::Disconnect::ByApplication, "", "")
-                .await?
+            if !session.is_closed() {
+                session
+                    .disconnect(russh::Disconnect::ByApplication, "", "")
+                    .await?;
+            }
+            self.session = None;
         }
         Ok(())
     }
