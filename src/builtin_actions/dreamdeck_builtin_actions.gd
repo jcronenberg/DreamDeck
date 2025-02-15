@@ -66,12 +66,15 @@ func switch_panel(panel_name: String) -> bool:
 
 
 ## Updates all available panels. This is used to display a selection of panels in the action editor.
-## This is mostly supposed to be called by [Layout] when it loads something has changed.
+## This is mostly supposed to be called by [Layout] when it loads or something has changed.
 func update_available_panels(panels: Array[String]) -> void:
 	_available_panels = panels
 	var panel_object: Config.StringArrayObject = _switch_panel_config.get_object("panel_name")
 	if panel_object:
 		panel_object.set_string_array(panels)
+		if panels.size() > 0:
+			panel_object.set_default_value(panels[0])
+			panel_object.set_value(panels[0])
 
 
 func _setup_actions() -> void:
@@ -79,7 +82,10 @@ func _setup_actions() -> void:
 	exec_cmd_args_config.add_string("Command", "command", "")
 	var timer_args_config: Config = Config.new()
 	timer_args_config.add_float("Time", "time", 1.0)
-	_switch_panel_config.add_string_array("Panel name", "panel_name", "", _available_panels)
+	var default_panel: String = "" if _available_panels.size() == 0 else _available_panels[0]
+	_switch_panel_config.add_string_array(
+		"Panel name", "panel_name", default_panel, _available_panels
+	)
 
 	_actions = [
 		PluginCoordinator.PluginActionDefinition.new(

@@ -27,7 +27,11 @@ func _init():
 
 
 func set_client_config(clients: Array[String]) -> void:
-	_exec_cmd_config.get_object("ssh_client").set_string_array(clients)
+	var ssh_client_object: Config.StringArrayObject = _exec_cmd_config.get_object("ssh_client")
+	ssh_client_object.set_string_array(clients)
+	if clients.size() > 0:
+		ssh_client_object.set_default_value(clients[0])
+		ssh_client_object.set_value(clients[0])
 
 
 func get_settings_page() -> Control:
