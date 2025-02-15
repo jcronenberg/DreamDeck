@@ -144,7 +144,7 @@ func add_string(
 ## Example:
 ## [codeblock]
 ## enum Example {ENUM_VALUE1, ENUM_VALUE2}
-## config.add_enum("Example Enum", Example.ENUM_VALUE1, Example)
+## config.add_enum("Example Enum", "example_enum", Example.ENUM_VALUE1, Example)
 ## [/codeblock]
 func add_enum(
 	label: String, key: String, default_value: int, enum_dict: Dictionary, description: String = ""
