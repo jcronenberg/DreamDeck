@@ -105,7 +105,7 @@ func edit_client_config(index: int) -> void:
 	var client_config: Dictionary = client_dict.config.get_as_dict()
 	client_dict.node.disconnect_session()
 	client_dict.node.setup(client_config["user"], client_config["ip"], int(client_config["port"]))
-	client_dict.node.set_auth_method("key_file", client_config["key_path"], "")
+	client_dict.node.set_auth_key_file(client_config["key_path"], "")
 	match client_config["server_check_method"]:
 		ServerCheckMethod.NO_CHECK:
 			client_dict.node.set_server_check_method("no_check")

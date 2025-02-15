@@ -312,24 +312,44 @@ pub impl SSHClient {
         result
     }
 
+    /// Sets auth method to type private key file.
+    ///
+    /// * `key_path` - Path to private key.
+    /// * `password` - Optional password to decrypt private key.
     #[func]
-    fn set_auth_method(&mut self, method: GString, key_path: GString, password: GString) {
-        match method.to_string().as_str() {
-            "key_file" => {
-                self.auth_method = AuthMethod::PrivateKeyFile {
-                    key_file_path: PathBuf::from(key_path.to_string()),
-                    key_pass: if password.to_string() != *"" {
-                        Some(password.to_string())
-                    } else {
-                        None
-                    },
-                }
-            }
-            "password" => self.auth_method = AuthMethod::Password(password.to_string()),
-            _ => {
-                self.auth_method = AuthMethod::None;
-            }
+    fn set_auth_key_file(&mut self, key_path: String, password: String) {
+        self.auth_method = AuthMethod::PrivateKeyFile {
+            key_file_path: PathBuf::from(key_path),
+            key_pass: if password.as_str() != "" {
+                Some(password)
+            } else {
+                None
+            },
         }
+    }
+
+    /// Sets auth method to type private key.
+    ///
+    /// * `key_data` - Complete key data of the private key.
+    /// * `password` - Optional password to decrypt private key.
+    #[func]
+    fn set_auth_key(&mut self, key_data: String, password: String) {
+        self.auth_method = AuthMethod::PrivateKey {
+            key_data,
+            key_pass: if password.as_str() != "" {
+                Some(password)
+            } else {
+                None
+            },
+        }
+    }
+
+    /// Sets auth method to type password.
+    ///
+    /// * `password` - Password for server.
+    #[func]
+    fn set_auth_password(&mut self, password: String) {
+        self.auth_method = AuthMethod::Password(password);
     }
 
     #[func]
