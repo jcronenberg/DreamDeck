@@ -5,6 +5,7 @@ use chrono::Local;
 use godot::prelude::*;
 use keys::PrivateKeyWithHashAlg;
 use osshkeys::keys::KeyPair;
+use osshkeys::KeyType;
 use russh::client::Handle;
 use russh::*;
 use std::path::PathBuf;
@@ -254,60 +255,73 @@ pub impl SSHClient {
         false
     }
 
-    /// Adds the currently set self.auth_method to the ssh servers authorized_keys file
-    /// This only works if self.auth_method is set to PrivateKeyFile
-    /// to establish an ssh session which then copies the key a password needs to be
-    /// supplied to handle authentication
+    /// If the current auth method is a private key method, this function can the private key
+    /// to the current server. It doesn't check if the private key is already authorized, so
+    /// it is recommended to only call this method on auth failure.
+    ///
+    /// * `password` - Password to temporarily connect to the server.
     #[func]
-    fn add_key(&mut self, password: GString) -> bool {
-        let key_path;
+    fn add_key(&mut self, password: String) -> bool {
+        let private_key_data: String;
         let passphrase: Option<String>;
 
         // Is only possible if self.auth_method is of type private key
-        // We extract the values of self.auth_method to convert it later
-        if let AuthMethod::PrivateKeyFile {
-            key_file_path,
-            key_pass,
-        } = self.auth_method.clone()
-        {
-            passphrase = key_pass;
-            key_path = key_file_path;
-        } else {
-            return false;
+        match self.auth_method.clone() {
+            AuthMethod::PrivateKeyFile {
+                key_file_path,
+                key_pass,
+            } => {
+                passphrase = key_pass;
+                private_key_data = match fs::read_to_string(&key_file_path) {
+                    Ok(key_data) => key_data,
+                    Err(e) => {
+                        godot_error!("Failed to read key at {}: {}", key_file_path.display(), e);
+                        return false;
+                    }
+                };
+            }
+            AuthMethod::PrivateKey { key_data, key_pass } => {
+                passphrase = key_pass;
+                private_key_data = key_data;
+            }
+            _ => return false,
         }
 
-        // Since we can't log in with the currently set auth_method
-        // we simply store it and replace it temporarily with a password
-        let auth_method_store = self.auth_method.clone();
-        self.auth_method = AuthMethod::Password(password.into());
-
-        // With the extracted values we can generate a KeyPair which can give as the publickey string
-        let key_pair = match KeyPair::from_keystr(
-            &fs::read_to_string(key_path).unwrap(),
-            passphrase
-                .map(|string| string.as_str().to_owned())
-                .as_deref(),
-        ) {
+        // With the extracted values generate a KeyPair and get the public key from that
+        let key_pair = match KeyPair::from_keystr(&private_key_data, passphrase.as_deref()) {
             Ok(key) => key,
             Err(e) => {
-                godot_error!("Couldn't load key: {}", e);
+                godot_error!("Failed to generate keypair: {}", e);
                 return false;
             }
         };
+        let pub_key = match key_pair.serialize_publickey() {
+            Ok(pub_key) => pub_key,
+            Err(e) => {
+                godot_error!("Failed to serialize public key: {}", e);
+                return false;
+            }
+        };
+
+        // Temporarily set auth method to password to allow login
+        let auth_method_store = self.auth_method.clone();
+        self.auth_method = AuthMethod::Password(password);
 
         if self.debug {
             godot_print!("Copying public key to SSH server");
         }
 
         // Adding the key via a ssh command
-        // TODO maybe only add if key isn't there
         let result = block_on(self._exec_ssh(format!(
-            "echo \"{}\" >> ~/.ssh/authorized_keys",
-            key_pair.serialize_publickey().unwrap()
+            "echo \"{}\" >> $HOME/.ssh/authorized_keys",
+            pub_key
         )));
 
         // Change back auth_method
         self.auth_method = auth_method_store;
+
+        // A session may have been opened by the _exec_ssh call
+        self.disconnect_session();
 
         result
     }
