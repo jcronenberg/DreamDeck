@@ -1,8 +1,6 @@
 class_name SSHPluginLoader
 extends PluginLoaderBase
 
-const SETTINGS_PAGE = preload("res://plugins/ssh/src/ssh_config_window.tscn")
-
 # Config for execute command action
 var _exec_cmd_config: Config = Config.new()
 
@@ -35,5 +33,4 @@ func set_client_config(clients: Array[String]) -> void:
 
 
 func _on_settings_button_pressed() -> void:
-	var settings: Control = SETTINGS_PAGE.instantiate()
-	PopupManager.push_stack_item([settings], settings._on_settings_confirmed)
+	get_controller("SSHController")._on_settings_button_pressed()

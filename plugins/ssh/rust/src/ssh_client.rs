@@ -607,7 +607,7 @@ pub impl SSHClient {
 fn generate_key(key_type: KeyType, key_size: usize) -> anyhow::Result<(String, String)> {
     let key_pair = KeyPair::generate(key_type, key_size)?;
     Ok((
-        key_pair.serialize_openssh(None, osshkeys::cipher::Cipher::Null)?,
+        key_pair.serialize_pem(None)?,
         key_pair.serialize_publickey()?,
     ))
 }

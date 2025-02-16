@@ -6,13 +6,17 @@ enum ServerCheckMethod {
 	KNOWN_HOSTS,
 }
 
+const SETTINGS_PAGE = preload("res://plugins/ssh/src/ssh_config_window.tscn")
 const PLUGIN_NAME = "SSH"
 
 ## List containing all the currently active clients.
 ## A client's [Dictionary] contains [code]config[/code] and [code]node[/code].
+## TODO move settings page to inner class, make private and update via signals
 var client_list: Array[Dictionary] = []
 
 var _thread_pool: Array[Thread] = []
+var _key_list: Array[Dictionary] = []
+var _keys_editor: KeysEditor
 @onready var _conf_path: String = conf_dir.path_join("clients.json")
 
 
@@ -30,6 +34,35 @@ func _process(_delta) -> void:
 		if not thread.is_alive():
 			thread.wait_to_finish()
 			_thread_pool.erase(thread)
+
+
+## Add a key with config [param key_config].[br]
+## [param key_config] formats:
+## [codeblock]
+## {"key_name": key_name, "key_type": KeyType.NEW_KEY, "key_data": key_data}
+## {"key_name": key_name, "key_type": KeyType.IMPORT_KEY, "key_path": key_path}
+## [/codeblock]
+func add_key(key_config: Dictionary) -> bool:
+	for key_dict in _key_list:
+		if key_dict.key_name == key_config.key_name:
+			return false
+
+	_key_list.append(key_config)
+	if _keys_editor and is_instance_valid(_keys_editor):
+		_keys_editor.set_keys(_key_list)
+	print(_key_list)
+	return true
+
+
+## Removes a key from the key list by [param key_name].
+func remove_key(key_name: String) -> bool:
+	for key_dict in _key_list:
+		if key_dict.key_name == key_name:
+			_key_list.erase(key_dict)
+			print(_key_list)
+			return true
+
+	return false
 
 
 ## Generates a [Config] with all default objects configured.
@@ -153,3 +186,222 @@ func exec_on_client(client_name: String, cmd: String) -> void:
 	var thread: Thread = Thread.new()
 	thread.start(ssh_client.exec.bind(cmd))
 	_thread_pool.append(thread)
+
+
+func _on_settings_button_pressed() -> void:
+	var clients_editor: Control = SETTINGS_PAGE.instantiate()
+	clients_editor.name = "SSH Clients"
+	_keys_editor = KeysEditor.new()
+	_keys_editor.set_keys(_key_list)
+	_keys_editor.key_added.connect(add_key)
+	_keys_editor.key_deleted.connect(remove_key)
+	PopupManager.push_stack_item([clients_editor, _keys_editor])
+
+
+class KeysEditor:
+	extends Control
+
+	signal key_added(key_config: Dictionary)
+	signal key_deleted(key_name: String)
+
+	enum KeyTypes {
+		NEW_KEY,
+		IMPORT_KEY,
+	}
+
+	enum CryptoTypes {
+		ED25519,
+		RSA,
+	}
+
+	const RSA_SIZES: Array[String] = [
+		"2048",
+		"4096",
+		"8192",
+		"16384",
+	]
+
+	var _ssh_keys_list: VBoxContainer = VBoxContainer.new()
+	var _key_creator_config: Config = Config.new()
+	var _key_editor: Config.ConfigEditor = null
+	var _new_key_config: Config = Config.new()
+	var _new_key_editor: Config.ConfigEditor = null
+	var _import_key_config: Config = Config.new()
+	var _import_key_editor: Config.ConfigEditor = null
+
+	func _init() -> void:
+		name = "SSH Keys"
+
+		_key_creator_config.add_string("Key name", "key_name", "")
+		_key_creator_config.add_enum("Key type", "key_type", KeyTypes.NEW_KEY, KeyTypes)
+
+		_import_key_config.add_file_path("Import key path", "key_path", "")
+
+		_new_key_config.add_enum("Crypto", "crypto", CryptoTypes.ED25519, CryptoTypes)
+		_new_key_config.add_string_array("Key size", "rsa_size", RSA_SIZES[1], RSA_SIZES)
+
+		var rows: VBoxContainer = VBoxContainer.new()
+		rows.add_theme_constant_override("separation", 10)
+		rows.set_anchors_preset(Control.PRESET_FULL_RECT)
+
+		var header: Label = Label.new()
+		header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		header.text = "SSH Keys"
+		rows.add_child(header)
+
+		_ssh_keys_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		rows.add_child(_ssh_keys_list)
+
+		var add_key_button: Button = Button.new()
+		add_key_button.text = "Add key"
+		add_key_button.pressed.connect(_on_add_key_button_pressed)
+		rows.add_child(add_key_button)
+
+		add_child(rows)
+
+	func set_keys(key_list: Array[Dictionary]) -> void:
+		for child in _ssh_keys_list.get_children():
+			child.queue_free()
+		for key_dict in key_list:
+			var key_editor: KeyEditor = KeyEditor.new(key_dict.key_name)
+			key_editor.key_deleted.connect(_on_key_deleted)
+			_ssh_keys_list.add_child(key_editor)
+
+	func _on_key_deleted(key_name: String) -> void:
+		key_deleted.emit(key_name)
+
+	func _on_add_key_button_pressed() -> void:
+		var vbox: VBoxContainer = VBoxContainer.new()
+		vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+		vbox.add_theme_constant_override("separation", 10)
+
+		_key_editor = _key_creator_config.generate_editor()
+		_key_editor.get_editor("key_type").value_selected.connect(
+			_on_key_type_editor_value_selected
+		)
+		vbox.add_child(_key_editor)
+
+		_new_key_editor = _new_key_config.generate_editor()
+		_new_key_editor.get_editor("rsa_size").visible = false
+		_new_key_editor.get_editor("crypto").value_selected.connect(_on_crypto_value_selected)
+		vbox.add_child(_new_key_editor)
+
+		_import_key_editor = _import_key_config.generate_editor()
+		_import_key_editor.visible = false
+		vbox.add_child(_import_key_editor)
+
+		PopupManager.push_stack_item([vbox], _on_key_editor_confirmed)
+
+	func _on_key_type_editor_value_selected(value_text: String) -> void:
+		if not _new_key_editor and not is_instance_valid(_new_key_editor):
+			return
+		if not _import_key_editor and not is_instance_valid(_import_key_editor):
+			return
+
+		_new_key_editor.visible = value_text == "NEW_KEY"
+		_import_key_editor.visible = value_text == "IMPORT_KEY"
+
+	func _on_crypto_value_selected(value_text: String) -> void:
+		if not _new_key_editor and not is_instance_valid(_new_key_editor):
+			return
+
+		var rsa_size_editor: Config.StringArrayEditor = _new_key_editor.get_editor("rsa_size")
+		rsa_size_editor.visible = value_text == "RSA"
+
+	func _on_key_editor_confirmed() -> bool:
+		var new_key_dict: Dictionary = _key_editor.serialize()
+		var import_key_dict: Dictionary = _import_key_editor.serialize()
+
+		var abort: bool = false
+		if new_key_dict.key_type == KeyTypes.IMPORT_KEY and import_key_dict.key_path == "":
+			_key_editor.get_editor("key_path").modulate = Color.RED
+			abort = true
+		if new_key_dict.key_name == "":
+			_key_editor.get_editor("key_name").modulate = Color.RED
+			abort = true
+		if abort:
+			return false
+
+		match new_key_dict.key_type:
+			KeyTypes.NEW_KEY:
+				var new_key_settings: Dictionary = _new_key_editor.serialize()
+				var key_size: int = (
+					256
+					if new_key_settings.crypto == CryptoTypes.ED25519
+					else int(new_key_settings.rsa_size)
+				)
+				var new_key: PackedStringArray = SSHClient.generate_key(
+					CryptoTypes.find_key(new_key_settings.crypto), key_size
+				)
+				if new_key.size() == 0:
+					push_error("Failed to generate key")
+					return false
+				new_key_dict["key_data"] = new_key[0]
+			KeyTypes.IMPORT_KEY:
+				new_key_dict.merge(import_key_dict)
+
+		key_added.emit(new_key_dict)
+		return true
+
+
+class KeyEditor:
+	extends PanelContainer
+
+	signal key_deleted(key_name: String)
+	signal confirm_dialog_closed(bool)
+
+	const DELETE_ICON = preload("res://resources/icons/trash.svg")
+
+	var _key_name: String
+
+	func _init(key_name: String) -> void:
+		_key_name = key_name
+
+		var stylebox: StyleBoxFlat = StyleBoxFlat.new()
+		stylebox.bg_color = Color("#ffffff0c")
+		stylebox.corner_radius_bottom_left = 8
+		stylebox.corner_radius_bottom_right = 8
+		stylebox.corner_radius_top_left = 8
+		stylebox.corner_radius_top_right = 8
+		stylebox.content_margin_top = 6
+		stylebox.content_margin_bottom = 6
+		stylebox.content_margin_left = 6
+		stylebox.content_margin_right = 6
+		add_theme_stylebox_override("panel", stylebox)
+
+		var hbox: HBoxContainer = HBoxContainer.new()
+
+		var label: Label = Label.new()
+		label.text = key_name
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hbox.add_child(label)
+
+		var delete_button: TextureButton = TextureButton.new()
+		delete_button.texture_normal = DELETE_ICON
+		delete_button.ignore_texture_size = true
+		delete_button.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+		delete_button.custom_minimum_size = Vector2(24, 24)
+		delete_button.pressed.connect(_on_delete_button_pressed)
+		hbox.add_child(delete_button)
+
+		add_child(hbox)
+
+	func _on_delete_button_pressed() -> void:
+		var confirm_dialog: ConfirmationDialog = ConfirmationDialog.new()
+		confirm_dialog.dialog_text = "Do you really want to delete key: %s" % _key_name
+		add_child(confirm_dialog)
+		confirm_dialog.initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_PRIMARY_SCREEN
+		confirm_dialog.show()
+		confirm_dialog.confirmed.connect(_on_confirm_dialog_confirmed)
+		confirm_dialog.canceled.connect(_on_confirm_dialog_canceled)
+		var ret: bool = await confirm_dialog_closed
+		confirm_dialog.queue_free()
+		if ret:
+			key_deleted.emit(_key_name)
+			queue_free()
+
+	func _on_confirm_dialog_confirmed() -> void:
+		confirm_dialog_closed.emit(true)
+
+	func _on_confirm_dialog_canceled() -> void:
+		confirm_dialog_closed.emit(false)

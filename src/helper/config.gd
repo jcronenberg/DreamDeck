@@ -726,6 +726,9 @@ class StringEditor:
 
 class EnumEditor:
 	extends VariantEditor
+
+	signal value_selected(value_text: String)
+
 	var _value_editor_hbox: HBoxContainer = HBoxContainer.new()
 	var _value_editor: OptionButton
 	var _default_button: TextureButton
@@ -781,6 +784,7 @@ class EnumEditor:
 			return
 
 		_value_editor.select(id)
+		value_selected.emit(_value_editor.get_item_text(id))
 		_default_button.visible = value != _default_value
 
 	func set_enum_dict(dict: Dictionary):
@@ -806,6 +810,7 @@ class EnumEditor:
 
 	func _on_value_editor_item_selected(index: int) -> void:
 		_default_button.visible = _enum_dict[_value_editor.get_item_text(index)] != _default_value
+		value_selected.emit(_value_editor.get_item_text(index))
 
 
 class StringArrayEditor:
