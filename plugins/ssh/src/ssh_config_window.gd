@@ -56,16 +56,6 @@ func save_client() -> void:
 	populate_list()
 
 
-## Called by [PopupManager] on confirm button pressed.
-func _on_settings_confirmed() -> bool:
-	return true
-
-
-## Called by [PopupManager] on cancel button pressed.
-func _on_settings_cancelled() -> void:
-	pass
-
-
 # Called by [PopupManager] on confirm button pressed when editing a client.
 func _on_confirm_client_editor() -> bool:
 	if _ensure_unique_name(_client_editor.get_editor("name").get_value()):

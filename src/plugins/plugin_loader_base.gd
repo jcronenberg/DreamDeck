@@ -147,14 +147,35 @@ func get_controller(controller_name: String) -> PluginControllerBase:
 	return null
 
 
-## If the plugin [member has_settings] is true this function is called
+## If the plugins [member has_settings] is true this function is called
 ## when the settings button in the plugins popup is pressed.
-## The settings page needs to implement these 2 functions, to handle
-## the [PopupManager]'s confirm and cancel actions.
+## It's recommended to push your settings page to the current [PopupManager]'s stack.[br]
+## Example:
 ## [codeblock]
+## ## With settings: Control
 ## # Can indicate whether confirm is successful or not
 ## func _on_settings_confirmed() -> bool:
+##     pass
+##
 ## func _on_settings_cancelled() -> void:
+##     pass
+##
+## func _on_settings_button_pressed() -> void:
+##     PopupManager.push_stack_item(
+##         [settings],
+##         _on_settings_confirmed,
+##         _on_settings_cancelled
+##     )
 ## [/codeblock]
-func get_settings_page() -> Control:
-	return null
+## [codeblock]
+## ## With config_editor: Config.ConfigEditor
+## func _on_settings_button_pressed() -> void:
+##     PopupManager.push_stack_item(
+##         [config_editor],
+##         func apply_and_save() -> void:
+##             config_editor.apply()
+##             config_editor.save()
+##     )
+## [/codeblock]
+func _on_settings_button_pressed() -> void:
+	return

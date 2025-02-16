@@ -34,5 +34,6 @@ func set_client_config(clients: Array[String]) -> void:
 		ssh_client_object.set_value(clients[0])
 
 
-func get_settings_page() -> Control:
-	return SETTINGS_PAGE.instantiate()
+func _on_settings_button_pressed() -> void:
+	var settings: Control = SETTINGS_PAGE.instantiate()
+	PopupManager.push_stack_item([settings], settings._on_settings_confirmed)

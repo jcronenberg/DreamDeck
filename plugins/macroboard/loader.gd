@@ -9,10 +9,16 @@ func _init():
 	has_settings = true
 
 
-func get_settings_page() -> Control:
+func _on_settings_button_pressed() -> void:
 	var controller: MacroboardController = get_controller("MacroboardController")
 	if not controller:
 		push_error("Macroboard: Failed to get controller")
-		return null
+		return
 
-	return controller.config.generate_editor()
+	var config_editor: Config.ConfigEditor = controller.config.generate_editor()
+	PopupManager.push_stack_item(
+		[config_editor],
+		func apply_and_save() -> void:
+			config_editor.apply()
+			config_editor.save()
+	)
