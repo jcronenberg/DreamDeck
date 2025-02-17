@@ -57,8 +57,8 @@ jobs:
   flatpak-build:
     if: |
       needs.changes.outputs.dist-changes == 'true' &&
-      github.event_name == 'pull_request' ||
-      (github.repository == 'jcronenberg/DreamDeck' && github.ref == 'refs/heads/prototyping')
+      (github.event_name == 'pull_request' ||
+      (github.repository == 'jcronenberg/DreamDeck' && github.ref == 'refs/heads/prototyping'))
     name: Flatpak build
     needs: [static-checks, changes]
     uses: ./.github/workflows/flatpak-build.yml
@@ -66,8 +66,8 @@ jobs:
   obs-build:
     if: |
       needs.changes.outputs.dist-changes == 'true' &&
-      github.event_name == 'pull_request' ||
-      (github.repository == 'jcronenberg/DreamDeck' && github.ref == 'refs/heads/prototyping')
+      (github.event_name == 'pull_request' ||
+      (github.repository == 'jcronenberg/DreamDeck' && github.ref == 'refs/heads/prototyping'))
     name: OBS build
     needs: [static-checks, changes]
     uses: ./.github/workflows/obs-build.yml
