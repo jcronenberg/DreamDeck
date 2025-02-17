@@ -330,13 +330,15 @@ class KeysEditor:
 					if new_key_settings.crypto == CryptoTypes.ED25519
 					else int(new_key_settings.rsa_size)
 				)
-				var new_key: PackedStringArray = SSHClient.generate_key(
-					CryptoTypes.find_key(new_key_settings.crypto), key_size
+				var new_key: String = SSHClient.generate_private_key(
+					CryptoTypes.find_key(new_key_settings.crypto),
+					key_size,
+					"%s@dreamdeck" % new_key_dict.key_name
 				)
-				if new_key.size() == 0:
+				if new_key == "":
 					push_error("Failed to generate key")
 					return false
-				new_key_dict["key_data"] = new_key[0]
+				new_key_dict["key_data"] = new_key
 			KeyTypes.IMPORT_KEY:
 				new_key_dict.merge(import_key_dict)
 

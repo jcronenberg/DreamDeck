@@ -1,17 +1,19 @@
 use anyhow::anyhow;
 use async_std::future;
 use async_std::task::block_on;
+use base64::prelude::BASE64_STANDARD;
+use base64::Engine;
 use chrono::Local;
 use godot::prelude::*;
-use keys::PrivateKeyWithHashAlg;
-use osshkeys::keys::KeyPair;
-use osshkeys::KeyType;
+use keys::ssh_key::private::{Ed25519Keypair, KeypairData, RsaKeypair};
+use keys::ssh_key::rand_core::OsRng;
+use keys::{PrivateKey, PrivateKeyWithHashAlg};
 use russh::client::Handle;
 use russh::*;
+use std::io;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
-use std::{fs, io};
 
 // TODO make blocking an option
 // because right now we just log the received data,
@@ -262,40 +264,53 @@ pub impl SSHClient {
     /// * `password` - Password to temporarily connect to the server.
     #[func]
     fn add_key(&mut self, password: String) -> bool {
-        let private_key_data: String;
         let passphrase: Option<String>;
 
-        // Is only possible if self.auth_method is of type private key
-        match self.auth_method.clone() {
+        let private_key = match self.auth_method.clone() {
             AuthMethod::PrivateKeyFile {
                 key_file_path,
                 key_pass,
             } => {
                 passphrase = key_pass;
-                private_key_data = match fs::read_to_string(&key_file_path) {
+                match PrivateKey::read_openssh_file(&key_file_path) {
                     Ok(key_data) => key_data,
                     Err(e) => {
                         godot_error!("Failed to read key at {}: {}", key_file_path.display(), e);
                         return false;
                     }
-                };
+                }
             }
             AuthMethod::PrivateKey { key_data, key_pass } => {
                 passphrase = key_pass;
-                private_key_data = key_data;
+                match PrivateKey::from_bytes(&BASE64_STANDARD.decode(key_data).unwrap()) {
+                    Ok(private_key) => private_key,
+                    Err(e) => {
+                        godot_error!("Failed to parse private key: {}", e);
+                        return false;
+                    }
+                }
             }
+            // Is only possible if self.auth_method is of type private key
             _ => return false,
-        }
-
-        // With the extracted values generate a KeyPair and get the public key from that
-        let key_pair = match KeyPair::from_keystr(&private_key_data, passphrase.as_deref()) {
-            Ok(key) => key,
-            Err(e) => {
-                godot_error!("Failed to generate keypair: {}", e);
+        };
+        let private_key = if private_key.is_encrypted() {
+            if let Some(passphrase) = passphrase {
+                match private_key.decrypt(passphrase) {
+                    Ok(private_key) => private_key,
+                    Err(e) => {
+                        godot_error!("Failed to parse private key: {}", e);
+                        return false;
+                    }
+                }
+            } else {
+                godot_error!("Key is encrypted but no password provided.");
                 return false;
             }
+        } else {
+            private_key
         };
-        let pub_key = match key_pair.serialize_publickey() {
+
+        let pub_key = match private_key.public_key().to_openssh() {
             Ok(pub_key) => pub_key,
             Err(e) => {
                 godot_error!("Failed to serialize public key: {}", e);
@@ -344,7 +359,7 @@ pub impl SSHClient {
 
     /// Sets auth method to type private key.
     ///
-    /// * `key_data` - Complete key data of the private key.
+    /// * `key_data` - Base64 encoded key data of the private key.
     /// * `password` - Optional password to decrypt private key.
     #[func]
     fn set_auth_key(&mut self, key_data: String, password: String) {
@@ -380,29 +395,37 @@ pub impl SSHClient {
         }
     }
 
-    /// Generate a key pair. Returns [private_key, public_key] on success or [] on failure.
+    /// Generates a private key base64 encoded. This can be used as the `key_data` for `set_auth_key`.
+    /// Returns empty string on failure.
     ///
     /// * `key_type` - Currently supported: "ED25519" or "RSA".
-    /// * `key_size` - Size of the key. Recommended values are 2048 for RSA and 256 for ED25519.
+    /// * `key_size` - Size of the key if it's RSA. Recommended value is 4096.
+    /// * `comment` - Comment of the key. This is e.g. user@hostname by default for openssh.
     #[func]
-    fn generate_key(key_type: String, key_size: i64) -> PackedStringArray {
-        let key_type = match key_type.as_str() {
-            "ED25519" => KeyType::ED25519,
-            "RSA" => KeyType::RSA,
+    fn generate_private_key(key_type: String, key_size: i64, comment: String) -> String {
+        let mut rng = OsRng;
+        let key_data = match key_type.as_str() {
+            "ED25519" => KeypairData::from(Ed25519Keypair::random(&mut rng)),
+            "RSA" => KeypairData::from(match RsaKeypair::random(&mut rng, key_size as usize) {
+                Ok(key_data) => key_data,
+                Err(e) => {
+                    godot_error!("Failed to generate rsa key data: {}", e);
+                    return "".to_string();
+                }
+            }),
             _ => {
                 godot_error!("Unknown key type: {}", key_type);
-                return [].into();
+                return "".to_string();
             }
         };
-        match generate_key(key_type, key_size as usize) {
-            Ok((private_key, public_key)) => {
-                vec![GString::from(private_key), GString::from(public_key)].into()
-            }
+        let private_key = match PrivateKey::new(key_data, comment) {
+            Ok(private_key) => private_key,
             Err(e) => {
-                godot_error!("Failed to generate key: {}", e);
-                [].into()
+                godot_error!("Failed to generate private key: {}", e);
+                return "".to_string();
             }
-        }
+        };
+        BASE64_STANDARD.encode(private_key.to_bytes().unwrap())
     }
 
     async fn _exec_ssh(&mut self, cmd: String) -> bool {
@@ -601,13 +624,4 @@ pub impl SSHClient {
             _ => Err(anyhow!("Private key auth failed")),
         }
     }
-}
-
-/// Returns (private_key, public_key)
-fn generate_key(key_type: KeyType, key_size: usize) -> anyhow::Result<(String, String)> {
-    let key_pair = KeyPair::generate(key_type, key_size)?;
-    Ok((
-        key_pair.serialize_pem(None)?,
-        key_pair.serialize_publickey()?,
-    ))
 }
