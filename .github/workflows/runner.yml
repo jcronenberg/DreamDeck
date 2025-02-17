@@ -6,9 +6,48 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      dist-changes: ${{ steps.filter-every.outputs.dist-changes }}
+      touch: ${{ steps.filter.outputs.touch }}
+      ssh: ${{ steps.filter.outputs.ssh }}
+      gdscript: ${{ steps.filter.outputs.gdscript }}
+    steps:
+    - name: Git Checkout
+      uses: actions/checkout@v4
+    - name: Check changed files with every quantifier
+      uses: dorny/paths-filter@v3
+      id: filter-every
+      with:
+        predicate-quantifier: 'every'
+        filters: |
+          dist-changes:
+            - '**'
+            - '!README.md'
+            - '!LICENSE'
+            - '!.github/**'
+    - name: Check changed files
+      uses: dorny/paths-filter@v3
+      id: filter
+      with:
+        filters: |
+          touch:
+            - 'plugins/touch/rust/**/*.rs'
+          ssh:
+            - 'plugins/ssh/rust/**/*.rs'
+          gdscript:
+            - 'plugins/**/*.gd'
+            - 'src/**/*.gd'
+
   static-checks:
     name: Static checks
+    needs: changes
     uses: ./.github/workflows/static-checks.yml
+    with:
+      touch-changed: ${{ needs.changes.outputs.touch }}
+      ssh-changed: ${{ needs.changes.outputs.ssh }}
+      gdscript-changed: ${{ needs.changes.outputs.gdscript }}
 
   dev-builds:
     name: Development builds
@@ -17,17 +56,19 @@ jobs:
 
   flatpak-build:
     if: |
+      needs.changes.outputs.dist-changes == 'true' &&
       github.event_name == 'pull_request' ||
       (github.repository == 'jcronenberg/DreamDeck' && github.ref == 'refs/heads/prototyping')
     name: Flatpak build
-    needs: static-checks
+    needs: [static-checks, changes]
     uses: ./.github/workflows/flatpak-build.yml
 
   obs-build:
     if: |
+      needs.changes.outputs.dist-changes == 'true' &&
       github.event_name == 'pull_request' ||
       (github.repository == 'jcronenberg/DreamDeck' && github.ref == 'refs/heads/prototyping')
     name: OBS build
-    needs: static-checks
+    needs: [static-checks, changes]
     uses: ./.github/workflows/obs-build.yml
     secrets: inherit

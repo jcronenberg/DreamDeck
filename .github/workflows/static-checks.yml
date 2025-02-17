@@ -2,37 +2,21 @@ name: "Static checks"
 
 on:
   workflow_call:
+    inputs:
+      touch-changed:
+        type: string
+      ssh-changed:
+        type: string
+      gdscript-changed:
+        type: string
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  changes:
-    runs-on: ubuntu-latest
-    outputs:
-      touch: ${{ steps.filter.outputs.touch }}
-      ssh: ${{ steps.filter.outputs.ssh }}
-      gdscript: ${{ steps.filter.outputs.gdscript }}
-    steps:
-    - name: Git Checkout
-      uses: actions/checkout@v4
-    - name: Check changed files
-      uses: dorny/paths-filter@v3
-      id: filter
-      with:
-        filters: |
-          touch:
-            - 'plugins/touch/rust/**/*.rs'
-          ssh:
-            - 'plugins/ssh/rust/**/*.rs'
-          gdscript:
-            - 'plugins/**/*.gd'
-            - 'src/**/*.gd'
-
   rust_touch_checks:
     name: Rust checks for touch plugin
-    needs: changes
-    if: ${{ needs.changes.outputs.touch == 'true' }}
+    if: ${{ inputs.touch-changed == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -59,8 +43,7 @@ jobs:
 
   rust_ssh_checks:
     name: Rust checks for ssh plugin
-    needs: changes
-    if: ${{ needs.changes.outputs.ssh == 'true' }}
+    if: ${{ inputs.ssh-changed == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -87,8 +70,7 @@ jobs:
 
   gd_checks:
     name: GDScript checks
-    needs: changes
-    if: ${{ needs.changes.outputs.gdscript == 'true' }}
+    if: ${{ inputs.gdscript-changed == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -103,7 +85,6 @@ jobs:
 
   spell_checks:
     name: Spell checks
-    needs: changes
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

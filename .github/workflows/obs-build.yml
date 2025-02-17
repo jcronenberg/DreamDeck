@@ -4,29 +4,8 @@ on:
   workflow_call:
 
 jobs:
-  changes:
-    runs-on: ubuntu-latest
-    outputs:
-      relevant_files_changed: ${{ steps.filter.outputs.relevant_files_changed }}
-    steps:
-    - name: Git Checkout
-      uses: actions/checkout@v4
-    - name: Check changed files
-      uses: dorny/paths-filter@v3
-      id: filter
-      with:
-        predicate-quantifier: 'every'
-        filters: |
-          relevant_files_changed:
-            - '**'
-            - '!README.md'
-            - '!LICENSE'
-            - '!.github/**'
-
   test-build-package:
     name: "Test build OBS package"
-    needs: changes
-    if: ${{ needs.changes.outputs.relevant_files_changed == 'true' }}
     runs-on: ubuntu-latest
     container:
       image: registry.opensuse.org/opensuse/tumbleweed:latest
