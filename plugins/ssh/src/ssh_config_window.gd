@@ -13,11 +13,11 @@ func _ready() -> void:
 	populate_list()
 
 
-## Edits a client by [param index] from [member SSHController.client_list].
+## Edits a client by [param index] from [member SSHController._clients_list].
 func edit_client(index: int) -> void:
-	if _ssh_controller.client_list.size() != index:
+	if _ssh_controller._clients_list.size() != index:
 		_client_index = index
-		_client_config = _ssh_controller.client_list[index].config
+		_client_config = _ssh_controller._clients_list[index].config
 	else:
 		_client_config = _ssh_controller.generate_default_client_config()
 
@@ -38,7 +38,7 @@ func edit_client(index: int) -> void:
 ## Populates the client list with all current clients from ssh_controller
 func populate_list() -> void:
 	%SSHClientList.clear()
-	for ssh_client in _ssh_controller.client_list:
+	for ssh_client in _ssh_controller._clients_list:
 		%SSHClientList.add_item(ssh_client.config.get_object("name").get_value())
 
 	%SSHClientList.add_item("+")
@@ -76,7 +76,7 @@ func _on_cancel_client_editor() -> void:
 # Ensures the name of the currently being edited client is unique if it changed.
 func _ensure_unique_name(client_name: String) -> bool:
 	var i: int = 0
-	for ssh_client in _ssh_controller.client_list:
+	for ssh_client in _ssh_controller._clients_list:
 		if ssh_client.config.get_object("name").get_value() == client_name and _client_index != i:
 			return false
 

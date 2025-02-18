@@ -6,18 +6,28 @@ enum ServerCheckMethod {
 	KNOWN_HOSTS,
 }
 
+enum KeyTypes {
+	NEW_KEY,
+	EXISTING_KEY,
+}
+
+enum CryptoTypes {
+	ED25519,
+	RSA,
+}
+
 const SETTINGS_PAGE = preload("res://plugins/ssh/src/ssh_config_window.tscn")
 const PLUGIN_NAME = "SSH"
 
 ## List containing all the currently active clients.
 ## A client's [Dictionary] contains [code]config[/code] and [code]node[/code].
 ## TODO move settings page to inner class, make private and update via signals
-var client_list: Array[Dictionary] = []
-
+var _clients_list: Array[Dictionary] = []
 var _thread_pool: Array[Thread] = []
-var _key_list: Array[Dictionary] = []
+var _keys_list: Array[Dictionary] = []
 var _keys_editor: KeysEditor
-@onready var _conf_path: String = conf_dir.path_join("clients.json")
+@onready var _keys_conf_path: String = conf_dir.path_join("keys.json")
+@onready var _clients_conf_path: String = conf_dir.path_join("clients.json")
 
 
 func _init() -> void:
@@ -26,6 +36,7 @@ func _init() -> void:
 
 func _ready() -> void:
 	load_clients()
+	load_keys()
 
 
 func _process(_delta) -> void:
@@ -43,26 +54,41 @@ func _process(_delta) -> void:
 ## {"key_name": key_name, "key_type": KeyType.IMPORT_KEY, "key_path": key_path}
 ## [/codeblock]
 func add_key(key_config: Dictionary) -> bool:
-	for key_dict in _key_list:
+	for key_dict in _keys_list:
 		if key_dict.key_name == key_config.key_name:
 			return false
 
-	_key_list.append(key_config)
+	_keys_list.append(key_config)
 	if _keys_editor and is_instance_valid(_keys_editor):
-		_keys_editor.set_keys(_key_list)
-	print(_key_list)
+		_keys_editor.set_keys(_keys_list)
+
+	print(_keys_list)
+	save_keys()
 	return true
 
 
 ## Removes a key from the key list by [param key_name].
 func remove_key(key_name: String) -> bool:
-	for key_dict in _key_list:
+	for key_dict in _keys_list:
 		if key_dict.key_name == key_name:
-			_key_list.erase(key_dict)
-			print(_key_list)
+			_keys_list.erase(key_dict)
+			print(_keys_list)
+			save_keys()
 			return true
 
 	return false
+
+
+func load_keys() -> void:
+	var loaded_keys_config: Variant = ConfLib.load_config(_keys_conf_path)
+	if loaded_keys_config is not Array:
+		return
+
+	_keys_list.assign(loaded_keys_config)
+
+
+func save_keys() -> void:
+	ConfLib.save_config(_keys_conf_path, _keys_list)
 
 
 ## Generates a [Config] with all default objects configured.
@@ -86,12 +112,12 @@ func generate_default_client_config() -> Config:
 
 ## Loads clients from disk.
 func load_clients() -> void:
-	var loaded_client_config: Variant = ConfLib.load_config(_conf_path)
-	if loaded_client_config is not Array:
+	var loaded_clients_config: Variant = ConfLib.load_config(_clients_conf_path)
+	if loaded_clients_config is not Array:
 		return
 
-	client_list = []
-	for client_dict in loaded_client_config:
+	_clients_list = []
+	for client_dict in loaded_clients_config:
 		var new_client: Config = generate_default_client_config()
 		new_client.apply_dict(client_dict)
 		add_client(new_client)
@@ -99,10 +125,10 @@ func load_clients() -> void:
 
 ## Saves clients to disk.
 func save_clients() -> void:
-	var serialized_client_list: Array[Dictionary] = []
-	for client in client_list:
-		serialized_client_list.append(client.config.get_as_dict())
-		ConfLib.save_config(_conf_path, serialized_client_list)
+	var serialized_clients_list: Array[Dictionary] = []
+	for client in _clients_list:
+		serialized_clients_list.append(client.config.get_as_dict())
+		ConfLib.save_config(_clients_conf_path, serialized_clients_list)
 
 
 ## Adds a new client with the [param client_config].
@@ -112,25 +138,25 @@ func add_client(client_config: Config) -> void:
 	add_child(ssh_client)
 
 	var client_dict: Dictionary = {"config": client_config, "node": ssh_client}
-	client_list.push_back(client_dict)
-	edit_client_config(client_list.size() - 1)
-	update_loader_client_list()
+	_clients_list.push_back(client_dict)
+	edit_client_config(_clients_list.size() - 1)
+	update_loader_clients_list()
 
 
 ## Updates the action in the loader so it always shows all available clients.
-func update_loader_client_list() -> void:
+func update_loader_clients_list() -> void:
 	var clients: Array[String] = []
-	for client in client_list:
+	for client in _clients_list:
 		clients.append(client.config.get_object("name").get_value())
 	PluginCoordinator.get_plugin_loader("SSH").set_client_config(clients)
 
 
-## Edits a client in both the child SSHClient node and [member client_list].
+## Edits a client in both the child SSHClient node and [member _clients_list].
 ## The config needs to be edited beforehand by the caller.
 func edit_client_config(index: int) -> void:
-	assert(client_list.size() > index)
+	assert(_clients_list.size() > index)
 
-	var client_dict: Dictionary = client_list[index]
+	var client_dict: Dictionary = _clients_list[index]
 	if not client_dict:
 		push_error("SSHClient not found")
 		return
@@ -157,8 +183,8 @@ func edit_client_config(index: int) -> void:
 
 ## Get a SSH client identified by [param client_name]
 func get_client(client_name: String) -> SSHClient:
-	for client_id in client_list.size():
-		if client_name == client_list[client_id].config.get_object("name").get_value():
+	for client_id in _clients_list.size():
+		if client_name == _clients_list[client_id].config.get_object("name").get_value():
 			return get_child(client_id)
 
 	return null
@@ -167,10 +193,10 @@ func get_client(client_name: String) -> SSHClient:
 ## Removes a SSH client identified by [param client_name]
 ## from both the client list and the [SSHClient] child.
 func remove_client(client_name: String) -> void:
-	for client in client_list:
+	for client in _clients_list:
 		if client.config.get_object("name").get_value() == client_name:
 			client.node.queue_free()
-			client_list.erase(client)
+			_clients_list.erase(client)
 
 
 # maybe switch away from identifier client_name to index, but having the same name is
@@ -192,7 +218,7 @@ func _on_settings_button_pressed() -> void:
 	var clients_editor: Control = SETTINGS_PAGE.instantiate()
 	clients_editor.name = "SSH Clients"
 	_keys_editor = KeysEditor.new()
-	_keys_editor.set_keys(_key_list)
+	_keys_editor.set_keys(_keys_list)
 	_keys_editor.key_added.connect(add_key)
 	_keys_editor.key_deleted.connect(remove_key)
 	PopupManager.push_stack_item([clients_editor, _keys_editor])
@@ -203,16 +229,6 @@ class KeysEditor:
 
 	signal key_added(key_config: Dictionary)
 	signal key_deleted(key_name: String)
-
-	enum KeyTypes {
-		NEW_KEY,
-		IMPORT_KEY,
-	}
-
-	enum CryptoTypes {
-		ED25519,
-		RSA,
-	}
 
 	const RSA_SIZES: Array[String] = [
 		"2048",
@@ -299,7 +315,7 @@ class KeysEditor:
 			return
 
 		_new_key_editor.visible = value_text == "NEW_KEY"
-		_import_key_editor.visible = value_text == "IMPORT_KEY"
+		_import_key_editor.visible = value_text == "EXISTING_KEY"
 
 	func _on_crypto_value_selected(value_text: String) -> void:
 		if not _new_key_editor and not is_instance_valid(_new_key_editor):
@@ -313,10 +329,10 @@ class KeysEditor:
 		var import_key_dict: Dictionary = _import_key_editor.serialize()
 
 		var abort: bool = false
-		if new_key_dict.key_type == KeyTypes.IMPORT_KEY and import_key_dict.key_path == "":
+		if new_key_dict.key_type == KeyTypes.EXISTING_KEY and import_key_dict.key_path == "":
 			_key_editor.get_editor("key_path").modulate = Color.RED
 			abort = true
-		if new_key_dict.key_name == "":
+		if new_key_dict.key_name == "" or not _check_unique_key(new_key_dict.key_name):
 			_key_editor.get_editor("key_name").modulate = Color.RED
 			abort = true
 		if abort:
@@ -339,10 +355,17 @@ class KeysEditor:
 					push_error("Failed to generate key")
 					return false
 				new_key_dict["key_data"] = new_key
-			KeyTypes.IMPORT_KEY:
+			KeyTypes.EXISTING_KEY:
 				new_key_dict.merge(import_key_dict)
 
 		key_added.emit(new_key_dict)
+		return true
+
+	func _check_unique_key(key_name: String) -> bool:
+		for key_editor in _ssh_keys_list.get_children():
+			if key_editor._key_name == key_name:
+				return false
+
 		return true
 
 
