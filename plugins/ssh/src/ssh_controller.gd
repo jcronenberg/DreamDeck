@@ -24,7 +24,7 @@ const PLUGIN_NAME = "SSH"
 ## TODO move settings page to inner class, make private and update via signals
 var _clients_list: Array[Dictionary] = []
 var _thread_pool: Array[Thread] = []
-var _keys_list: Array[Dictionary] = []
+var _keys_list: Array[SSHKey] = []
 var _keys_editor: KeysEditor
 @onready var _keys_conf_path: String = conf_dir.path_join("keys.json")
 @onready var _clients_conf_path: String = conf_dir.path_join("clients.json")
@@ -47,48 +47,47 @@ func _process(_delta) -> void:
 			_thread_pool.erase(thread)
 
 
-## Add a key with config [param key_config].[br]
-## [param key_config] formats:
-## [codeblock]
-## {"key_name": key_name, "key_type": KeyType.NEW_KEY, "key_data": key_data}
-## {"key_name": key_name, "key_type": KeyType.IMPORT_KEY, "key_path": key_path}
-## [/codeblock]
-func add_key(key_config: Dictionary) -> bool:
-	for key_dict in _keys_list:
-		if key_dict.key_name == key_config.key_name:
-			return false
+## Adds a key to the keys list and also saves to disk.[br]
+## Also updates the keys editor if it is being used
+func add_key(new_key: SSHKey) -> void:
+	for key in _keys_list:
+		if key.key_name == new_key.key_name:
+			push_error("Key with the same name already exists")
+			return
 
-	_keys_list.append(key_config)
+	_keys_list.append(new_key)
 	if _keys_editor and is_instance_valid(_keys_editor):
 		_keys_editor.set_keys(_keys_list)
 
-	print(_keys_list)
 	save_keys()
-	return true
 
 
-## Removes a key from the key list by [param key_name].
-func remove_key(key_name: String) -> bool:
-	for key_dict in _keys_list:
-		if key_dict.key_name == key_name:
-			_keys_list.erase(key_dict)
-			print(_keys_list)
-			save_keys()
-			return true
-
-	return false
+## Removes a key from the keys list and saves to disk.
+func remove_key(key: SSHKey) -> void:
+	_keys_list.erase(key)
+	save_keys()
 
 
+## Loads keys from disk.
 func load_keys() -> void:
 	var loaded_keys_config: Variant = ConfLib.load_config(_keys_conf_path)
 	if loaded_keys_config is not Array:
 		return
 
-	_keys_list.assign(loaded_keys_config)
+	_keys_list = []
+	for key_dict in loaded_keys_config:
+		var new_key: SSHKey = SSHKey.new()
+		new_key.deserialize(key_dict)
+		add_key(new_key)
 
 
+## Saves keys to disk.
 func save_keys() -> void:
-	ConfLib.save_config(_keys_conf_path, _keys_list)
+	var keys: Array[Dictionary] = []
+	for key in _keys_list:
+		keys.append(key.serialize())
+
+	ConfLib.save_config(_keys_conf_path, keys)
 
 
 ## Generates a [Config] with all default objects configured.
@@ -224,11 +223,32 @@ func _on_settings_button_pressed() -> void:
 	PopupManager.push_stack_item([clients_editor, _keys_editor])
 
 
-class KeysEditor:
-	extends Control
+class SSHKey:
+	var key_name: String = ""
+	var type: KeyTypes = KeyTypes.NEW_KEY
+	var key_data: String = ""
+	var key_path: String = ""
 
-	signal key_added(key_config: Dictionary)
-	signal key_deleted(key_name: String)
+	func deserialize(dict: Dictionary) -> void:
+		for key in dict:
+			if not key in self:
+				continue
+			set(key, dict[key])
+
+	func serialize() -> Dictionary:
+		var ret_dict: Dictionary = {"key_name": key_name}
+		if key_data != "":
+			ret_dict.key_data = key_data
+		elif key_path != "":
+			ret_dict.key_path = key_path
+		else:
+			push_error("SSHKey is configured wrong")
+
+		return ret_dict
+
+
+class NewSSHKeyEditor:
+	extends VBoxContainer
 
 	const RSA_SIZES: Array[String] = [
 		"2048",
@@ -237,7 +257,10 @@ class KeysEditor:
 		"16384",
 	]
 
-	var _ssh_keys_list: VBoxContainer = VBoxContainer.new()
+	var key_names_list: Array[String] = []:
+		set = set_key_names_list
+
+	var _key: SSHKey = null
 	var _key_creator_config: Config = Config.new()
 	var _key_editor: Config.ConfigEditor = null
 	var _new_key_config: Config = Config.new()
@@ -245,16 +268,106 @@ class KeysEditor:
 	var _import_key_config: Config = Config.new()
 	var _import_key_editor: Config.ConfigEditor = null
 
-	func _init() -> void:
-		name = "SSH Keys"
+	func _init(key: SSHKey) -> void:
+		_key = key
 
-		_key_creator_config.add_string("Key name", "key_name", "")
-		_key_creator_config.add_enum("Key type", "key_type", KeyTypes.NEW_KEY, KeyTypes)
+		set_anchors_preset(Control.PRESET_FULL_RECT)
+		add_theme_constant_override("separation", 10)
 
-		_import_key_config.add_file_path("Import key path", "key_path", "")
+		_key_creator_config.add_string("Key name", "key_name", key.key_name)
+		_key_creator_config.add_enum("Key type", "key_type", key.type, KeyTypes)
+		_key_editor = _key_creator_config.generate_editor()
+
+		_key_editor.get_editor("key_type").value_selected.connect(
+			_on_key_type_editor_value_selected
+		)
+		add_child(_key_editor)
+
+		_import_key_config.add_file_path("Import key path", "key_path", key.key_path)
+		_import_key_editor = _import_key_config.generate_editor()
+		_import_key_editor.visible = false
+		add_child(_import_key_editor)
 
 		_new_key_config.add_enum("Crypto", "crypto", CryptoTypes.ED25519, CryptoTypes)
 		_new_key_config.add_string_array("Key size", "rsa_size", RSA_SIZES[1], RSA_SIZES)
+		_new_key_editor = _new_key_config.generate_editor()
+		_new_key_editor.get_editor("rsa_size").visible = false
+		_new_key_editor.get_editor("crypto").value_selected.connect(_on_crypto_value_selected)
+		add_child(_new_key_editor)
+
+	func set_key_names_list(value: Array[String]) -> void:
+		key_names_list = value
+
+	func confirm() -> bool:
+		var abort: bool = false
+
+		var new_key_dict: Dictionary = _key_editor.serialize()
+		if new_key_dict.key_name == "" or not _check_unique_key(new_key_dict.key_name):
+			_key_editor.get_editor("key_name").modulate = Color.RED
+			abort = true
+
+		var import_key_dict: Dictionary = _import_key_editor.serialize()
+		if new_key_dict.key_type == KeyTypes.EXISTING_KEY and import_key_dict.key_path == "":
+			_import_key_editor.get_editor("key_path").modulate = Color.RED
+			abort = true
+
+		if abort:
+			return false
+
+		_key.key_name = new_key_dict.key_name
+
+		match new_key_dict.key_type:
+			KeyTypes.NEW_KEY:
+				var new_key_settings: Dictionary = _new_key_editor.serialize()
+				var key_size: int = (
+					256
+					if new_key_settings.crypto == CryptoTypes.ED25519
+					else int(new_key_settings.rsa_size)
+				)
+				var new_key: String = SSHClient.generate_private_key(
+					CryptoTypes.find_key(new_key_settings.crypto),
+					key_size,
+					"%s@dreamdeck" % new_key_dict.key_name
+				)
+				if new_key == "":
+					push_error("Failed to generate key")
+					return false
+				_key.key_data = new_key
+			KeyTypes.EXISTING_KEY:
+				_key.key_path = import_key_dict.key_path
+
+		return true
+
+	func _on_key_type_editor_value_selected(value_text: String) -> void:
+		if not _new_key_editor and not is_instance_valid(_new_key_editor):
+			return
+		if not _import_key_editor and not is_instance_valid(_import_key_editor):
+			return
+
+		_new_key_editor.visible = value_text == "NEW_KEY"
+		_import_key_editor.visible = value_text == "EXISTING_KEY"
+
+	func _on_crypto_value_selected(value_text: String) -> void:
+		if not _new_key_editor and not is_instance_valid(_new_key_editor):
+			return
+
+		var rsa_size_editor: Config.StringArrayEditor = _new_key_editor.get_editor("rsa_size")
+		rsa_size_editor.visible = value_text == "RSA"
+
+	func _check_unique_key(key_name: String) -> bool:
+		return not key_name in key_names_list
+
+
+class KeysEditor:
+	extends Control
+
+	signal key_added(key: SSHKey)
+	signal key_deleted(key: SSHKey)
+
+	var _ssh_keys_list: VBoxContainer = VBoxContainer.new()
+
+	func _init() -> void:
+		name = "SSH Keys"
 
 		var rows: VBoxContainer = VBoxContainer.new()
 		rows.add_theme_constant_override("separation", 10)
@@ -275,112 +388,49 @@ class KeysEditor:
 
 		add_child(rows)
 
-	func set_keys(key_list: Array[Dictionary]) -> void:
+	func set_keys(keys_list: Array[SSHKey]) -> void:
 		for child in _ssh_keys_list.get_children():
 			child.queue_free()
-		for key_dict in key_list:
-			var key_editor: KeyEditor = KeyEditor.new(key_dict.key_name)
+		for key in keys_list:
+			var key_editor: KeyEntry = KeyEntry.new(key)
 			key_editor.key_deleted.connect(_on_key_deleted)
 			_ssh_keys_list.add_child(key_editor)
 
-	func _on_key_deleted(key_name: String) -> void:
-		key_deleted.emit(key_name)
+	func _on_key_deleted(key: SSHKey) -> void:
+		key_deleted.emit(key)
 
 	func _on_add_key_button_pressed() -> void:
-		var vbox: VBoxContainer = VBoxContainer.new()
-		vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-		vbox.add_theme_constant_override("separation", 10)
-
-		_key_editor = _key_creator_config.generate_editor()
-		_key_editor.get_editor("key_type").value_selected.connect(
-			_on_key_type_editor_value_selected
-		)
-		vbox.add_child(_key_editor)
-
-		_new_key_editor = _new_key_config.generate_editor()
-		_new_key_editor.get_editor("rsa_size").visible = false
-		_new_key_editor.get_editor("crypto").value_selected.connect(_on_crypto_value_selected)
-		vbox.add_child(_new_key_editor)
-
-		_import_key_editor = _import_key_config.generate_editor()
-		_import_key_editor.visible = false
-		vbox.add_child(_import_key_editor)
-
-		PopupManager.push_stack_item([vbox], _on_key_editor_confirmed)
-
-	func _on_key_type_editor_value_selected(value_text: String) -> void:
-		if not _new_key_editor and not is_instance_valid(_new_key_editor):
-			return
-		if not _import_key_editor and not is_instance_valid(_import_key_editor):
-			return
-
-		_new_key_editor.visible = value_text == "NEW_KEY"
-		_import_key_editor.visible = value_text == "EXISTING_KEY"
-
-	func _on_crypto_value_selected(value_text: String) -> void:
-		if not _new_key_editor and not is_instance_valid(_new_key_editor):
-			return
-
-		var rsa_size_editor: Config.StringArrayEditor = _new_key_editor.get_editor("rsa_size")
-		rsa_size_editor.visible = value_text == "RSA"
-
-	func _on_key_editor_confirmed() -> bool:
-		var new_key_dict: Dictionary = _key_editor.serialize()
-		var import_key_dict: Dictionary = _import_key_editor.serialize()
-
-		var abort: bool = false
-		if new_key_dict.key_type == KeyTypes.EXISTING_KEY and import_key_dict.key_path == "":
-			_key_editor.get_editor("key_path").modulate = Color.RED
-			abort = true
-		if new_key_dict.key_name == "" or not _check_unique_key(new_key_dict.key_name):
-			_key_editor.get_editor("key_name").modulate = Color.RED
-			abort = true
-		if abort:
+		var new_key: SSHKey = SSHKey.new()
+		var key_editor: NewSSHKeyEditor = NewSSHKeyEditor.new(new_key)
+		key_editor.set_key_names_list(_generate_key_names_list())
+		var callback: Callable = func confirm() -> bool:
+			if key_editor.confirm():
+				key_added.emit(new_key)
+				return true
 			return false
 
-		match new_key_dict.key_type:
-			KeyTypes.NEW_KEY:
-				var new_key_settings: Dictionary = _new_key_editor.serialize()
-				var key_size: int = (
-					256
-					if new_key_settings.crypto == CryptoTypes.ED25519
-					else int(new_key_settings.rsa_size)
-				)
-				var new_key: String = SSHClient.generate_private_key(
-					CryptoTypes.find_key(new_key_settings.crypto),
-					key_size,
-					"%s@dreamdeck" % new_key_dict.key_name
-				)
-				if new_key == "":
-					push_error("Failed to generate key")
-					return false
-				new_key_dict["key_data"] = new_key
-			KeyTypes.EXISTING_KEY:
-				new_key_dict.merge(import_key_dict)
+		PopupManager.push_stack_item([key_editor], callback)
 
-		key_added.emit(new_key_dict)
-		return true
+	func _generate_key_names_list() -> Array[String]:
+		var ret: Array[String] = []
+		for entry: KeyEntry in _ssh_keys_list.get_children():
+			ret.append(entry.key.key_name)
 
-	func _check_unique_key(key_name: String) -> bool:
-		for key_editor in _ssh_keys_list.get_children():
-			if key_editor._key_name == key_name:
-				return false
-
-		return true
+		return ret
 
 
-class KeyEditor:
+class KeyEntry:
 	extends PanelContainer
 
-	signal key_deleted(key_name: String)
+	signal key_deleted(key: SSHKey)
 	signal confirm_dialog_closed(bool)
 
 	const DELETE_ICON = preload("res://resources/icons/trash.svg")
 
-	var _key_name: String
+	var key: SSHKey
 
-	func _init(key_name: String) -> void:
-		_key_name = key_name
+	func _init(init_key: SSHKey) -> void:
+		key = init_key
 
 		var stylebox: StyleBoxFlat = StyleBoxFlat.new()
 		stylebox.bg_color = Color("#ffffff0c")
@@ -397,7 +447,7 @@ class KeyEditor:
 		var hbox: HBoxContainer = HBoxContainer.new()
 
 		var label: Label = Label.new()
-		label.text = key_name
+		label.text = key.key_name
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		hbox.add_child(label)
 
@@ -413,7 +463,7 @@ class KeyEditor:
 
 	func _on_delete_button_pressed() -> void:
 		var confirm_dialog: ConfirmationDialog = ConfirmationDialog.new()
-		confirm_dialog.dialog_text = "Do you really want to delete key: %s" % _key_name
+		confirm_dialog.dialog_text = "Do you really want to delete key: %s" % key.key_name
 		add_child(confirm_dialog)
 		confirm_dialog.initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_PRIMARY_SCREEN
 		confirm_dialog.show()
@@ -422,7 +472,7 @@ class KeyEditor:
 		var ret: bool = await confirm_dialog_closed
 		confirm_dialog.queue_free()
 		if ret:
-			key_deleted.emit(_key_name)
+			key_deleted.emit(key)
 			queue_free()
 
 	func _on_confirm_dialog_confirmed() -> void:
