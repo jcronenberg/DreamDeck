@@ -13,9 +13,7 @@ jobs:
 
     strategy:
       matrix:
-        #repo: [openSUSE_Tumbleweed, Fedora_41, Fedora_Rawhide]
-        # Fedora Rawhide local build seems to broken atm for whatever reason
-        repo: [openSUSE_Tumbleweed, Fedora_41]
+        repo: [openSUSE_Tumbleweed, Fedora_41, Fedora_Rawhide]
 
     steps:
       - name: Git Checkout
