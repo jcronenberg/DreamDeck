@@ -133,8 +133,6 @@ func save_clients() -> void:
 ## Adds a new client with the [param client_config].
 func add_client(client_config: Config) -> void:
 	var ssh_client: SSHClient = SSHClient.new()
-	ssh_client.name = client_config.get_as_dict().name
-	add_child(ssh_client)
 
 	var client_dict: Dictionary = {"config": client_config, "node": ssh_client}
 	_clients_list.push_back(client_dict)
@@ -162,7 +160,9 @@ func edit_client_config(index: int) -> void:
 
 	var client_config: Dictionary = client_dict.config.get_as_dict()
 	client_dict.node.disconnect_session()
-	client_dict.node.setup(client_config["user"], client_config["ip"], int(client_config["port"]))
+	client_dict.node.user = client_config.user
+	client_dict.node.ip = client_config.ip
+	client_dict.node.port = client_config.port
 	client_dict.node.set_auth_key_file(client_config["key_path"], "")
 	match client_config["server_check_method"]:
 		ServerCheckMethod.NO_CHECK:
@@ -172,7 +172,7 @@ func edit_client_config(index: int) -> void:
 		_:
 			push_error("Unknown server check method, setting to known hosts file")
 			client_dict.node.set_server_check_method("known_hosts_file")
-	client_dict.node.set_debug(client_config["debug"])
+	client_dict.node.set_debug(client_config.debug)
 	var error: Variant = client_dict.node.open_session()
 	if error:
 		push_error('Failed to open session for client "%s": %s' % [client_config["name"], error])
@@ -182,9 +182,9 @@ func edit_client_config(index: int) -> void:
 
 ## Get a SSH client identified by [param client_name]
 func get_client(client_name: String) -> SSHClient:
-	for client_id in _clients_list.size():
-		if client_name == _clients_list[client_id].config.get_object("name").get_value():
-			return get_child(client_id)
+	for client in _clients_list:
+		if client_name == client.config.get_object("name").get_value():
+			return client.node
 
 	return null
 
@@ -570,6 +570,7 @@ class NewSSHKeyEditor:
 				if new_key == "":
 					push_error("Failed to generate key")
 					return false
+				new_key = Marshalls.utf8_to_base64(new_key)
 				_key.key_data = new_key
 				_key.type = KeyTypes.NEW_KEY
 			KeyTypes.EXISTING_KEY:

@@ -1,8 +1,6 @@
 use anyhow::anyhow;
 use async_std::future;
 use async_std::task::block_on;
-use base64::prelude::BASE64_STANDARD;
-use base64::Engine;
 use chrono::Local;
 use godot::prelude::*;
 use keys::ssh_key::private::{Ed25519Keypair, KeypairData, RsaKeypair};
@@ -176,97 +174,24 @@ impl client::Handler for Client {
     }
 }
 
-#[derive(GodotClass)]
-#[class(base = Node)]
-pub struct SSHClient {
+struct InternalSSHClient {
     debug: bool,
     session: Option<Handle<Client>>,
     auth_method: AuthMethod,
     server_check: ServerCheckMethod,
-    user: Option<String>,
-    ip: Option<String>,
-    port: u16,
-    _base: Base<Node>,
 }
 
-#[godot_api]
-pub impl INode for SSHClient {
-    fn init(base: Base<Node>) -> Self {
-        Self {
-            debug: false,
-            session: None,
-            auth_method: AuthMethod::None,
-            server_check: ServerCheckMethod::NoCheck,
-            user: None,
-            ip: None,
-            port: 22,
-            _base: base,
-        }
-    }
-}
-
-/// A simple SSH client that can open a single session and reuse said session
-/// to spawn multiple channels and execute a command on that channel
-#[godot_api]
-pub impl SSHClient {
-    #[func]
-    fn setup(&mut self, user: String, ip: String, port: i64) {
-        self.user = Some(user);
-        self.ip = Some(ip);
-        self.port = port as u16;
-    }
-
-    #[func]
-    fn set_debug(&mut self, debug: bool) {
-        self.debug = debug;
-    }
-
-    #[func]
-    fn exec(&mut self, cmd: String) -> bool {
-        if self.session.is_none() {
-            let result = self.open_session();
-            if !result.is_nil() {
-                godot_error!("Failed to open session: {}", result);
-                return false;
-            }
-        }
-        block_on(self._exec_ssh(cmd))
-    }
-
-    #[func]
-    fn open_session(&mut self) -> Variant {
-        self.session = Some(match block_on(self._open_session()) {
-            Ok(session) => session,
-            Err(error) => return Variant::from(error.to_string()),
-        });
-        Variant::nil()
-    }
-
-    #[func]
-    fn disconnect_session(&mut self) {
-        if let Err(error) = block_on(self._disconnect_session()) {
-            godot_error!("Failed to disconnect ssh session: {}", error);
-        }
-    }
-
-    #[func]
-    fn is_session_active(&mut self) -> bool {
-        if let Some(session) = &self.session {
-            return !session.is_closed();
-        }
-        false
-    }
-
-    /// If the current auth method is a private key method, this function can the private key
-    /// to the current server. It doesn't check if the private key is already authorized, so
-    /// it is recommended to only call this method on auth failure.
-    ///
-    /// * `password` - Password to temporarily connect to the server.
-    #[func]
-    fn add_key(&mut self, password: String) -> bool {
+impl InternalSSHClient {
+    fn add_key_to_server(
+        &mut self,
+        password: String,
+        ip: &String,
+        user: &String,
+        port: u16,
+    ) -> anyhow::Result<()> {
         let passphrase: Option<String>;
 
-        let private_key = match self.auth_method.clone() {
+        let mut private_key = match self.auth_method.clone() {
             AuthMethod::PrivateKeyFile {
                 key_file_path,
                 key_pass,
@@ -275,47 +200,34 @@ pub impl SSHClient {
                 match PrivateKey::read_openssh_file(&key_file_path) {
                     Ok(key_data) => key_data,
                     Err(e) => {
-                        godot_error!("Failed to read key at {}: {}", key_file_path.display(), e);
-                        return false;
+                        anyhow::bail!("Failed to read key at {}: {}", key_file_path.display(), e)
                     }
                 }
             }
             AuthMethod::PrivateKey { key_data, key_pass } => {
                 passphrase = key_pass;
-                match PrivateKey::from_bytes(&BASE64_STANDARD.decode(key_data).unwrap()) {
+                match PrivateKey::from_openssh(key_data) {
                     Ok(private_key) => private_key,
-                    Err(e) => {
-                        godot_error!("Failed to parse private key: {}", e);
-                        return false;
-                    }
+                    Err(e) => anyhow::bail!("Failed to parse private key: {}", e),
                 }
             }
             // Is only possible if self.auth_method is of type private key
-            _ => return false,
+            _ => anyhow::bail!("Wrong auth method set"),
         };
-        let private_key = if private_key.is_encrypted() {
-            if let Some(passphrase) = passphrase {
+        if private_key.is_encrypted() {
+            private_key = if let Some(passphrase) = passphrase {
                 match private_key.decrypt(passphrase) {
                     Ok(private_key) => private_key,
-                    Err(e) => {
-                        godot_error!("Failed to parse private key: {}", e);
-                        return false;
-                    }
+                    Err(e) => anyhow::bail!("Failed to decrypt private key: {}", e),
                 }
             } else {
-                godot_error!("Key is encrypted but no password provided.");
-                return false;
-            }
-        } else {
-            private_key
-        };
+                anyhow::bail!("Key is encrypted but no password provided.");
+            };
+        }
 
         let pub_key = match private_key.public_key().to_openssh() {
             Ok(pub_key) => pub_key,
-            Err(e) => {
-                godot_error!("Failed to serialize public key: {}", e);
-                return false;
-            }
+            Err(e) => anyhow::bail!("Failed to serialize public key: {}", e),
         };
 
         // Temporarily set auth method to password to allow login
@@ -327,132 +239,45 @@ pub impl SSHClient {
         }
 
         // Adding the key via a ssh command
-        let result = block_on(self._exec_ssh(format!(
-            "echo \"{}\" >> $HOME/.ssh/authorized_keys",
-            pub_key
-        )));
+        block_on(self.exec_ssh(
+            format!("echo \"{}\" >> $HOME/.ssh/authorized_keys", pub_key),
+            ip,
+            user,
+            port,
+        ))?;
 
         // Change back auth_method
         self.auth_method = auth_method_store;
 
         // A session may have been opened by the _exec_ssh call
-        self.disconnect_session();
+        block_on(self.disconnect_session())?;
 
-        result
+        Ok(())
     }
 
-    /// Sets auth method to type private key file.
-    ///
-    /// * `key_path` - Path to private key.
-    /// * `password` - Optional password to decrypt private key.
-    #[func]
-    fn set_auth_key_file(&mut self, key_path: String, password: String) {
-        self.auth_method = AuthMethod::PrivateKeyFile {
-            key_file_path: PathBuf::from(key_path),
-            key_pass: if password.as_str() != "" {
-                Some(password)
-            } else {
-                None
-            },
-        }
-    }
-
-    /// Sets auth method to type private key.
-    ///
-    /// * `key_data` - Base64 encoded key data of the private key.
-    /// * `password` - Optional password to decrypt private key.
-    #[func]
-    fn set_auth_key(&mut self, key_data: String, password: String) {
-        self.auth_method = AuthMethod::PrivateKey {
-            key_data,
-            key_pass: if password.as_str() != "" {
-                Some(password)
-            } else {
-                None
-            },
-        }
-    }
-
-    /// Sets auth method to type password.
-    ///
-    /// * `password` - Password for server.
-    #[func]
-    fn set_auth_password(&mut self, password: String) {
-        self.auth_method = AuthMethod::Password(password);
-    }
-
-    /// Sets the method by which to check the server against.
-    ///
-    /// * `method` - Currently supported: "known_hosts_file" or "no_check".
-    #[func]
-    fn set_server_check_method(&mut self, method: String) {
-        match method.as_str() {
-            "known_hosts_file" => self.server_check = ServerCheckMethod::DefaultKnownHostsFile,
-            "no_check" => self.server_check = ServerCheckMethod::NoCheck,
-            _ => {
-                self.server_check = ServerCheckMethod::NoCheck;
-            }
-        }
-    }
-
-    /// Generates a private key base64 encoded. This can be used as the `key_data` for `set_auth_key`.
-    /// Returns empty string on failure.
-    ///
-    /// * `key_type` - Currently supported: "ED25519" or "RSA".
-    /// * `key_size` - Size of the key if it's RSA. Recommended value is 4096.
-    /// * `comment` - Comment of the key. This is e.g. user@hostname by default for openssh.
-    #[func]
-    fn generate_private_key(key_type: String, key_size: i64, comment: String) -> String {
-        let mut rng = OsRng;
-        let key_data = match key_type.as_str() {
-            "ED25519" => KeypairData::from(Ed25519Keypair::random(&mut rng)),
-            "RSA" => KeypairData::from(match RsaKeypair::random(&mut rng, key_size as usize) {
-                Ok(key_data) => key_data,
-                Err(e) => {
-                    godot_error!("Failed to generate rsa key data: {}", e);
-                    return "".to_string();
-                }
-            }),
-            _ => {
-                godot_error!("Unknown key type: {}", key_type);
-                return "".to_string();
-            }
-        };
-        let private_key = match PrivateKey::new(key_data, comment) {
-            Ok(private_key) => private_key,
-            Err(e) => {
-                godot_error!("Failed to generate private key: {}", e);
-                return "".to_string();
-            }
-        };
-        BASE64_STANDARD.encode(private_key.to_bytes().unwrap())
-    }
-
-    async fn _exec_ssh(&mut self, cmd: String) -> bool {
+    async fn exec_ssh(
+        &mut self,
+        cmd: String,
+        ip: &String,
+        user: &String,
+        port: u16,
+    ) -> anyhow::Result<()> {
         if self.session.is_none() {
             if self.debug {
                 godot_print!("No session open at exec call, trying to open one")
             }
-            match block_on(self._open_session()) {
-                Ok(session) => self.session = Some(session),
-                Err(error) => {
-                    godot_error!("Failed to open ssh session: {}", error);
-                    return false;
-                }
+            if let Err(e) = block_on(self.open_session(ip, user, port)) {
+                anyhow::bail!("Failed to open ssh session: {}", e);
             }
         }
         // Check if session is closed
         if self.session.as_ref().unwrap().is_closed() {
             // Try reopening session once
-            match self._open_session().await {
-                Ok(session) => self.session = Some(session),
-                Err(error) => {
-                    self.session = None;
-                    godot_error!("Failed to open ssh session: {}", error);
-                    return false;
-                }
+            if let Err(e) = self.open_session(ip, user, port).await {
+                anyhow::bail!("Failed to open ssh session: {}", e);
             }
         }
+
         // open channel
         // TODO maybe make this configurable
         let dur = Duration::new(1, 0);
@@ -462,38 +287,36 @@ pub impl SSHClient {
                 Ok(channel) => channel,
                 Err(_) => {
                     self.session = None;
-                    godot_error!("Timed out when trying to open channel");
-                    return false;
+                    anyhow::bail!("Timed out when trying to open channel");
                 }
             };
         let channel = match channel {
             Ok(channel) => channel,
-            Err(error) => {
-                godot_error!("Couldn't open channel: {}", error);
-                return false;
-            }
+            Err(error) => anyhow::bail!("Couldn't open channel: {}", error),
         };
+
         // run cmd
         if let Err(error) = channel.exec(false, cmd.clone()).await {
-            godot_error!(
+            anyhow::bail!(
                 "Couldn't execute command: \"{}\" on {:?}: {}",
                 cmd,
                 channel.id(),
                 error
             );
-            return false;
         } else if self.debug {
             godot_print!("Executing command: \"{}\" on {:?}", cmd, channel.id());
         }
-        true
+
+        Ok(())
     }
 
-    /// Open a new session with current client settings
-    async fn _open_session(&mut self) -> Result<Handle<Client>, anyhow::Error> {
+    /// Open a new session
+    async fn open_session(&mut self, ip: &String, user: &String, port: u16) -> anyhow::Result<()> {
+        // If a session is currently active this will disconnect it
+        self.disconnect_session().await?;
+
         if self.auth_method == AuthMethod::None {
             anyhow::bail!("No authentication method set");
-        } else if self.ip.is_none() || self.user.is_none() {
-            anyhow::bail!("Client not configured");
         }
 
         let config = russh::client::Config {
@@ -503,25 +326,21 @@ pub impl SSHClient {
         };
         let config = Arc::new(config);
         let sh = Client {
-            ip: self.ip.clone().unwrap(),
-            port: self.port,
+            ip: ip.to_string(),
+            port,
             server_check: self.server_check.clone(),
             debug: self.debug,
         };
 
         if self.debug {
-            godot_print!(
-                "Trying to connect to {}:{}",
-                self.ip.as_ref().unwrap(),
-                self.port
-            );
+            godot_print!("Trying to connect to {}:{}", ip, port);
         }
 
         // TODO maybe make this configurable
         let dur = Duration::new(1, 0);
-        let mut session = match future::timeout(
+        self.session = Some(match future::timeout(
             dur,
-            russh::client::connect(config, (self.ip.clone().unwrap(), self.port), sh),
+            russh::client::connect(config, (ip.clone(), port), sh),
         )
         .await
         {
@@ -529,25 +348,19 @@ pub impl SSHClient {
             Err(_) => {
                 anyhow::bail!("Timed out when trying to open channel");
             }
-        }?;
+        }?);
 
-        if let Err(e) = self._authenticate(&mut session).await {
-            anyhow::bail!(e);
-        };
+        self.authenticate(user).await?;
 
         if self.debug {
-            godot_print!(
-                "Successfully connected to {}:{}",
-                self.ip.as_ref().unwrap(),
-                self.port
-            );
+            godot_print!("Successfully connected to {}:{}", ip, port);
         }
 
-        Ok(session)
+        Ok(())
     }
 
     /// Disconnects current session
-    async fn _disconnect_session(&mut self) -> Result<(), russh::Error> {
+    async fn disconnect_session(&mut self) -> Result<(), russh::Error> {
         if let Some(session) = &self.session {
             if !session.is_closed() {
                 session
@@ -560,34 +373,39 @@ pub impl SSHClient {
     }
 
     /// This takes a handle and performs authentication with the given method.
-    async fn _authenticate(&mut self, session: &mut Handle<Client>) -> Result<(), anyhow::Error> {
-        let username = match &self.user {
-            None => anyhow::bail!("No user set"),
-            Some(user) => user,
+    async fn authenticate(&mut self, user: &String) -> Result<(), anyhow::Error> {
+        let session = match &mut self.session {
+            Some(session) => session,
+            None => anyhow::bail!("No session active"),
         };
         match &self.auth_method {
             AuthMethod::Password(password) => {
-                if session
-                    .authenticate_password(username, password)
-                    .await
-                    .is_ok()
-                {
+                if session.authenticate_password(user, password).await.is_ok() {
                     return Ok(());
                 };
                 Err(anyhow!("Wrong Password"))
             }
             AuthMethod::PrivateKey { key_data, key_pass } => {
-                let cprivk =
-                    match russh::keys::decode_secret_key(key_data.as_str(), key_pass.as_deref()) {
-                        Ok(kp) => kp,
-                        Err(e) => return Err(anyhow!(e)),
+                let mut private_key = match PrivateKey::from_openssh(key_data) {
+                    Ok(kp) => kp,
+                    Err(e) => return Err(anyhow!(e)),
+                };
+                if private_key.is_encrypted() {
+                    private_key = if let Some(key_pass) = key_pass {
+                        match private_key.decrypt(key_pass) {
+                            Ok(private_key) => private_key,
+                            Err(e) => anyhow::bail!("Failed to decrypt private key: {}", e),
+                        }
+                    } else {
+                        anyhow::bail!("Key is encrypted but no password provided.");
                     };
+                }
 
                 let result = session
                     .authenticate_publickey(
-                        username,
+                        user,
                         PrivateKeyWithHashAlg::new(
-                            Arc::new(cprivk),
+                            Arc::new(private_key),
                             session.best_supported_rsa_hash().await?.flatten(),
                         ),
                     )
@@ -609,7 +427,7 @@ pub impl SSHClient {
 
                 let result = session
                     .authenticate_publickey(
-                        username,
+                        user,
                         PrivateKeyWithHashAlg::new(
                             Arc::new(cprivk),
                             session.best_supported_rsa_hash().await?.flatten(),
@@ -624,4 +442,277 @@ pub impl SSHClient {
             _ => Err(anyhow!("Private key auth failed")),
         }
     }
+}
+
+impl Default for InternalSSHClient {
+    fn default() -> Self {
+        Self {
+            debug: false,
+            session: None,
+            auth_method: AuthMethod::None,
+            server_check: ServerCheckMethod::NoCheck,
+        }
+    }
+}
+
+/// A simple SSH client.
+///
+/// This client can open a single session and reuse said session
+/// to spawn multiple channels and execute a command on that channel.
+/// Currently it is not possible to get the output of an executed command.
+/// The output of commands can only be printed in debug mode.
+///
+/// **Note:** Changing the configuration while a session is active doesn't
+/// automatically close it, so the current session may still use the old configuration
+/// and needs to manually be closed for it to take effect.
+///
+/// # Example usage
+///
+/// ```
+/// var client: SSHClient = SSHClient.new()
+/// client.user = "example_user"
+/// client.ip = "127.0.0.1"
+/// # Optional, as default is 22 already
+/// client.port = 22
+/// client.set_auth_password("secure_pw")
+/// # Optional, as exec() would also try to open a session,
+/// # but this way an error can be handled.
+/// var err: Variant = client.open_session()
+/// if err:
+///     push_error("Failed to open session: %s" % err)
+///     return
+/// client.exec("echo Hello from SSH")
+/// ```
+#[derive(GodotClass)]
+#[class(base = RefCounted)]
+pub struct SSHClient {
+    /// SSH user
+    #[var]
+    user: Variant,
+    /// Server ip (defaults to 22)
+    #[var]
+    ip: Variant,
+    /// Server port
+    #[var]
+    port: u16,
+    _internal_ssh_client: InternalSSHClient,
+}
+
+#[godot_api]
+pub impl IRefCounted for SSHClient {
+    fn init(_base: Base<RefCounted>) -> Self {
+        Self {
+            user: Variant::nil(),
+            ip: Variant::nil(),
+            port: 22,
+            _internal_ssh_client: InternalSSHClient::default(),
+        }
+    }
+}
+
+#[godot_api]
+pub impl SSHClient {
+    /// Set debug state of the client. In debug state it will verbosely print status updates
+    /// and executed command outputs.
+    #[func]
+    fn set_debug(&mut self, debug: bool) {
+        self._internal_ssh_client.debug = debug;
+    }
+
+    /// Get the current debug state.
+    #[func]
+    fn get_debug(&self) -> bool {
+        self._internal_ssh_client.debug
+    }
+
+    /// Execute a command on the client. Needs to be configured to work.
+    /// If there is already a session active, it will use this session, otherwise it will try to open one.
+    ///
+    /// * `cmd` - Command to execute.
+    #[func]
+    fn exec(&mut self, cmd: String) -> bool {
+        if let Err(e) = self.check_configured() {
+            godot_error!("{}", e);
+            return false;
+        }
+        if let Err(e) = block_on(self._internal_ssh_client.exec_ssh(
+            cmd,
+            &self.ip.to_string(),
+            &self.user.to_string(),
+            self.port,
+        )) {
+            godot_error!("{}", e);
+            return false;
+        }
+        true
+    }
+
+    /// Try to open a session for the client. If a session is already active it will be closed.
+    /// Will return null on success, otherwise a string with the error will be returned.
+    #[func]
+    fn open_session(&mut self) -> Variant {
+        if let Err(e) = self.check_configured() {
+            return Variant::from(e.to_string());
+        }
+        if let Err(e) = block_on(self._internal_ssh_client.open_session(
+            &self.ip.to_string(),
+            &self.user.to_string(),
+            self.port,
+        )) {
+            return Variant::from(e.to_string());
+        }
+        Variant::nil()
+    }
+
+    /// Disconnect the current session if one is active.
+    #[func]
+    fn disconnect_session(&mut self) {
+        if let Err(error) = block_on(self._internal_ssh_client.disconnect_session()) {
+            godot_error!("Failed to disconnect ssh session: {}", error);
+        }
+    }
+
+    /// Returns the current session status.
+    #[func]
+    fn is_session_active(&self) -> bool {
+        if let Some(session) = &self._internal_ssh_client.session {
+            return !session.is_closed();
+        }
+        false
+    }
+
+    /// If the current auth method is a private key method, this function can add the private key
+    /// to the current server's authorized keys. It doesn't check if the private key is already authorized, so
+    /// it is recommended to only call this method on auth failure.
+    ///
+    /// **Note:** This will close any currently active sessions.
+    ///
+    /// * `password` - Password to temporarily connect to the server.
+    #[func]
+    fn add_key_to_server(&mut self, password: String) -> bool {
+        if let Err(e) = self.check_configured() {
+            godot_error!("{}", e);
+            return false;
+        }
+        if let Err(e) = self._internal_ssh_client.add_key_to_server(
+            password,
+            &self.ip.to_string(),
+            &self.user.to_string(),
+            self.port,
+        ) {
+            godot_error!("{}", e);
+            return false;
+        }
+        true
+    }
+
+    /// Sets auth method to type private key file.
+    ///
+    /// * `key_path` - Path to private key.
+    /// * `password` - Optional password to decrypt private key.
+    #[func]
+    fn set_auth_key_file(&mut self, key_path: String, password: String) {
+        self._internal_ssh_client.auth_method = AuthMethod::PrivateKeyFile {
+            key_file_path: PathBuf::from(key_path),
+            key_pass: if password.as_str() != "" {
+                Some(password)
+            } else {
+                None
+            },
+        }
+    }
+
+    /// Sets auth method to type private key.
+    ///
+    /// * `key_data` - Base64 encoded key data of the private key.
+    /// * `password` - Optional password to decrypt private key.
+    #[func]
+    fn set_auth_key(&mut self, key_data: String, password: String) {
+        self._internal_ssh_client.auth_method = AuthMethod::PrivateKey {
+            key_data,
+            key_pass: if password.as_str() != "" {
+                Some(password)
+            } else {
+                None
+            },
+        }
+    }
+
+    /// Sets auth method to type password.
+    ///
+    /// * `password` - Password for server.
+    #[func]
+    fn set_auth_password(&mut self, password: String) {
+        self._internal_ssh_client.auth_method = AuthMethod::Password(password);
+    }
+
+    /// Sets the method by which to check the server against.
+    ///
+    /// * `method` - Currently supported: "known_hosts_file" or "no_check".
+    #[func]
+    fn set_server_check_method(&mut self, method: String) {
+        match method.as_str() {
+            "known_hosts_file" => {
+                self._internal_ssh_client.server_check = ServerCheckMethod::DefaultKnownHostsFile
+            }
+            "no_check" => self._internal_ssh_client.server_check = ServerCheckMethod::NoCheck,
+            _ => {
+                self._internal_ssh_client.server_check = ServerCheckMethod::NoCheck;
+            }
+        }
+    }
+
+    // TODO add an optional password to encrypt key
+    /// Generates a private key in the openssh format. This can be used as the `key_data` for `set_auth_key`.
+    /// Returns empty string on failure.
+    ///
+    /// * `key_type` - Currently supported: "ED25519" or "RSA".
+    /// * `key_size` - Size of the key if it's RSA. Recommended value is 4096. (Will be ignored for ED25519)
+    /// * `comment` - Comment of the key. This is e.g. user@hostname by default for openssh.
+    #[func]
+    fn generate_private_key(key_type: String, key_size: i64, comment: String) -> String {
+        match generate_private_key(key_type, key_size, comment) {
+            Ok(base64_key) => base64_key,
+            Err(e) => {
+                godot_error!("{}", e);
+                "".to_string()
+            }
+        }
+    }
+
+    /// Checks that the client is configured.
+    fn check_configured(&self) -> anyhow::Result<()> {
+        if self.user.is_nil() || self.user.get_type() != VariantType::STRING {
+            anyhow::bail!("Invalid user \"{}\"", self.user);
+        }
+        if self.ip.is_nil() || self.ip.get_type() != VariantType::STRING {
+            anyhow::bail!("Invalid ip \"{}\"", self.ip);
+        }
+        Ok(())
+    }
+}
+
+/// Helper function that generates a base64 encoded key.
+fn generate_private_key(
+    key_type: String,
+    key_size: i64,
+    comment: String,
+) -> anyhow::Result<String> {
+    let mut rng = OsRng;
+    let key_data = match key_type.as_str() {
+        "ED25519" => KeypairData::from(Ed25519Keypair::random(&mut rng)),
+        "RSA" => KeypairData::from(match RsaKeypair::random(&mut rng, key_size as usize) {
+            Ok(key_data) => key_data,
+            Err(e) => anyhow::bail!("Failed to generate rsa key data: {}", e),
+        }),
+        _ => anyhow::bail!("Unknown key type: {}", key_type),
+    };
+    let private_key = match PrivateKey::new(key_data, comment) {
+        Ok(private_key) => private_key,
+        Err(e) => anyhow::bail!("Failed to generate private key: {}", e),
+    };
+    Ok(private_key
+        .to_openssh(keys::ssh_key::LineEnding::default())
+        .unwrap()
+        .to_string())
 }
