@@ -432,15 +432,18 @@ class PluginAction:
 	var controller: String
 	var plugin: String
 	var func_name: String
-	var args: Array[Variant]
+	var args: Array[Variant]:
+		set = set_args
 	var blocking: bool
+
+	var _call_args: Array[Variant]
 
 	func deserialize(dict: Dictionary) -> void:
 		controller = dict["controller"]
 		plugin = dict["plugin"]
 		func_name = dict["func_name"]
-		args = dict["args"]
 		blocking = dict["blocking"]
+		args = dict["args"]
 
 	func serialize() -> Dictionary:
 		return {
@@ -450,6 +453,12 @@ class PluginAction:
 			"args": args,
 			"blocking": blocking
 		}
+
+	func set_args(value: Array[Variant]) -> void:
+		args = value
+
+		_call_args = args.duplicate(true)
+		_call_args.insert(0, blocking)
 
 	func execute() -> void:
 		var controller_instance: PluginControllerBase
@@ -464,16 +473,10 @@ class PluginAction:
 				return
 
 		var ret: Variant
-		if blocking:
-			if plugin == "DreamDeck":
-				ret = await DreamdeckBuiltinActions.callv(func_name, args)
-			else:
-				ret = await controller_instance.callv(func_name, args)
+		if plugin == "DreamDeck":
+			ret = await DreamdeckBuiltinActions.callv(func_name, _call_args)
 		else:
-			if plugin == "DreamDeck":
-				ret = DreamdeckBuiltinActions.callv(func_name, args)
-			else:
-				ret = controller_instance.callv(func_name, args)
+			ret = await controller_instance.callv(func_name, _call_args)
 
 		if typeof(ret) == TYPE_BOOL:
 			if not ret:

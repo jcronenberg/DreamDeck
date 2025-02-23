@@ -202,15 +202,27 @@ func remove_client(client_name: String) -> void:
 # still confusing so having unique names should probably still be enforced
 ## Executes the [param cmd] string on client, which is identified by [param client_name].
 ## This operation is done asynchronously to not block the main thread.
-func exec_on_client(client_name: String, cmd: String) -> void:
+func exec_on_client(blocking: bool, client_name: String, cmd: String) -> bool:
 	var ssh_client: SSHClient = get_client(client_name)
 	if not ssh_client:
 		push_error("Couldn't execute %s: SSHClient %s not found" % [cmd, client_name])
-		return
+		return false
 
+	if blocking:
+		var output: Variant = ssh_client.exec_blocking(cmd)
+		if not output:
+			return false
+
+		return output.exit_status != -1
+
+	# Even though we are in non blocking mode and exec() is non blocking
+	# it isn't actually non blocking, it just doesn't block when the execution has started
+	# until then it does block, so to avoid any delay it is still moved to a different thread.
 	var thread: Thread = Thread.new()
 	thread.start(ssh_client.exec.bind(cmd))
 	_thread_pool.append(thread)
+
+	return true
 
 
 func _on_settings_button_pressed() -> void:
