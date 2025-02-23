@@ -2,6 +2,7 @@ use anyhow::anyhow;
 use async_std::future;
 use async_std::task::block_on;
 use chrono::Local;
+use client::Msg;
 use godot::prelude::*;
 use keys::ssh_key::private::{Ed25519Keypair, KeypairData, RsaKeypair};
 use keys::ssh_key::rand_core::OsRng;
@@ -255,6 +256,51 @@ impl InternalSSHClient {
         Ok(())
     }
 
+    fn exec_ssh_blocking(
+        &mut self,
+        cmd: String,
+        ip: &String,
+        user: &String,
+        port: u16,
+    ) -> anyhow::Result<Dictionary> {
+        let mut channel = block_on(self.open_channel(ip, user, port))?;
+
+        // run cmd
+        if let Err(error) = block_on(channel.exec(false, cmd.clone())) {
+            anyhow::bail!(
+                "Couldn't execute command: \"{}\" on {:?}: {}",
+                cmd,
+                channel.id(),
+                error
+            );
+        } else if self.debug {
+            godot_print!("Executing command: \"{}\" on {:?}", cmd, channel.id());
+        }
+        let mut stdout = String::new();
+        let mut stderr = String::new();
+        let mut exit_status: i64 = -1;
+        loop {
+            let msg = block_on(channel.wait());
+            match msg {
+                Some(msg) => match msg {
+                    ChannelMsg::Data { data } => stdout.push_str(&String::from_utf8_lossy(&data)),
+                    ChannelMsg::ExtendedData { ext, data } => {
+                        if ext == 1 {
+                            stderr.push_str(&String::from_utf8_lossy(&data))
+                        }
+                    }
+                    ChannelMsg::ExitStatus {
+                        exit_status: new_exit_status,
+                    } => exit_status = new_exit_status as i64,
+                    _ => (),
+                },
+                None => break,
+            }
+        }
+
+        Ok(dict! {"stdout": stdout, "stderr": stderr, "exit_status": exit_status})
+    }
+
     async fn exec_ssh(
         &mut self,
         cmd: String,
@@ -262,6 +308,29 @@ impl InternalSSHClient {
         user: &String,
         port: u16,
     ) -> anyhow::Result<()> {
+        let channel = self.open_channel(ip, user, port).await?;
+
+        // run cmd
+        if let Err(error) = channel.exec(false, cmd.clone()).await {
+            anyhow::bail!(
+                "Couldn't execute command: \"{}\" on {:?}: {}",
+                cmd,
+                channel.id(),
+                error
+            );
+        } else if self.debug {
+            godot_print!("Executing command: \"{}\" on {:?}", cmd, channel.id());
+        }
+
+        Ok(())
+    }
+
+    async fn open_channel(
+        &mut self,
+        ip: &String,
+        user: &String,
+        port: u16,
+    ) -> anyhow::Result<Channel<Msg>> {
         if self.session.is_none() {
             if self.debug {
                 godot_print!("No session open at exec call, trying to open one")
@@ -290,24 +359,10 @@ impl InternalSSHClient {
                     anyhow::bail!("Timed out when trying to open channel");
                 }
             };
-        let channel = match channel {
-            Ok(channel) => channel,
+        match channel {
+            Ok(channel) => Ok(channel),
             Err(error) => anyhow::bail!("Couldn't open channel: {}", error),
-        };
-
-        // run cmd
-        if let Err(error) = channel.exec(false, cmd.clone()).await {
-            anyhow::bail!(
-                "Couldn't execute command: \"{}\" on {:?}: {}",
-                cmd,
-                channel.id(),
-                error
-            );
-        } else if self.debug {
-            godot_print!("Executing command: \"{}\" on {:?}", cmd, channel.id());
         }
-
-        Ok(())
     }
 
     /// Open a new session
@@ -459,8 +514,6 @@ impl Default for InternalSSHClient {
 ///
 /// This client can open a single session and reuse said session
 /// to spawn multiple channels and execute a command on that channel.
-/// Currently it is not possible to get the output of an executed command.
-/// The output of commands can only be printed in debug mode.
 ///
 /// **Note:** Changing the configuration while a session is active doesn't
 /// automatically close it, so the current session may still use the old configuration
@@ -514,6 +567,9 @@ pub impl IRefCounted for SSHClient {
 pub impl SSHClient {
     /// Set debug state of the client. In debug state it will verbosely print status updates
     /// and executed command outputs.
+    ///
+    /// **Note:** If a session is already open, the debug state won't apply to until closed
+    /// and reopened.
     #[func]
     fn set_debug(&mut self, debug: bool) {
         self._internal_ssh_client.debug = debug;
@@ -525,8 +581,11 @@ pub impl SSHClient {
         self._internal_ssh_client.debug
     }
 
-    /// Execute a command on the client. Needs to be configured to work.
+    /// Execute a command asynchronously on the client. Client needs to be configured to work.
     /// If there is already a session active, it will use this session, otherwise it will try to open one.
+    ///
+    /// **Note:** While the client connects this will still block the thread, only after a connection is established
+    /// and the command execution has started will it execute asynchronously.
     ///
     /// * `cmd` - Command to execute.
     #[func]
@@ -545,6 +604,30 @@ pub impl SSHClient {
             return false;
         }
         true
+    }
+
+    /// Execute a command in a blocking fashion on the client. Client needs to be configured to work.
+    /// If there is already a session active, it will use this session, otherwise it will try to open one.
+    ///
+    /// * `cmd` - Command to execute.
+    #[func]
+    fn exec_blocking(&mut self, cmd: String) -> Variant {
+        if let Err(e) = self.check_configured() {
+            godot_error!("{}", e);
+            return Variant::nil();
+        }
+        match self._internal_ssh_client.exec_ssh_blocking(
+            cmd,
+            &self.ip.to_string(),
+            &self.user.to_string(),
+            self.port,
+        ) {
+            Err(e) => {
+                godot_error!("{}", e);
+                Variant::nil()
+            }
+            Ok(dict) => Variant::from(dict),
+        }
     }
 
     /// Try to open a session for the client. If a session is already active it will be closed.
