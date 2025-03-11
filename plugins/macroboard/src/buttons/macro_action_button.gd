@@ -178,6 +178,7 @@ func _on_popup_confirmed() -> bool:
 	_config_editor.apply()
 	deserialize(_config.get_as_dict())
 	apply_change()
+	super()
 	return true
 
 
@@ -201,7 +202,6 @@ func _on_pressed() -> void:
 
 		return
 
-	button_pressed = false
 	open_editor()
 	_actions_editor.populate_actions(_actions)
 
