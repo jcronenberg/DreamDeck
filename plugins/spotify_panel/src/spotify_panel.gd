@@ -36,7 +36,7 @@ var cur_data  # Current data from state requests, used to check if changes happe
 var repeat_state: int = 0  # Song repeat state, value between 0 and 2, see REPEAT_MODES
 var play_state: bool = false
 var shuffle_state: bool = false
-var volume_state: float = 0.0
+var volume_state: int = 0
 var album: String
 var artist: String
 var track_name: String
