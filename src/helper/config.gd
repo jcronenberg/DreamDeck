@@ -133,23 +133,28 @@ func add_string(
 	_config.append(StringObject.new(label, key, default_value, description))
 
 
-## Adds a enum object.[br]
+## Adds a dictionary object.[br]
 ## [param label]: User facing name of this object when editing[br]
 ## [param key]: Key string for the object (Will be what it is saved as on disk and also what you
 ## get when running [method get_as_dict])[br]
 ## [param default_value]: Default value[br]
-## [param enum_dict]: All available values for the enum in a [Dictionary].[br]
-## Gdscript's [code]enum[/code] automatically generates this enum. See example below.[br]
+## [param dict]: The [Dictionary] containing all the keys and values (can also be an enum).[br]
+## Gdscript's [code]enum[/code] automatically generates this dict. See example below.[br]
 ## [param description](Optional): Description for what this config object does[br]
 ## Example:
 ## [codeblock]
 ## enum Example {ENUM_VALUE1, ENUM_VALUE2}
-## config.add_enum("Example Enum", "example_enum", Example.ENUM_VALUE1, Example)
+## config.add_dict("Example Enum", "example_enum", Example.ENUM_VALUE1, Example)
 ## [/codeblock]
-func add_enum(
-	label: String, key: String, default_value: int, enum_dict: Dictionary, description: String = ""
+## or:
+## [codeblock]
+## var dict: Dictionary = {"test1": "hello", "test2": "hi"}
+## config.add_dict("Example Dict", "example_dict", dict.test1, dict)
+## [/codeblock]
+func add_dict(
+	label: String, key: String, default_value: Variant, dict: Dictionary, description: String = ""
 ) -> void:
-	_config.append(EnumObject.new(label, key, default_value, enum_dict, description))
+	_config.append(DictObject.new(label, key, default_value, dict, description))
 
 
 ## Adds a string array object.[br]
@@ -357,45 +362,49 @@ class StringObject:
 		return {_key: _value}
 
 
-class EnumObject:
+class DictObject:
 	extends ConfigObject
-	var _value: int:
+	var _value: Variant:
 		set = set_value,
 		get = get_value
-	var _default_value: int:
+	var _default_value: Variant = null:
 		get = get_default_value,
 		set = set_default_value
-	var _enum_dict: Dictionary:
-		get = get_enum_dict
+	var _dict: Dictionary:
+		get = get_dict,
+		set = set_dict
 
 	func _init(
-		label: String, key: String, value: int, enum_dict: Dictionary, description: String = ""
+		label: String, key: String, value: Variant, dict: Dictionary, description: String = ""
 	):
 		super(label, key, description)
-		_enum_dict = enum_dict
+		_dict = dict
 		_value = value
 		_default_value = _value
 
-	func get_value() -> int:
+	func get_value() -> Variant:
 		return _value
 
-	func set_value(value: int):
-		if _enum_dict.values().has(value):
+	func set_value(value: Variant):
+		if _dict.values().has(value):
 			_value = value
-		else:
+		elif value:
 			push_error("Value not in enum")
 
-	func get_default_value() -> int:
+	func get_default_value() -> Variant:
 		return _default_value
 
-	func set_default_value(value: int) -> void:
-		if _enum_dict.values().has(value):
+	func set_default_value(value: Variant) -> void:
+		if _dict.values().has(value):
 			_default_value = value
-		else:
-			push_error("Default value not in enum")
+		elif value:
+			push_error("Default value not in dictionary")
 
-	func get_enum_dict() -> Dictionary:
-		return _enum_dict
+	func get_dict() -> Dictionary:
+		return _dict
+
+	func set_dict(dict: Dictionary) -> void:
+		_dict = dict
 
 	func serialize() -> Dictionary:
 		return {_key: _value}
@@ -541,8 +550,8 @@ class ConfigEditor:
 				_object_editors.append(FloatEditor.new(object))
 			elif object is StringObject:
 				_object_editors.append(StringEditor.new(object))
-			elif object is EnumObject:
-				_object_editors.append(EnumEditor.new(object))
+			elif object is DictObject:
+				_object_editors.append(DictEditor.new(object))
 			elif object is StringArrayObject:
 				_object_editors.append(StringArrayEditor.new(object))
 			elif object is ColorObject:
@@ -724,7 +733,7 @@ class StringEditor:
 		return _value_editor.text
 
 
-class EnumEditor:
+class DictEditor:
 	extends VariantEditor
 
 	signal value_selected(value_text: String)
@@ -732,17 +741,17 @@ class EnumEditor:
 	var _value_editor_hbox: HBoxContainer = HBoxContainer.new()
 	var _value_editor: OptionButton
 	var _default_button: TextureButton
-	var _default_value: int
-	var _enum_dict: Dictionary
+	var _default_value: Variant
+	var _dict: Dictionary
 
-	func _init(object: EnumObject):
+	func _init(object: DictObject):
 		super(object)
 
 		_value_editor_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_value_editor_hbox.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		add_child(_value_editor_hbox)
 
-		_enum_dict = object.get_enum_dict()
+		_dict = object.get_dict()
 		_value_editor = OptionButton.new()
 		_value_editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_value_editor.theme_type_variation = "ConfigEditorOptionButton"
@@ -765,12 +774,14 @@ class EnumEditor:
 
 	func setup_value_editor():
 		_value_editor.clear()
-		for key in _enum_dict:
+		for key in _dict:
 			_value_editor.add_item(key)
 
-	func set_value(value: int):
+	func set_value(value: Variant):
+		if not value:
+			return
 		var id: int = -1
-		var value_string: Variant = _enum_dict.find_key(value)
+		var value_string: Variant = _dict.find_key(value)
 		if value_string == null:
 			push_error("Value not found in enum")
 			return
@@ -785,22 +796,23 @@ class EnumEditor:
 
 		_value_editor.select(id)
 		value_selected.emit(_value_editor.get_item_text(id))
-		_default_button.visible = value != _default_value
+		if _default_value:
+			_default_button.visible = value != _default_value
 
-	func set_enum_dict(dict: Dictionary):
-		_enum_dict = dict
+	func set_dict(dict: Dictionary):
+		_dict = dict
 		setup_value_editor()
 
 	func get_value_editor() -> OptionButton:
 		return _value_editor
 
 	func get_value():
-		return _enum_dict.get(_value_editor.get_item_text(_value_editor.get_selected_id()))
+		return _dict.get(_value_editor.get_item_text(_value_editor.get_selected_id()))
 
 	func get_value_string() -> String:
-		var value: int = get_value()
-		for item in _enum_dict:
-			if _enum_dict[item] == value:
+		var value: Variant = get_value()
+		for item in _dict:
+			if _dict[item] == value:
 				return item
 
 		return ""
@@ -809,7 +821,8 @@ class EnumEditor:
 		set_value(_default_value)
 
 	func _on_value_editor_item_selected(index: int) -> void:
-		_default_button.visible = _enum_dict[_value_editor.get_item_text(index)] != _default_value
+		if _default_value:
+			_default_button.visible = _dict[_value_editor.get_item_text(index)] != _default_value
 		value_selected.emit(_value_editor.get_item_text(index))
 
 

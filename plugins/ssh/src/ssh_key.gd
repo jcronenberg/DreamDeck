@@ -295,7 +295,7 @@ class NewSSHKeyEditor:
 		super(key)
 
 		_key_creator_config.add_string("Key name", "key_name", key.key_name)
-		_key_creator_config.add_enum("Key type", "key_type", key.type, KeyTypes)
+		_key_creator_config.add_dict("Key type", "key_type", key.type, KeyTypes)
 		_key_creator_editor = _key_creator_config.generate_editor()
 
 		_key_creator_editor.get_editor("key_type").value_selected.connect(
@@ -308,7 +308,7 @@ class NewSSHKeyEditor:
 		_import_key_creator_editor.visible = false
 		add_child(_import_key_creator_editor)
 
-		_new_key_config.add_enum("Crypto", "crypto", CryptoTypes.ED25519, CryptoTypes)
+		_new_key_config.add_dict("Crypto", "crypto", CryptoTypes.ED25519, CryptoTypes)
 		_new_key_config.add_string_array("Key size", "rsa_size", RSA_SIZES[1], RSA_SIZES)
 		_new_key_creator_editor = _new_key_config.generate_editor()
 		_new_key_creator_editor.get_editor("rsa_size").visible = false
