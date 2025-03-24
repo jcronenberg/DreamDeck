@@ -11,6 +11,8 @@ enum KeyTypes {
 	EXISTING_KEY,
 }
 
+## UUID of the key.
+var uuid: String
 ## Name of the key, must be unique as it is the identifier.
 var key_name: String = ""
 ## Type of the key.
@@ -39,7 +41,7 @@ func deserialize(dict: Dictionary) -> void:
 ## only either [member key_data] or [member key_path] will be saved.
 ## Will also emit an error when both are set, as this is not intended behaviour.
 func serialize() -> Dictionary:
-	var ret_dict: Dictionary = {"key_name": key_name}
+	var ret_dict: Dictionary = {"uuid": uuid, "key_name": key_name}
 	if key_data != "":
 		ret_dict.key_data = key_data
 	elif key_path != "":
@@ -48,6 +50,12 @@ func serialize() -> Dictionary:
 		push_error("SSHKey is configured wrong")
 
 	return ret_dict
+
+
+## Generate a new uuid for this object.
+## Should only be used when the object is supposed to be a new one.
+func gen_uuid() -> void:
+	uuid = UUID.v4()
 
 
 ## The editor that gets shown when the plugins settings button is pressed.
@@ -102,8 +110,8 @@ class KeysEditor:
 
 	func _on_add_key_button_pressed() -> void:
 		var new_key: SSHKey = SSHKey.new()
+		new_key.gen_uuid()
 		var key_editor: NewSSHKeyEditor = NewSSHKeyEditor.new(new_key)
-		key_editor.set_key_names_list(_generate_key_names_list())
 		var callback: Callable = func confirm() -> bool:
 			if key_editor.confirm():
 				key_added.emit(new_key)
@@ -111,13 +119,6 @@ class KeysEditor:
 			return false
 
 		PopupManager.push_stack_item([key_editor], callback)
-
-	func _generate_key_names_list() -> Array[String]:
-		var ret: Array[String] = []
-		for entry: KeyEntry in _ssh_keys_list.get_children():
-			ret.append(entry._key.key_name)
-
-		return ret
 
 
 ## An entry in the list of keys in [SSHController.KeysEditor]
@@ -173,7 +174,6 @@ class KeyEntry:
 
 	func _on_edit_button_pressed() -> void:
 		var key_editor: ExistingSSHKeyEditor = ExistingSSHKeyEditor.new(_key)
-		key_editor.set_key_names_list(key_names_list)
 		var callback: Callable = func confirm() -> bool:
 			if key_editor.confirm():
 				# _edit_button.text = _key.key_name
@@ -208,10 +208,6 @@ class KeyEntry:
 class SSHKeyEditor:
 	extends VBoxContainer
 
-	## List of all key names to check if the key's [member SSHController.SSHKey.key_name] is unique.
-	var key_names_list: Array[String] = []:
-		set = set_key_names_list
-
 	var _key: SSHKey = null
 
 	func _init(key: SSHKey) -> void:
@@ -220,18 +216,9 @@ class SSHKeyEditor:
 		set_anchors_preset(Control.PRESET_FULL_RECT)
 		add_theme_constant_override("separation", 10)
 
-	## Sets [member key_names_list] but removes the set key's [member SSHKey.key_name].
-	func set_key_names_list(value: Array[String]) -> void:
-		key_names_list = value
-		if _key:
-			key_names_list.erase(_key.key_name)
-
 	## Called on confirm button pressed. Overwrite this.
 	func confirm() -> bool:
 		return true
-
-	func _check_unique_key(key_name: String) -> bool:
-		return not key_name in key_names_list
 
 
 ## Editor that gets shown when an existing key is supposed to be edited.
@@ -255,7 +242,7 @@ class ExistingSSHKeyEditor:
 		var abort: bool = false
 
 		var key_dict: Dictionary = _key_editor.serialize()
-		if key_dict.key_name == "" or not _check_unique_key(key_dict.key_name):
+		if key_dict.key_name == "":
 			_key_editor.get_editor("key_name").modulate = Color.RED
 			abort = true
 		if key_dict.has("key_path") and key_dict.key_path == "":
@@ -322,7 +309,7 @@ class NewSSHKeyEditor:
 		var abort: bool = false
 
 		var new_key_dict: Dictionary = _key_creator_editor.serialize()
-		if new_key_dict.key_name == "" or not _check_unique_key(new_key_dict.key_name):
+		if new_key_dict.key_name == "":
 			_key_creator_editor.get_editor("key_name").modulate = Color.RED
 			abort = true
 
