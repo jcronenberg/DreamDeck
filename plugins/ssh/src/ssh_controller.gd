@@ -1,11 +1,6 @@
 class_name SSHController
 extends PluginControllerBase
 
-enum ServerCheckMethod {
-	NO_CHECK,
-	KNOWN_HOSTS,
-}
-
 const PLUGIN_NAME = "SSH"
 
 var _clients: Array[SSHClientWrapper] = []

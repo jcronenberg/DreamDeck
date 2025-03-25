@@ -4,6 +4,11 @@ class_name SSHClientWrapper
 ## Note: not emitted on [method deserialize].
 signal client_updated
 
+enum ServerCheckMethod {
+	NO_CHECK,
+	KNOWN_HOSTS,
+}
+
 ## User facing name of the client.
 var name: String:
 	set(value):
@@ -109,9 +114,9 @@ func deserialize(dict: Dictionary) -> void:
 	if dict.has("key_uuid") and dict.key_uuid:
 		key_uuid = dict.key_uuid
 	match dict.server_check_method as int:
-		SSHController.ServerCheckMethod.NO_CHECK:
+		ServerCheckMethod.NO_CHECK:
 			_client.set_server_check_method("no_check")
-		SSHController.ServerCheckMethod.KNOWN_HOSTS:
+		ServerCheckMethod.KNOWN_HOSTS:
 			_client.set_server_check_method("known_hosts_file")
 		_:
 			push_error("Unknown server check method, setting to known hosts file")
@@ -155,8 +160,8 @@ func _generate_default_client_config() -> Config:
 	client_config.add_dict(
 		"Server check method",
 		"server_check_method",
-		SSHController.ServerCheckMethod.KNOWN_HOSTS,
-		SSHController.ServerCheckMethod,
+		ServerCheckMethod.KNOWN_HOSTS,
+		ServerCheckMethod,
 		"Whether the server should be checked against the known hosts"
 	)
 	client_config.add_bool("Debug", "debug", false)
