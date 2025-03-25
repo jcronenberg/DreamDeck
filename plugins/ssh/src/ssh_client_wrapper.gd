@@ -68,6 +68,7 @@ var key_uuid: String:
 var _key: SSHKey:
 	set(value):
 		_key = value
+		value.key_updated.connect(apply_key_to_client)
 		if _client:
 			apply_key_to_client()
 # Internal [SSHClient].

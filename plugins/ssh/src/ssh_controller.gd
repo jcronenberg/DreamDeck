@@ -31,6 +31,7 @@ func _process(_delta) -> void:
 ## Adds a key to the keys list and also saves to disk.[br]
 ## Also updates the keys editor if it is being used
 func add_key(new_key: SSHKey) -> void:
+	new_key.key_updated.connect(save_keys)
 	_keys_list.append(new_key)
 
 	# TODO should this be done here?
@@ -57,15 +58,15 @@ func get_key(key_uuid: String) -> SSHKey:
 func get_keys_dict() -> Dictionary:
 	var dict: Dictionary = {}
 	for key in _keys_list:
-		if not dict.has(key.key_name):
-			dict[key.key_name] = key.uuid
+		if not dict.has(key.name):
+			dict[key.name] = key.uuid
 			continue
 
-		# If dict already contains the key_name, append a (2..) behind it
-		var key_name: String = key.key_name
+		# If dict already contains the keys name, append a (2..) behind it
+		var key_name: String = key.name
 		var i: int = 2
 		while dict.has(key_name):
-			key_name = "%s (%s)" % [key.key_name, str(i)]
+			key_name = "%s (%s)" % [key.name, str(i)]
 			i += 1
 
 		dict[key_name] = key.uuid
@@ -83,6 +84,7 @@ func load_keys() -> void:
 	for key_dict in loaded_keys_config:
 		var new_key: SSHKey = SSHKey.new()
 		new_key.deserialize(key_dict)
+		new_key.key_updated.connect(save_keys)
 		_keys_list.append(new_key)
 
 
@@ -216,8 +218,6 @@ func _on_settings_button_pressed() -> void:
 		_keys_editor.queue_free()
 	_keys_editor = SSHKey.KeysEditor.new()
 	_keys_editor.set_keys(_keys_list)
-	_keys_editor.key_changed.connect(save_keys)
-	_keys_editor.key_changed.connect(_keys_editor.set_keys.bind(_keys_list))
 	_keys_editor.key_added.connect(add_key)
 	_keys_editor.key_deleted.connect(remove_key)
 

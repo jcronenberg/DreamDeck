@@ -1,6 +1,10 @@
 class_name SSHKey
 ## Stores an SSH key.
 
+## Emitted when the key config was updated.
+## Note: not emitted on [method deserialize].
+signal key_updated
+
 enum CryptoTypes {
 	ED25519,
 	RSA,
@@ -12,28 +16,80 @@ enum KeyTypes {
 }
 
 ## UUID of the key.
-var uuid: String
+var uuid: String:
+	set(value):
+		uuid = value
+		_config.get_object("uuid").set_value(value)
 ## Name of the key, must be unique as it is the identifier.
-var key_name: String = ""
+var name: String:
+	set(value):
+		name = value
+		_config.get_object("name").set_value(value)
 ## Type of the key.
-var type: KeyTypes = KeyTypes.NEW_KEY
+var type: KeyTypes:
+	set(value):
+		type = value
+		_config.get_object("type").set_value(value)
+
 ## Data of the private key when [member type] is [code]NEW_KEY[/code].
-var key_data: String = ""
-## Path to the private key when [member type] is [code]EXISTING_KEY[/code]
-var key_path: String = ""
+var key_data: String:
+	set(value):
+		key_data = value
+		_config.get_object("key_data").set_value(value)
+## Path to the private key when [member type] is [code]EXISTING_KEY[/code].
+var key_path: String:
+	set(value):
+		key_path = value
+		_config.get_object("key_path").set_value(value)
+
+# Internal config.
+var _config: Config = _generate_default_config()
+
+
+func _generate_default_config() -> Config:
+	var config: Config = Config.new()
+
+	config.add_string("UUID", "uuid", "")
+	config.add_string("Name", "name", "")
+	config.add_dict("Key type", "type", KeyTypes.NEW_KEY, KeyTypes)
+	config.add_string("Key data", "key_data", "")
+	config.add_file_path("Key path", "key_path", "")
+
+	return config
+
+
+func generate_editor() -> Config.ConfigEditor:
+	var editor: Config.ConfigEditor = _config.generate_editor()
+
+	# These editors are never supposed to be edited by a user on an existing key
+	editor.get_editor("uuid").visible = false
+	editor.get_editor("key_data").visible = false
+	editor.get_editor("type").visible = false
+
+	match type:
+		KeyTypes.NEW_KEY:
+			editor.get_editor("key_path").visible = false
+
+	return editor
+
+
+func apply_config() -> void:
+	var dict: Dictionary = _config.get_as_dict()
+	deserialize(dict)
+	key_updated.emit()
 
 
 ## Fill values from [param dict].
 func deserialize(dict: Dictionary) -> void:
-	for key in dict:
-		if not key in self:
-			continue
-		set(key, dict[key])
+	uuid = dict.uuid
+	name = dict.name
+	type = dict.type
 
-	if key_data != "":
-		type = KeyTypes.NEW_KEY
-	elif key_path != "":
-		type = KeyTypes.EXISTING_KEY
+	match type:
+		KeyTypes.NEW_KEY:
+			key_data = dict.key_data
+		KeyTypes.EXISTING_KEY:
+			key_path = dict.key_path
 
 
 ## Create a [Dictionary] with appropriate values.
@@ -41,13 +97,13 @@ func deserialize(dict: Dictionary) -> void:
 ## only either [member key_data] or [member key_path] will be saved.
 ## Will also emit an error when both are set, as this is not intended behaviour.
 func serialize() -> Dictionary:
-	var ret_dict: Dictionary = {"uuid": uuid, "key_name": key_name}
-	if key_data != "":
-		ret_dict.key_data = key_data
-	elif key_path != "":
-		ret_dict.key_path = key_path
-	else:
-		push_error("SSHKey is configured wrong")
+	var ret_dict: Dictionary = _config.get_as_dict()
+
+	match type:
+		KeyTypes.NEW_KEY:
+			ret_dict.erase("key_path")
+		KeyTypes.EXISTING_KEY:
+			ret_dict.erase("key_data")
 
 	return ret_dict
 
@@ -62,8 +118,6 @@ func gen_uuid() -> void:
 class KeysEditor:
 	extends VBoxContainer
 
-	## Emitted when a key was edited.
-	signal key_changed
 	## Emitted when [param key] is supposed to be added.
 	signal key_added(key: SSHKey)
 	## Emitted when [param key] is supposed to be deleted.
@@ -92,17 +146,11 @@ class KeysEditor:
 
 	## Set the keys that will be shown in the list.
 	func set_keys(keys_list: Array[SSHKey]) -> void:
-		var key_names_list: Array[String] = []
-		for key in keys_list:
-			key_names_list.append(key.key_name)
-
 		for child in _ssh_keys_list.get_children():
 			child.queue_free()
 		for key in keys_list:
 			var key_entry: KeyEntry = KeyEntry.new(key)
-			key_entry.key_names_list = key_names_list
 			key_entry.key_deleted.connect(_on_key_deleted)
-			key_entry.key_changed.connect(key_changed.emit)
 			_ssh_keys_list.add_child(key_entry)
 
 	func _on_key_deleted(key: SSHKey) -> void:
@@ -125,8 +173,6 @@ class KeysEditor:
 class KeyEntry:
 	extends PanelContainer
 
-	## Emitted when the key was edited.
-	signal key_changed
 	## Emitted when [param key] is supposed to be deleted.
 	signal key_deleted(key: SSHKey)
 	## Internal signal to combine a [ConfirmationDialog]'s confirmed and canceled signals.
@@ -134,13 +180,11 @@ class KeyEntry:
 
 	const DELETE_ICON = preload("res://resources/icons/trash.svg")
 
-	## List of all key names to check if the key's [member SSHController.SSHKey.key_name] is unique.
-	var key_names_list: Array[String]
-
 	var _key: SSHKey
 	var _edit_button: Button = Button.new()
 
 	func _init(key: SSHKey) -> void:
+		key.key_updated.connect(_on_key_updated)
 		_key = key
 
 		var stylebox: StyleBoxFlat = StyleBoxFlat.new()
@@ -157,7 +201,7 @@ class KeyEntry:
 
 		var hbox: HBoxContainer = HBoxContainer.new()
 
-		_edit_button.text = key.key_name
+		_edit_button.text = key.name
 		_edit_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_edit_button.pressed.connect(_on_edit_button_pressed)
 		hbox.add_child(_edit_button)
@@ -172,20 +216,16 @@ class KeyEntry:
 
 		add_child(hbox)
 
+	func _on_key_updated() -> void:
+		_edit_button.text = _key.name
+
 	func _on_edit_button_pressed() -> void:
 		var key_editor: ExistingSSHKeyEditor = ExistingSSHKeyEditor.new(_key)
-		var callback: Callable = func confirm() -> bool:
-			if key_editor.confirm():
-				# _edit_button.text = _key.key_name
-				key_changed.emit()
-				return true
-			return false
-
-		PopupManager.push_stack_item([key_editor], callback)
+		PopupManager.push_stack_item([key_editor], key_editor.confirm)
 
 	func _on_delete_button_pressed() -> void:
 		var confirm_dialog: ConfirmationDialog = ConfirmationDialog.new()
-		confirm_dialog.dialog_text = "Do you really want to delete key: %s" % _key.key_name
+		confirm_dialog.dialog_text = "Do you really want to delete key: %s" % _key.name
 		add_child(confirm_dialog)
 		confirm_dialog.initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_PRIMARY_SCREEN
 		confirm_dialog.show()
@@ -225,16 +265,12 @@ class SSHKeyEditor:
 class ExistingSSHKeyEditor:
 	extends SSHKeyEditor
 
-	var _key_config: Config = Config.new()
 	var _key_editor: Config.ConfigEditor = null
 
 	func _init(key: SSHKey) -> void:
 		super(key)
 
-		_key_config.add_string("Key name", "key_name", key.key_name)
-		if key.type == KeyTypes.EXISTING_KEY:
-			_key_config.add_file_path("Key path", "key_path", key.key_path)
-		_key_editor = _key_config.generate_editor()
+		_key_editor = key.generate_editor()
 		add_child(_key_editor)
 
 	## Called on confirm button pressed.
@@ -242,19 +278,18 @@ class ExistingSSHKeyEditor:
 		var abort: bool = false
 
 		var key_dict: Dictionary = _key_editor.serialize()
-		if key_dict.key_name == "":
-			_key_editor.get_editor("key_name").modulate = Color.RED
+		if key_dict.name == "":
+			_key_editor.get_editor("name").modulate = Color.RED
 			abort = true
-		if key_dict.has("key_path") and key_dict.key_path == "":
+		if key_dict.type == KeyTypes.EXISTING_KEY and key_dict.key_path == "":
 			_key_editor.get_editor("key_path").modulate = Color.RED
 			abort = true
 
 		if abort:
 			return false
 
-		_key.key_name = key_dict.key_name
-		if key_dict.has("key_path"):
-			_key.key_path = key_dict.key_path
+		_key_editor.apply()
+		_key.apply_config()
 
 		return true
 
@@ -281,7 +316,7 @@ class NewSSHKeyEditor:
 	func _init(key: SSHKey) -> void:
 		super(key)
 
-		_key_creator_config.add_string("Key name", "key_name", key.key_name)
+		_key_creator_config.add_string("Key name", "name", key.name)
 		_key_creator_config.add_dict("Key type", "key_type", key.type, KeyTypes)
 		_key_creator_editor = _key_creator_config.generate_editor()
 
@@ -309,8 +344,8 @@ class NewSSHKeyEditor:
 		var abort: bool = false
 
 		var new_key_dict: Dictionary = _key_creator_editor.serialize()
-		if new_key_dict.key_name == "":
-			_key_creator_editor.get_editor("key_name").modulate = Color.RED
+		if new_key_dict.name == "":
+			_key_creator_editor.get_editor("name").modulate = Color.RED
 			abort = true
 
 		var import_key_dict: Dictionary = _import_key_creator_editor.serialize()
@@ -321,7 +356,7 @@ class NewSSHKeyEditor:
 		if abort:
 			return false
 
-		_key.key_name = new_key_dict.key_name
+		_key.name = new_key_dict.name
 
 		match new_key_dict.key_type:
 			KeyTypes.NEW_KEY:
@@ -334,7 +369,7 @@ class NewSSHKeyEditor:
 				var new_key: String = SSHClient.generate_private_key(
 					CryptoTypes.find_key(new_key_settings.crypto),
 					key_size,
-					"%s@dreamdeck" % new_key_dict.key_name
+					"%s@dreamdeck" % new_key_dict.name
 				)
 				if new_key == "":
 					push_error("Failed to generate key")
