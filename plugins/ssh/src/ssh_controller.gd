@@ -136,6 +136,7 @@ func add_client(client: SSHClientWrapper) -> void:
 	_clients.append(client)
 	client.client_updated.connect(save_clients)
 	update_loader_clients()
+	save_clients()
 
 
 ## Updates the action in the loader so it always shows all available clients.
@@ -175,12 +176,10 @@ func get_client(client_uuid: String) -> SSHClientWrapper:
 	return null
 
 
-## Removes a SSH client identified by [param client_uuid]
-## from both the client list and the [SSHClient] child.
-func remove_client(client_uuid: String) -> void:
-	for client in _clients:
-		if client.uuid == client_uuid:
-			_clients.erase(client)
+## Removes a SSH client identified by [param client_uuid].
+func remove_client(client: SSHClientWrapper) -> void:
+	_clients.erase(client)
+	save_clients()
 
 
 # maybe switch away from identifier client_name to index, but having the same name is
@@ -213,6 +212,8 @@ func exec_on_client(blocking: bool, client_uuid: String, cmd: String) -> bool:
 func _on_settings_button_pressed() -> void:
 	var clients_editor: SSHClientWrapper.SSHClientsEditor = SSHClientWrapper.SSHClientsEditor.new()
 	clients_editor.set_clients(_clients)
+	clients_editor.client_added.connect(add_client)
+	clients_editor.client_deleted.connect(remove_client)
 
 	if _keys_editor and is_instance_valid(_keys_editor):
 		_keys_editor.queue_free()

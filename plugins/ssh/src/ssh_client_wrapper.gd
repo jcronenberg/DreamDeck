@@ -136,6 +136,7 @@ func update_keys(keys_dict: Dictionary) -> void:
 
 ## Applies the currently set key to the ssh client.
 func apply_key_to_client() -> void:
+	print("DEBUG: applying key to client")
 	match _key.type:
 		SSHKey.KeyTypes.NEW_KEY:
 			_client.set_auth_key(Marshalls.base64_to_utf8(_key.key_data), "")
@@ -151,7 +152,6 @@ func _generate_default_client_config() -> Config:
 	client_config.add_string("Server ip address", "ip", "")
 	client_config.add_int("Server port", "port", 22)
 	client_config.add_string("Username", "user", "")
-	# client_config.add_file_path("Secret key path", "key_path", "")
 	client_config.add_dict(
 		"SSH Key",
 		"key_uuid",
@@ -203,19 +203,19 @@ class SSHClientsEditor:
 			client_entry.queue_free()
 
 		for client in clients:
-			var client_entry: ClientEntry = ClientEntry.new(client)
-			client_entry.client_deleted.connect(client_deleted.emit)
-			#_client_entries.append(client_entry)
-			_client_entries.add_child(client_entry)
+			_add_client(client)
 
-	# func _on_client_deleted(client: SSHClientWrapper) -> void:
-	# 	client_deleted.emit(client)
+	func _add_client(client: SSHClientWrapper) -> void:
+		var client_entry: ClientEntry = ClientEntry.new(client)
+		client_entry.client_deleted.connect(client_deleted.emit)
+		_client_entries.add_child(client_entry)
 
 	func _on_add_client_button_pressed() -> void:
 		var client_editor: ClientEditor = ClientEditor.new(null)
 		var callback: Callable = func confirm() -> bool:
 			if client_editor.confirm():
 				client_added.emit(client_editor.get_client())
+				_add_client(client_editor.get_client())
 				return true
 			return false
 
@@ -269,14 +269,6 @@ class ClientEntry:
 
 	func _on_edit_button_pressed() -> void:
 		var client_editor: ClientEditor = ClientEditor.new(_client)
-		# client_editor.set_key_names_list(key_names_list)
-		# var callback: Callable = func confirm() -> bool:
-		# 	if client_editor.confirm():
-		# 		# _edit_button.text = _key.key_name
-		# 		key_changed.emit()
-		# 		return true
-		# 	return false
-
 		PopupManager.push_stack_item([client_editor], client_editor.confirm)
 
 	func _on_delete_button_pressed() -> void:
@@ -325,7 +317,6 @@ class ClientEditor:
 		var abort: bool = false
 
 		var new_client_dict: Dictionary = _client_editor.serialize()
-		# TODO check unique name
 		if new_client_dict.ip == "":
 			_client_editor.get_editor("ip").modulate = Color.RED
 			abort = true
