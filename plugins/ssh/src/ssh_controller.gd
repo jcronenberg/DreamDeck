@@ -6,7 +6,6 @@ const PLUGIN_NAME = "SSH"
 var _clients: Array[SSHClientWrapper] = []
 var _thread_pool: Array[Thread] = []
 var _keys_list: Array[SSHKey] = []
-var _keys_editor: SSHKey.KeysEditor
 @onready var _keys_conf_path: String = conf_dir.path_join("keys.json")
 @onready var _clients_conf_path: String = conf_dir.path_join("clients.json")
 
@@ -33,10 +32,6 @@ func _process(_delta) -> void:
 func add_key(new_key: SSHKey) -> void:
 	new_key.key_updated.connect(save_keys)
 	_keys_list.append(new_key)
-
-	# TODO should this be done here?
-	if _keys_editor and is_instance_valid(_keys_editor):
-		_keys_editor.set_keys(_keys_list)
 
 	save_keys()
 
@@ -215,11 +210,9 @@ func _on_settings_button_pressed() -> void:
 	clients_editor.client_added.connect(add_client)
 	clients_editor.client_deleted.connect(remove_client)
 
-	if _keys_editor and is_instance_valid(_keys_editor):
-		_keys_editor.queue_free()
-	_keys_editor = SSHKey.KeysEditor.new()
-	_keys_editor.set_keys(_keys_list)
-	_keys_editor.key_added.connect(add_key)
-	_keys_editor.key_deleted.connect(remove_key)
+	var keys_editor: SSHKey.KeysEditor = SSHKey.KeysEditor.new()
+	keys_editor.set_keys(_keys)
+	keys_editor.key_added.connect(add_key)
+	keys_editor.key_deleted.connect(remove_key)
 
-	PopupManager.push_stack_item([clients_editor, _keys_editor])
+	PopupManager.push_stack_item([clients_editor, keys_editor])

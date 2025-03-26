@@ -149,20 +149,22 @@ class KeysEditor:
 		for child in _ssh_keys_list.get_children():
 			child.queue_free()
 		for key in keys_list:
-			var key_entry: KeyEntry = KeyEntry.new(key)
-			key_entry.key_deleted.connect(_on_key_deleted)
-			_ssh_keys_list.add_child(key_entry)
+			_add_key(key)
 
 	func _on_key_deleted(key: SSHKey) -> void:
 		key_deleted.emit(key)
 
+	func _add_key(key: SSHKey) -> void:
+		var key_entry: KeyEntry = KeyEntry.new(key)
+		key_entry.key_deleted.connect(_on_key_deleted)
+		_ssh_keys_list.add_child(key_entry)
+
 	func _on_add_key_button_pressed() -> void:
-		var new_key: SSHKey = SSHKey.new()
-		new_key.gen_uuid()
-		var key_editor: NewSSHKeyEditor = NewSSHKeyEditor.new(new_key)
+		var key_editor: NewSSHKeyEditor = NewSSHKeyEditor.new()
 		var callback: Callable = func confirm() -> bool:
 			if key_editor.confirm():
-				key_added.emit(new_key)
+				key_added.emit(key_editor.get_key())
+				_add_key(key_editor.get_key())
 				return true
 			return false
 
@@ -260,6 +262,9 @@ class SSHKeyEditor:
 	func confirm() -> bool:
 		return true
 
+	func get_key() -> SSHKey:
+		return _key
+
 
 ## Editor that gets shown when an existing key is supposed to be edited.
 class ExistingSSHKeyEditor:
@@ -313,7 +318,9 @@ class NewSSHKeyEditor:
 	var _import_key_config: Config = Config.new()
 	var _import_key_creator_editor: Config.ConfigEditor = null
 
-	func _init(key: SSHKey) -> void:
+	func _init() -> void:
+		var key: SSHKey = SSHKey.new()
+		key.gen_uuid()
 		super(key)
 
 		_key_creator_config.add_string("Key name", "name", key.name)
