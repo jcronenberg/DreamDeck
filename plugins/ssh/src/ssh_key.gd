@@ -5,11 +5,16 @@ class_name SSHKey
 ## Note: not emitted on [method deserialize].
 signal key_updated
 
+## All available crypto types when generating a new key.
 enum CryptoTypes {
 	ED25519,
 	RSA,
 }
 
+## The types a key can have.[br]
+## [code]EXISTING_KEY[code] uses an existing key from a file.[br]
+## [code]NEW_KEY[code] generates a new key or if it already has been generated
+## contains the keys data.
 enum KeyTypes {
 	NEW_KEY,
 	EXISTING_KEY,
@@ -46,18 +51,7 @@ var key_path: String:
 var _config: Config = _generate_default_config()
 
 
-func _generate_default_config() -> Config:
-	var config: Config = Config.new()
-
-	config.add_string("UUID", "uuid", "")
-	config.add_string("Name", "name", "")
-	config.add_dict("Key type", "type", KeyTypes.NEW_KEY, KeyTypes)
-	config.add_string("Key data", "key_data", "")
-	config.add_file_path("Key path", "key_path", "")
-
-	return config
-
-
+## Generate a [Config.ConfigEditor] with all the relevant config options.
 func generate_editor() -> Config.ConfigEditor:
 	var editor: Config.ConfigEditor = _config.generate_editor()
 
@@ -73,6 +67,8 @@ func generate_editor() -> Config.ConfigEditor:
 	return editor
 
 
+## Apply the current config to the object.
+## This is supposed to be called after the editor was edited.
 func apply_config() -> void:
 	var dict: Dictionary = _config.get_as_dict()
 	deserialize(dict)
@@ -112,6 +108,19 @@ func serialize() -> Dictionary:
 ## Should only be used when the object is supposed to be a new one.
 func gen_uuid() -> void:
 	uuid = UUID.v4()
+
+
+# Generates a [Config] with all default objects configured.
+func _generate_default_config() -> Config:
+	var config: Config = Config.new()
+
+	config.add_string("UUID", "uuid", "")
+	config.add_string("Name", "name", "")
+	config.add_dict("Key type", "type", KeyTypes.NEW_KEY, KeyTypes)
+	config.add_string("Key data", "key_data", "")
+	config.add_file_path("Key path", "key_path", "")
+
+	return config
 
 
 ## The editor that gets shown when the plugins settings button is pressed.

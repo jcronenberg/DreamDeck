@@ -4,6 +4,8 @@ class_name SSHClientWrapper
 ## Note: not emitted on [method deserialize].
 signal client_updated
 
+## All available methods to check the server against.
+## [code]KNOWN_HOSTS[/code] uses the default known hosts file.
 enum ServerCheckMethod {
 	NO_CHECK,
 	KNOWN_HOSTS,
@@ -48,6 +50,7 @@ var debug: bool:
 	set(value):
 		_client.set_debug(value)
 		_config.get_object("debug").set_value(value)
+## The [SSHKey]'s uuid.
 var key_uuid: String:
 	get:
 		return _key.uuid
@@ -64,11 +67,13 @@ var key_uuid: String:
 		else:
 			push_error("Failed to get ssh key with uuid: %s" % value)
 
-# Internal [SSHKey], use key_uuid to set this.
+# Internal [SSHKey], use [member key_uuid] to set this.
 var _key: SSHKey:
 	set(value):
-		_key = value
+		if _key:
+			_key.key_updated.disconnect(apply_key_to_client)
 		value.key_updated.connect(apply_key_to_client)
+		_key = value
 		if _client:
 			apply_key_to_client()
 # Internal [SSHClient].
@@ -130,13 +135,13 @@ func gen_uuid() -> void:
 	uuid = UUID.v4()
 
 
+## Update the available keys dictionary.
 func update_keys(keys_dict: Dictionary) -> void:
 	_config.get_object("key_uuid").set_dict(keys_dict)
 
 
-## Applies the currently set key to the ssh client.
+## Applies the currently set key to the internal ssh client.
 func apply_key_to_client() -> void:
-	print("DEBUG: applying key to client")
 	match _key.type:
 		SSHKey.KeyTypes.NEW_KEY:
 			_client.set_auth_key(Marshalls.base64_to_utf8(_key.key_data), "")
@@ -149,15 +154,10 @@ func _generate_default_client_config() -> Config:
 	var client_config: Config = Config.new()
 	client_config.add_string("UUID", "uuid", "")
 	client_config.add_string("Name", "name", "")
-	client_config.add_string("Server ip address", "ip", "")
+	client_config.add_string("Server domain or ip", "ip", "")
 	client_config.add_int("Server port", "port", 22)
 	client_config.add_string("Username", "user", "")
-	client_config.add_dict(
-		"SSH Key",
-		"key_uuid",
-		null,
-		PluginCoordinator.get_plugin_loader("SSH").get_controller("SSHController").get_keys_dict()
-	)
+	client_config.add_dict("SSH Key", "key_uuid", null, {})
 	client_config.add_dict(
 		"Server check method",
 		"server_check_method",
@@ -236,6 +236,7 @@ class ClientEntry:
 	var _edit_button: Button = Button.new()
 
 	func _init(client: SSHClientWrapper) -> void:
+		client.client_updated.connect(_on_client_updated)
 		_client = client
 
 		var stylebox: StyleBoxFlat = StyleBoxFlat.new()
@@ -266,6 +267,9 @@ class ClientEntry:
 		hbox.add_child(delete_button)
 
 		add_child(hbox)
+
+	func _on_client_updated() -> void:
+		_edit_button.text = _client.name
 
 	func _on_edit_button_pressed() -> void:
 		var client_editor: ClientEditor = ClientEditor.new(_client)
@@ -302,6 +306,14 @@ class ClientEditor:
 		if not client:
 			_client = SSHClientWrapper.new()
 			_client.gen_uuid()
+			_client.update_keys(
+				(
+					PluginCoordinator
+					. get_plugin_loader("SSH")
+					. get_controller("SSHController")
+					. get_keys_dict()
+				)
+			)
 		else:
 			_client = client
 
@@ -317,6 +329,9 @@ class ClientEditor:
 		var abort: bool = false
 
 		var new_client_dict: Dictionary = _client_editor.serialize()
+		if new_client_dict.name == "":
+			_client_editor.get_editor("name").modulate = Color.RED
+			abort = true
 		if new_client_dict.ip == "":
 			_client_editor.get_editor("ip").modulate = Color.RED
 			abort = true

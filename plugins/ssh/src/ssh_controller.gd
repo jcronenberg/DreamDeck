@@ -3,9 +3,9 @@ extends PluginControllerBase
 
 const PLUGIN_NAME = "SSH"
 
-var _clients: Array[SSHClientWrapper] = []
 var _thread_pool: Array[Thread] = []
-var _keys_list: Array[SSHKey] = []
+var _clients: Array[SSHClientWrapper] = []
+var _keys: Array[SSHKey] = []
 @onready var _keys_conf_path: String = conf_dir.path_join("keys.json")
 @onready var _clients_conf_path: String = conf_dir.path_join("clients.json")
 
@@ -31,19 +31,19 @@ func _process(_delta) -> void:
 ## Also updates the keys editor if it is being used
 func add_key(new_key: SSHKey) -> void:
 	new_key.key_updated.connect(save_keys)
-	_keys_list.append(new_key)
+	_keys.append(new_key)
 
 	save_keys()
 
 
 ## Removes a key from the keys list and saves to disk.
 func remove_key(key: SSHKey) -> void:
-	_keys_list.erase(key)
+	_keys.erase(key)
 	save_keys()
 
 
 func get_key(key_uuid: String) -> SSHKey:
-	for key in _keys_list:
+	for key in _keys:
 		if key.uuid == key_uuid:
 			return key
 
@@ -52,7 +52,7 @@ func get_key(key_uuid: String) -> SSHKey:
 
 func get_keys_dict() -> Dictionary:
 	var dict: Dictionary = {}
-	for key in _keys_list:
+	for key in _keys:
 		if not dict.has(key.name):
 			dict[key.name] = key.uuid
 			continue
@@ -75,18 +75,18 @@ func load_keys() -> void:
 	if loaded_keys_config is not Array:
 		return
 
-	_keys_list = []
+	_keys = []
 	for key_dict in loaded_keys_config:
 		var new_key: SSHKey = SSHKey.new()
 		new_key.deserialize(key_dict)
 		new_key.key_updated.connect(save_keys)
-		_keys_list.append(new_key)
+		_keys.append(new_key)
 
 
 ## Saves keys to disk.
 func save_keys() -> void:
 	var keys: Array[Dictionary] = []
-	for key in _keys_list:
+	for key in _keys:
 		keys.append(key.serialize())
 
 	ConfLib.save_config(_keys_conf_path, keys)
@@ -95,31 +95,23 @@ func save_keys() -> void:
 
 ## Loads clients from disk.
 func load_clients() -> void:
-	print("DEBUG: loading ssh clients")
 	var loaded_clients_config: Variant = ConfLib.load_config(_clients_conf_path)
 	if loaded_clients_config is not Array:
 		return
 
 	_clients = []
-	# FIXME migration to new client uuid, delete in the future
-	var save: bool = false
 	for client_dict in loaded_clients_config:
 		var new_client: SSHClientWrapper = SSHClientWrapper.new()
+		new_client.update_keys(get_keys_dict())
 		new_client.client_updated.connect(save_clients)
-		if not client_dict.has("uuid"):
-			client_dict["uuid"] = UUID.v4()
-			save = true
 		new_client.deserialize(client_dict)
 		_clients.append(new_client)
 
-	if save:
-		save_clients()
 	update_loader_clients()
 
 
 ## Saves clients to disk.
 func save_clients() -> void:
-	print("DEBUG: Saving ssh clients")
 	var serialized_clients: Array[Dictionary] = []
 	for client in _clients:
 		serialized_clients.append(client.serialize())
@@ -177,9 +169,7 @@ func remove_client(client: SSHClientWrapper) -> void:
 	save_clients()
 
 
-# maybe switch away from identifier client_name to index, but having the same name is
-# still confusing so having unique names should probably still be enforced
-## Executes the [param cmd] string on client, which is identified by [param client_name].
+## Executes the [param cmd] string on client, which is identified by [param client_uuid].
 ## This operation is done asynchronously to not block the main thread.
 func exec_on_client(blocking: bool, client_uuid: String, cmd: String) -> bool:
 	var ssh_client: SSHClientWrapper = get_client(client_uuid)
