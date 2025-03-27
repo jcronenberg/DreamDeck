@@ -132,10 +132,13 @@ class KeysEditor:
 	## Emitted when [param key] is supposed to be deleted.
 	signal key_deleted(key: SSHKey)
 
+	const SSH_THEME = preload("res://plugins/ssh/assets/ssh_theme.tres")
+
 	var _ssh_keys_list: VBoxContainer = VBoxContainer.new()
 
 	func _init() -> void:
 		name = "SSH Keys"
+		theme = SSH_THEME
 
 		add_theme_constant_override("separation", 10)
 		set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -198,30 +201,20 @@ class KeyEntry:
 		key.key_updated.connect(_on_key_updated)
 		_key = key
 
-		var stylebox: StyleBoxFlat = StyleBoxFlat.new()
-		stylebox.bg_color = Color("#ffffff0c")
-		stylebox.corner_radius_bottom_left = 8
-		stylebox.corner_radius_bottom_right = 8
-		stylebox.corner_radius_top_left = 8
-		stylebox.corner_radius_top_right = 8
-		stylebox.content_margin_top = 6
-		stylebox.content_margin_bottom = 6
-		stylebox.content_margin_left = 6
-		stylebox.content_margin_right = 6
-		add_theme_stylebox_override("panel", stylebox)
+		theme_type_variation = "SettingsList"
 
 		var hbox: HBoxContainer = HBoxContainer.new()
+		hbox.add_theme_constant_override("separation", 0)
 
 		_edit_button.text = key.name
 		_edit_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_edit_button.pressed.connect(_on_edit_button_pressed)
+		_edit_button.theme_type_variation = "ListButton"
 		hbox.add_child(_edit_button)
 
-		var delete_button: TextureButton = TextureButton.new()
-		delete_button.texture_normal = DELETE_ICON
-		delete_button.ignore_texture_size = true
-		delete_button.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
-		delete_button.custom_minimum_size = Vector2(24, 24)
+		var delete_button: Button = Button.new()
+		delete_button.icon = DELETE_ICON
+		delete_button.theme_type_variation = "ListDeleteButton"
 		delete_button.pressed.connect(_on_delete_button_pressed)
 		hbox.add_child(delete_button)
 
