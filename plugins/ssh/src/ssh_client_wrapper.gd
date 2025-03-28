@@ -1,4 +1,7 @@
 class_name SSHClientWrapper
+## Wrapper for [SSHClient].
+##
+## This wrapper has some helpers for storing and better integrating [SSHClient].
 
 ## Emitted when the client config was updated.
 ## Note: not emitted on [method deserialize].
@@ -203,6 +206,7 @@ class SSHClientsEditor:
 		add_client_button.pressed.connect(_on_add_client_button_pressed)
 		add_child(add_client_button)
 
+	## Populate clients list with [param clients].
 	func set_clients(clients: Array[SSHClientWrapper]) -> void:
 		for client_entry in _client_entries.get_children():
 			client_entry.queue_free()
@@ -342,6 +346,7 @@ class ClientEditor:
 
 		return true
 
+	## Getter for internal client.
 	func get_client() -> SSHClientWrapper:
 		return _client
 

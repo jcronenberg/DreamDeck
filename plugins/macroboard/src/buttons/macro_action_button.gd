@@ -174,7 +174,7 @@ func _on_popup_confirmed() -> bool:
 
 
 func _on_pressed() -> void:
-	# If not in start thread to execute all actions
+	# If not in edit mode, start thread to execute all actions
 	# It is moved to a thread to not block the whole main thread while
 	# blocking actions get executed
 	if not GlobalSignals.get_edit_state():

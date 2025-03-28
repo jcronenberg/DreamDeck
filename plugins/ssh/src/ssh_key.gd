@@ -248,7 +248,7 @@ class KeyEntry:
 		confirm_dialog_closed.emit(false)
 
 
-## Just a common helper class for the special editor.
+## Common helper class for the key editors.
 class SSHKeyEditor:
 	extends VBoxContainer
 
@@ -264,6 +264,7 @@ class SSHKeyEditor:
 	func confirm() -> bool:
 		return true
 
+	## Getter for internal key.
 	func get_key() -> SSHKey:
 		return _key
 
