@@ -25,34 +25,15 @@ func _init() -> void:
 
 
 func save() -> bool:
-	var new_panel_dict: Dictionary = _config_editor.serialize()
 	var abort: bool = false
-
-	# Give user feedback on what's missing
-	if new_panel_dict["panel_name"] == "":
-		_config_editor.get_editor("panel_name").modulate = Color.RED
-		abort = true
-	else:
-		_config_editor.get_editor("panel_name").modulate = Color.WHITE
-
-	if new_panel_dict["plugin"] == "":
-		_config_editor.get_editor("plugin").modulate = Color.RED
-		abort = true
-	else:
-		_config_editor.get_editor("plugin").modulate = Color.WHITE
-
-	if new_panel_dict["scene"] == "":
-		_config_editor.get_editor("scene").modulate = Color.RED
-		abort = true
-	else:
-		_config_editor.get_editor("scene").modulate = Color.WHITE
-
+	abort = not _config_editor.get_editor("panel_name").validate("") or abort
+	abort = not _config_editor.get_editor("plugin").validate("") or abort
+	abort = not _config_editor.get_editor("scene").validate("") or abort
 	if abort:
 		return false
 
+	var new_panel_dict: Dictionary = _config_editor.serialize()
 	new_panel_dict["UUID"] = UUID.v4()
-	new_panel_dict["scene"] = _config_editor.get_editor("scene").get_value()
-	new_panel_dict["plugin"] = _config_editor.get_editor("plugin").get_value()
 	get_node("/root/Main/Layout").add_panel(new_panel_dict)
 	return true
 

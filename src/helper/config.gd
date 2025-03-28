@@ -646,6 +646,26 @@ class VariantEditor:
 	func get_value():
 		pass
 
+	## Validates the current value set in the editor against the [param value].[br]
+	## It will return false if the value IS the value and also indicate that the validation
+	## failed by modulating the editor red.
+	## An example would be when you have a string and this string is required to be set
+	## this function could be used like this:
+	## [codeblock]
+	## var abort: bool = false
+	## abort = not editor.get_editor("example_key").validate("") or abort
+	## abort = not editor.get_editor("example_key2").validate("") or abort
+	## if abort:
+	##     ... # handle error
+	## [/codeblock]
+	func validate(value: Variant) -> bool:
+		if get_value() == value:
+			modulate = Color.RED
+			return false
+
+		modulate = Color.WHITE
+		return true
+
 
 class BoolEditor:
 	extends VariantEditor

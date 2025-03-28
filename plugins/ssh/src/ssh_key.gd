@@ -283,15 +283,9 @@ class ExistingSSHKeyEditor:
 	## Called on confirm button pressed.
 	func confirm() -> bool:
 		var abort: bool = false
-
-		var key_dict: Dictionary = _key_editor.serialize()
-		if key_dict.name == "":
-			_key_editor.get_editor("name").modulate = Color.RED
-			abort = true
-		if key_dict.type == KeyTypes.EXISTING_KEY and key_dict.key_path == "":
-			_key_editor.get_editor("key_path").modulate = Color.RED
-			abort = true
-
+		abort = not _key_editor.get_editor("name").validate("") or abort
+		if _key_editor.get_editor("type").get_value() == KeyTypes.EXISTING_KEY:
+			abort = not _key_editor.get_editor("key_path").validate("") or abort
 		if abort:
 			return false
 
@@ -326,10 +320,10 @@ class NewSSHKeyEditor:
 		super(key)
 
 		_key_creator_config.add_string("Key name", "name", key.name)
-		_key_creator_config.add_dict("Key type", "key_type", key.type, KeyTypes)
+		_key_creator_config.add_dict("Key type", "type", key.type, KeyTypes)
 		_key_creator_editor = _key_creator_config.generate_editor()
 
-		_key_creator_editor.get_editor("key_type").value_selected.connect(
+		_key_creator_editor.get_editor("type").value_selected.connect(
 			_on_key_type_editor_value_selected
 		)
 		add_child(_key_creator_editor)
@@ -351,23 +345,16 @@ class NewSSHKeyEditor:
 	## Called on confirm button pressed.
 	func confirm() -> bool:
 		var abort: bool = false
-
-		var new_key_dict: Dictionary = _key_creator_editor.serialize()
-		if new_key_dict.name == "":
-			_key_creator_editor.get_editor("name").modulate = Color.RED
-			abort = true
-
-		var import_key_dict: Dictionary = _import_key_creator_editor.serialize()
-		if new_key_dict.key_type == KeyTypes.EXISTING_KEY and import_key_dict.key_path == "":
-			_import_key_creator_editor.get_editor("key_path").modulate = Color.RED
-			abort = true
-
+		abort = not _key_creator_editor.get_editor("name").validate("") or abort
+		if _key_creator_editor.get_editor("type").get_value() == KeyTypes.EXISTING_KEY:
+			abort = not _import_key_creator_editor.get_editor("key_path").validate("") or abort
 		if abort:
 			return false
 
+		var new_key_dict: Dictionary = _key_creator_editor.serialize()
+		var import_key_dict: Dictionary = _import_key_creator_editor.serialize()
 		_key.name = new_key_dict.name
-
-		match new_key_dict.key_type:
+		match new_key_dict.type:
 			KeyTypes.NEW_KEY:
 				var new_key_settings: Dictionary = _new_key_creator_editor.serialize()
 				var key_size: int = (

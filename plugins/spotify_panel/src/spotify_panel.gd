@@ -569,24 +569,13 @@ Copy your \"Client ID\" and \"Client secret\" into DreamDeck
 		PopupManager.push_stack_item([dev_setup_label])
 
 	func _on_start_auth_button_pressed() -> void:
-		_credentials_editor.apply()
-		var creds: Dictionary = _credentials_creation_config.get_as_dict()
 		var abort: bool = false
-		if creds["client_id"] == "":
-			_credentials_editor.get_editor("client_id").modulate = Color.RED
-			abort = true
-		else:
-			_credentials_editor.get_editor("client_id").modulate = Color.WHITE
-
-		if creds["client_secret"] == "":
-			_credentials_editor.get_editor("client_secret").modulate = Color.RED
-			abort = true
-		else:
-			_credentials_editor.get_editor("client_secret").modulate = Color.WHITE
-
+		abort = not _credentials_editor.get_editor("client_id").validate("") or abort
+		abort = not _credentials_editor.get_editor("client_secret").validate("") or abort
 		if abort:
 			return
 
+		var creds: Dictionary = _credentials_editor.serialize()
 		_encoded_client = Marshalls.utf8_to_base64(
 			"%s:%s" % [creds["client_id"], creds["client_secret"]]
 		)

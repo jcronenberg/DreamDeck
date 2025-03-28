@@ -320,17 +320,9 @@ class ClientEditor:
 	## Called on confirm button pressed.
 	func confirm() -> bool:
 		var abort: bool = false
-
-		var new_client_dict: Dictionary = _client_editor.serialize()
-		if new_client_dict.name == "":
-			_client_editor.get_editor("name").modulate = Color.RED
-			abort = true
-		if new_client_dict.ip == "":
-			_client_editor.get_editor("ip").modulate = Color.RED
-			abort = true
-		if new_client_dict.user == "":
-			_client_editor.get_editor("user").modulate = Color.RED
-			abort = true
+		abort = not _client_editor.get_editor("name").validate("") or abort
+		abort = not _client_editor.get_editor("ip").validate("") or abort
+		abort = not _client_editor.get_editor("user").validate("") or abort
 		if abort:
 			return false
 
