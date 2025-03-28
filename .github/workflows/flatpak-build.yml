@@ -28,14 +28,12 @@ jobs:
           python3 flatpak-cargo-generator.py -o dist/cargo-source1.json plugins/ssh/rust/Cargo.lock
           python3 flatpak-cargo-generator.py -o dist/cargo-source2.json plugins/touch/rust/Cargo.lock
       - name: Build flatpak
-        # Upstream one is currently broken, need to use a fork meanwhile
-        # TODO switch to upstream once it's fixed
-        #uses: flatpak/flatpak-github-actions/flatpak-builder@v6
-        uses: jochumdev/flatpak-github-actions/flatpak-builder@builder-update-deps
+        uses: flatpak/flatpak-github-actions/flatpak-builder@v6
         with:
           bundle: dreamdeck.flatpak
           manifest-path: dist/dev.jcronenberg.DreamDeck.yml
-          cache-key: flatpak-builder-${{ github.sha }}
+          # Cargo locks as cache-keys because they contain the only relevant files that take a long time
+          cache-key: flatpak-builder-${{ hashFiles('plugins/touch/rust/Cargo.lock', 'plugins/ssh/rust/Cargo.lock') }}
           upload-artifact: false
       - name: Upload artifact
         uses: actions/upload-artifact@v4
