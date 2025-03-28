@@ -20,8 +20,6 @@ func _ready() -> void:
 	# Required for dragging to work
 	mouse_filter = Control.MOUSE_FILTER_PASS
 
-	migrate_icon_path()
-
 	apply_change()
 
 	set_process(false)
@@ -31,13 +29,6 @@ func _process(_delta: float) -> void:
 	if _exec_thread and not _exec_thread.is_alive():
 		_exec_thread.wait_to_finish()
 		set_process(false)
-
-
-# FIXME definitely remove this soon, this migrates the icon path
-func migrate_icon_path() -> void:
-	if _icon_path and not _icon_path.contains("/"):
-		_icon_path = "icons/" + _icon_path
-		_config.get_object("icon_path").set_value(_icon_path)
 
 
 func deserialize(dict: Dictionary) -> void:
