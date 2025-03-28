@@ -66,6 +66,15 @@ var key_uuid: String:
 			_config.get_object("key_uuid").set_value(value)
 		else:
 			push_error("Failed to get ssh key with uuid: %s" % value)
+var server_check_method: ServerCheckMethod:
+	set(value):
+		server_check_method = value
+		_config.get_object("server_check_method").set_value(value)
+		match value:
+			ServerCheckMethod.NO_CHECK:
+				_client.set_server_check_method("no_check")
+			ServerCheckMethod.KNOWN_HOSTS:
+				_client.set_server_check_method("known_hosts_file")
 
 # Internal [SSHKey], use [member key_uuid] to set this.
 var _key: SSHKey:
@@ -119,14 +128,7 @@ func deserialize(dict: Dictionary) -> void:
 	uuid = dict.uuid
 	if dict.has("key_uuid") and dict.key_uuid:
 		key_uuid = dict.key_uuid
-	match dict.server_check_method as int:
-		ServerCheckMethod.NO_CHECK:
-			_client.set_server_check_method("no_check")
-		ServerCheckMethod.KNOWN_HOSTS:
-			_client.set_server_check_method("known_hosts_file")
-		_:
-			push_error("Unknown server check method, setting to known hosts file")
-			_client.set_server_check_method("known_hosts_file")
+	server_check_method = dict.server_check_method as ServerCheckMethod
 
 
 ## Generate a new uuid for this object.
