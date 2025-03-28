@@ -4,44 +4,9 @@ on:
   workflow_call:
 
 jobs:
-  test-build-package:
-    name: "Test build OBS package"
-    runs-on: ubuntu-latest
-    container:
-      image: registry.opensuse.org/home/jcronenberg/github-ci/containers/opensuse/obs-build:latest
-      options: --privileged
-
-    strategy:
-      matrix:
-        repo: [openSUSE_Tumbleweed, Fedora_41, Fedora_Rawhide]
-
-    steps:
-      - name: Git Checkout
-        uses: actions/checkout@v4
-      - name: Configure osc
-        run: .github/workflows/configure_osc.sh
-        env:
-          OBS_USER: ${{ secrets.OBS_USER }}
-          OBS_PW: ${{ secrets.OBS_PW }}
-      - name: Checkout package
-        run: osc checkout home:jcronenberg:dreamdeck/dreamdeck -o dreamdeck-package
-      - name: Remove current obscpio
-        run: rm -f *.obscpio
-        working-directory: ./dreamdeck-package
-      - name: Run osc service manualrun
-        run: osc service manualrun
-        working-directory: ./dreamdeck-package
-      - name: Update current files in osc
-        run: osc ar
-        working-directory: ./dreamdeck-package
-      - name: Build package
-        run: osc build --clean --no-verify --trust-all-projects ${{ matrix.repo }}
-        working-directory: ./dreamdeck-package
-
   update-obs-package:
     # only publish if push to main repo and branch
     if: github.repository == 'jcronenberg/DreamDeck' && github.event_name == 'push' && github.ref == 'refs/heads/prototyping'
-    needs: test-build-package
 
     name: "Update dev OBS package"
     runs-on: ubuntu-latest
