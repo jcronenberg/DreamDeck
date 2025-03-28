@@ -785,11 +785,11 @@ class DictEditor:
 		_default_button.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
 		_default_button.custom_minimum_size = Vector2(25, 28)
 		_default_button.pressed.connect(_on_default_button_pressed)
-		_default_button.visible = false
 		_value_editor_hbox.add_child(_default_button)
 
 		setup_value_editor()
 		_default_value = object.get_default_value()
+		_default_button.visible = _default_value != object.get_value()
 		set_value(object.get_value())
 
 	func setup_value_editor():
