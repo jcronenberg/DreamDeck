@@ -292,8 +292,12 @@ class ClientEntry:
 class ClientEditor:
 	extends VBoxContainer
 
+	## Internal signal to combine a [ConfirmationDialog]'s confirmed and canceled signals.
+	signal confirm_dialog_closed(bool)
+
 	var _client: SSHClientWrapper
 	var _client_editor: Config.ConfigEditor = null
+	var _add_key_button: Button
 
 	func _init(client: SSHClientWrapper) -> void:
 		if not client:
@@ -317,6 +321,11 @@ class ClientEditor:
 
 		add_child(_client_editor)
 
+		_add_key_button = Button.new()
+		_add_key_button.text = "Add public key to server"
+		_add_key_button.pressed.connect(_on_add_key_button_pressed)
+		add_child(_add_key_button)
+
 	## Called on confirm button pressed.
 	func confirm() -> bool:
 		var abort: bool = false
@@ -333,3 +342,35 @@ class ClientEditor:
 
 	func get_client() -> SSHClientWrapper:
 		return _client
+
+	func _on_add_key_button_pressed() -> void:
+		if not confirm():
+			return
+
+		var pw_edit: LineEdit = LineEdit.new()
+		pw_edit.custom_minimum_size = Vector2(200, 10)
+		var confirm_dialog: ConfirmationDialog = ConfirmationDialog.new()
+		confirm_dialog.title = "Server password"
+		confirm_dialog.add_child(pw_edit)
+		add_child(confirm_dialog)
+		confirm_dialog.initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_PRIMARY_SCREEN
+		confirm_dialog.show()
+		confirm_dialog.confirmed.connect(_on_confirm_dialog_confirmed)
+		confirm_dialog.canceled.connect(_on_confirm_dialog_canceled)
+		var ret: bool = await confirm_dialog_closed
+		var pw_string: String = pw_edit.text
+		confirm_dialog.queue_free()
+
+		if not ret:
+			return
+
+		if not _client.get_client().add_key_to_server(pw_string):
+			_add_key_button.modulate = Color.RED
+		else:
+			_add_key_button.modulate = Color.WHITE
+
+	func _on_confirm_dialog_confirmed() -> void:
+		confirm_dialog_closed.emit(true)
+
+	func _on_confirm_dialog_canceled() -> void:
+		confirm_dialog_closed.emit(false)
