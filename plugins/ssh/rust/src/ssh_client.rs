@@ -239,13 +239,20 @@ impl InternalSSHClient {
             godot_print!("Copying public key to SSH server");
         }
 
+        block_on(self.disconnect_session())?;
+        block_on(self.open_session(ip, user, port))?;
         // Adding the key via a ssh command
-        block_on(self.exec_ssh(
-            format!("echo \"{}\" >> $HOME/.ssh/authorized_keys", pub_key),
+        // This is kind of ugly but it is the best way I found that should work
+        // most reliably even if the server is windows.
+        // The mkdir will most likely fail because on most setups .ssh should
+        // already exist, but this only prints a error and still works.
+        self.exec_ssh_blocking("mkdir .ssh".to_string(), ip, user, port)?;
+        self.exec_ssh_blocking(
+            format!("echo {} >> .ssh/authorized_keys", pub_key),
             ip,
             user,
             port,
-        ))?;
+        )?;
 
         // Change back auth_method
         self.auth_method = auth_method_store;
