@@ -351,6 +351,7 @@ class ClientEditor:
 
 		var pw_edit: LineEdit = LineEdit.new()
 		pw_edit.custom_minimum_size = Vector2(200, 10)
+		pw_edit.text_submitted.connect(_on_pw_edit_text_submitted)
 		var confirm_dialog: ConfirmationDialog = ConfirmationDialog.new()
 		confirm_dialog.title = "Server password"
 		confirm_dialog.add_child(pw_edit)
@@ -370,6 +371,9 @@ class ClientEditor:
 			_add_key_button.modulate = Color.RED
 		else:
 			_add_key_button.modulate = Color.WHITE
+
+	func _on_pw_edit_text_submitted(_text: String) -> void:
+		confirm_dialog_closed.emit(true)
 
 	func _on_confirm_dialog_confirmed() -> void:
 		confirm_dialog_closed.emit(true)
