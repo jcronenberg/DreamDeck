@@ -305,11 +305,8 @@ class NewSSHKeyEditor:
 		"16384",
 	]
 
-	var _key_creator_config: Config = Config.new()
 	var _key_creator_editor: Config.ConfigEditor = null
-	var _new_key_config: Config = Config.new()
 	var _new_key_creator_editor: Config.ConfigEditor = null
-	var _import_key_config: Config = Config.new()
 	var _import_key_creator_editor: Config.ConfigEditor = null
 
 	func _init() -> void:
@@ -317,23 +314,26 @@ class NewSSHKeyEditor:
 		key.gen_uuid()
 		super(key)
 
-		_key_creator_config.add_string("Key name", "name", key.name)
-		_key_creator_config.add_dict("Key type", "type", key.type, KeyTypes)
-		_key_creator_editor = _key_creator_config.generate_editor()
+		var key_creator_config: Config = Config.new()
+		key_creator_config.add_string("Key name", "name", key.name)
+		key_creator_config.add_dict("Key type", "type", key.type, KeyTypes)
+		_key_creator_editor = key_creator_config.generate_editor()
 
 		_key_creator_editor.get_editor("type").value_selected.connect(
 			_on_key_type_editor_value_selected
 		)
 		add_child(_key_creator_editor)
 
-		_import_key_config.add_file_path("Key path", "key_path", key.key_path)
-		_import_key_creator_editor = _import_key_config.generate_editor()
+		var import_key_config: Config = Config.new()
+		import_key_config.add_file_path("Key path", "key_path", key.key_path)
+		_import_key_creator_editor = import_key_config.generate_editor()
 		_import_key_creator_editor.visible = false
 		add_child(_import_key_creator_editor)
 
-		_new_key_config.add_dict("Crypto", "crypto", CryptoTypes.ED25519, CryptoTypes)
-		_new_key_config.add_string_array("Key size", "rsa_size", RSA_SIZES[1], RSA_SIZES)
-		_new_key_creator_editor = _new_key_config.generate_editor()
+		var new_key_config: Config = Config.new()
+		new_key_config.add_dict("Crypto", "crypto", CryptoTypes.ED25519, CryptoTypes)
+		new_key_config.add_string_array("Key size", "rsa_size", RSA_SIZES[1], RSA_SIZES)
+		_new_key_creator_editor = new_key_config.generate_editor()
 		_new_key_creator_editor.get_editor("rsa_size").visible = false
 		_new_key_creator_editor.get_editor("crypto").value_selected.connect(
 			_on_crypto_value_selected
