@@ -5,3 +5,4 @@ excluded_directories: !!set
   godottpd: null
 
 max-line-length: 120
+max-file-lines: 2000

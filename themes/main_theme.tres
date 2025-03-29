@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=46 format=3 uid="uid://duea6v8sw5cfx"]
+[gd_resource type="Theme" load_steps=47 format=3 uid="uid://duea6v8sw5cfx"]
 
 [ext_resource type="FontFile" uid="uid://dnvsausndgsb2" path="res://fonts/roboto/roboto_bold.ttf" id="1_dkosj"]
 [ext_resource type="FontFile" uid="uid://cbcdnmy2og275" path="res://fonts/roboto/roboto_regular.ttf" id="1_orbee"]
@@ -143,6 +143,14 @@ corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_46vci"]
+bg_color = Color(1, 1, 1, 0.196078)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+corner_detail = 12
+
 [sub_resource type="StyleBoxFlat" id="29"]
 bg_color = Color(1, 1, 1, 0)
 border_width_left = 8
@@ -260,6 +268,9 @@ LayoutTabContainer/base_type = &"TabContainer"
 LayoutTabContainer/styles/panel = SubResource("StyleBoxEmpty_j0ya6")
 LineEdit/styles/focus = SubResource("24")
 LineEdit/styles/normal = SubResource("24")
+MacroButton/base_type = &"Button"
+MacroButton/colors/font_disabled_color = Color(1, 1, 1, 1)
+MacroButton/styles/disabled = SubResource("StyleBoxFlat_46vci")
 MainMenuButton/base_type = &"Button"
 MainMenuButton/styles/focus = SubResource("29")
 MainMenuButton/styles/hover = SubResource("32")

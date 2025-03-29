@@ -37,4 +37,5 @@ func _on_popup_confirmed() -> bool:
 	config["actions"] = serialized_actions
 
 	replace_button.emit(self, config)
+	super()
 	return true

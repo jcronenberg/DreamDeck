@@ -13,21 +13,22 @@ var _icon_path: String = ""
 var _show_button_label: bool = false
 var _actions: Array[PluginCoordinator.PluginAction]
 
+var _exec_thread: Thread = null
+
 
 func _ready() -> void:
 	# Required for dragging to work
 	mouse_filter = Control.MOUSE_FILTER_PASS
 
-	migrate_icon_path()
-
 	apply_change()
 
+	set_process(false)
 
-# FIXME definitely remove this soon, this migrates the icon path
-func migrate_icon_path() -> void:
-	if _icon_path and not _icon_path.contains("/"):
-		_icon_path = "icons/" + _icon_path
-		_config.get_object("icon_path").set_value(_icon_path)
+
+func _process(_delta: float) -> void:
+	if _exec_thread and not _exec_thread.is_alive():
+		_exec_thread.wait_to_finish()
+		set_process(false)
 
 
 func deserialize(dict: Dictionary) -> void:
@@ -132,11 +133,13 @@ func set_bg_color(bg_color: Color) -> void:
 func set_pressed_color(pressed_color: Color) -> void:
 	if pressed_color.to_rgba32() == DEFAULT_PRESSED_COLOR.to_rgba32():
 		remove_theme_stylebox_override("pressed")
+		remove_theme_stylebox_override("disabled")
 		return
 
 	var pressed_stylebox: StyleBoxFlat = get_theme_stylebox("pressed").duplicate()
 	pressed_stylebox.bg_color = pressed_color
 	add_theme_stylebox_override("pressed", pressed_stylebox)
+	add_theme_stylebox_override("disabled", pressed_stylebox)
 
 
 func set_font_color(font_color: Color) -> void:
@@ -154,8 +157,10 @@ func set_font_color(font_color: Color) -> void:
 func set_font_pressed_color(font_pressed_color: Color) -> void:
 	if font_pressed_color.to_rgba32() == DEFAULT_FONT_COLOR.to_rgba32():
 		remove_theme_color_override("font_pressed_color")
+		remove_theme_color_override("font_disabled_color")
 		return
 
+	add_theme_color_override("font_disabled_color", font_pressed_color)
 	add_theme_color_override("font_pressed_color", font_pressed_color)
 
 
@@ -164,18 +169,41 @@ func _on_popup_confirmed() -> bool:
 	_config_editor.apply()
 	deserialize(_config.get_as_dict())
 	apply_change()
+	super()
 	return true
 
 
 func _on_pressed() -> void:
-	# If not in edit mode execute all actions
+	# If not in edit mode, start thread to execute all actions
+	# It is moved to a thread to not block the whole main thread while
+	# blocking actions get executed
 	if not GlobalSignals.get_edit_state():
-		for action in _actions:
-			await action.execute()
+		if not _exec_thread:
+			_exec_thread = Thread.new()
+		if _exec_thread.is_alive():
+			# Shouldn't happen as button should be disabled
+			push_error("Already executing")
+			return
+		if _exec_thread.is_started():
+			_exec_thread.wait_to_finish()
+
+		_exec_thread.start(_execute)
+		set_process(true)
+		disabled = true
+
 		return
 
 	open_editor()
 	_actions_editor.populate_actions(_actions)
+
+
+# Function for _exec_thread
+func _execute() -> void:
+	for action in _actions:
+		await action.execute()
+
+	call_deferred("set_pressed", false)
+	call_deferred("set_disabled", false)
 
 
 func _on_button_down() -> void:

@@ -3,11 +3,11 @@ extends PluginControllerBase
 
 const PLUGIN_NAME = "SSH"
 
-## List containing all the currently active client [Config]s.
-var client_list: Array[Config] = []
-
 var _thread_pool: Array[Thread] = []
-@onready var _conf_path: String = conf_dir.path_join("clients.json")
+var _clients: Array[SSHClientWrapper] = []
+var _keys: Array[SSHKey] = []
+@onready var _keys_conf_path: String = conf_dir.path_join("keys.json")
+@onready var _clients_conf_path: String = conf_dir.path_join("clients.json")
 
 
 func _init() -> void:
@@ -15,6 +15,7 @@ func _init() -> void:
 
 
 func _ready() -> void:
+	load_keys()
 	load_clients()
 
 
@@ -26,111 +27,188 @@ func _process(_delta) -> void:
 			_thread_pool.erase(thread)
 
 
-## Generates a [Config] with all default objects configured.
-func generate_default_client_config() -> Config:
-	var client_config: Config = Config.new()
-	client_config.add_string("Name", "name", "")
-	client_config.add_string("Server ip address", "ip", "")
-	client_config.add_int("Server port", "port", 22)
-	client_config.add_string("Username", "user", "")
-	client_config.add_file_path("Secret key path", "key_path", "")
-	client_config.add_bool("Debug", "debug", false)
-	return client_config
+## Adds a key to the keys list and also saves to disk.[br]
+## Also updates the keys editor if it is being used
+func add_key(new_key: SSHKey) -> void:
+	new_key.key_updated.connect(save_keys)
+	_keys.append(new_key)
+
+	save_keys()
 
 
-## Loads clients from disk.
-func load_clients() -> void:
-	var loaded_client_config: Variant = ConfLib.load_config(_conf_path)
-	if loaded_client_config is not Array:
-		return
-
-	client_list = []
-	for client_dict in loaded_client_config:
-		var new_client: Config = generate_default_client_config()
-		new_client.apply_dict(client_dict)
-		add_client(new_client)
+## Removes a key from the keys list and saves to disk.
+func remove_key(key: SSHKey) -> void:
+	_keys.erase(key)
+	save_keys()
 
 
-## Saves clients to disk.
-func save_clients() -> void:
-	var serialized_client_list: Array[Dictionary] = []
-	for client_config in client_list:
-		serialized_client_list.append(client_config.get_as_dict())
-		ConfLib.save_config(_conf_path, serialized_client_list)
-
-
-## Adds a new client with the [param client_config].
-func add_client(client_config: Config) -> void:
-	client_list.push_back(client_config)
-
-	var ssh_client: SSHClient = SSHClient.new()
-	var client_dict: Dictionary = client_config.get_as_dict()
-	ssh_client.name = client_dict["name"]
-	add_child(ssh_client)
-	edit_client_config(get_child_count() - 1)
-	update_loader_client_list()
-
-
-## Updates the action in the loader so it always shows all available clients.
-func update_loader_client_list() -> void:
-	var clients: Array[String] = []
-	for client in client_list:
-		clients.append(client.get_object("name").get_value())
-	PluginCoordinator.get_plugin_loader("SSH").set_client_config(clients)
-
-
-## Edits a client in both the child SSHClient node and [member client_list].
-## The config needs to be edited beforehand by the caller.
-func edit_client_config(index: int) -> void:
-	assert(client_list.size() > index)
-
-	var ssh_client: SSHClient = get_child(index)
-	if not ssh_client:
-		push_error("SSHClient not found")
-		return
-
-	var client_dict: Dictionary = client_list[index].get_as_dict()
-	ssh_client.disconnect_session()
-	ssh_client.setup(client_dict["user"], client_dict["ip"], int(client_dict["port"]))
-	ssh_client.set_auth_method("key_file", client_dict["key_path"], "")
-	ssh_client.set_server_check_method("known_hosts_file")
-	ssh_client.set_debug(client_dict["debug"])
-	ssh_client.open_session()
-
-	save_clients()
-
-
-## Get a SSH client identified by [param client_name]
-func get_client(client_name: String) -> SSHClient:
-	for client_id in client_list.size():
-		if client_name == client_list[client_id].get_object("name").get_value():
-			return get_child(client_id)
+## Get a [SSHKey] by [param key_uuid]. Returns null on failure.
+func get_key(key_uuid: String) -> SSHKey:
+	for key in _keys:
+		if key.uuid == key_uuid:
+			return key
 
 	return null
 
 
-## Removes a SSH client identified by [param client_name]
-## from both the client list and the [SSHClient] child.
-func remove_client(client_name: String) -> void:
-	var ssh_client: SSHClient = get_client(client_name)
-	if ssh_client:
-		ssh_client.queue_free()
+## Get a [Dictionary] containing all the keys with key: key name, value: key uuid.
+## Note that the name may be altered if the name appears multiple times as dictionaries
+## can't contain the same key twice.
+func get_keys_dict() -> Dictionary:
+	var dict: Dictionary = {}
+	for key in _keys:
+		if not dict.has(key.name):
+			dict[key.name] = key.uuid
+			continue
 
-	for client_config in client_list:
-		if client_config.get_object("name").get_value() == client_name:
-			client_list.erase(client_config)
+		# If dict already contains the keys name, append a (2..) behind it
+		var key_name: String = key.name
+		var i: int = 2
+		while dict.has(key_name):
+			key_name = "%s (%s)" % [key.name, str(i)]
+			i += 1
+
+		dict[key_name] = key.uuid
+
+	return dict
 
 
-# maybe switch away from identifier client_name to index, but having the same name is
-# still confusing so having unique names should probably still be enforced
-## Executes the [param cmd] string on client, which is identified by [param client_name].
-## This operation is done asynchronously to not block the main thread.
-func exec_on_client(client_name: String, cmd: String) -> void:
-	var ssh_client: SSHClient = get_client(client_name)
-	if not ssh_client:
-		push_error("Couldn't execute %s: SSHClient %s not found" % [cmd, client_name])
+## Loads keys from disk.
+func load_keys() -> void:
+	var loaded_keys_config: Variant = ConfLib.load_config(_keys_conf_path)
+	if loaded_keys_config is not Array:
 		return
 
+	_keys = []
+	for key_dict in loaded_keys_config:
+		var new_key: SSHKey = SSHKey.new()
+		new_key.deserialize(key_dict)
+		new_key.key_updated.connect(save_keys)
+		_keys.append(new_key)
+
+
+## Saves keys to disk.
+func save_keys() -> void:
+	var keys: Array[Dictionary] = []
+	for key in _keys:
+		keys.append(key.serialize())
+
+	ConfLib.save_config(_keys_conf_path, keys)
+	update_clients_keys()
+
+
+## Loads clients from disk.
+func load_clients() -> void:
+	var loaded_clients_config: Variant = ConfLib.load_config(_clients_conf_path)
+	if loaded_clients_config is not Array:
+		return
+
+	_clients = []
+	for client_dict in loaded_clients_config:
+		var new_client: SSHClientWrapper = SSHClientWrapper.new()
+		new_client.update_keys(get_keys_dict())
+		new_client.client_updated.connect(save_clients)
+		new_client.deserialize(client_dict)
+		_clients.append(new_client)
+
+	update_loader_clients()
+
+
+## Saves clients to disk.
+func save_clients() -> void:
+	var serialized_clients: Array[Dictionary] = []
+	for client in _clients:
+		serialized_clients.append(client.serialize())
+		ConfLib.save_config(_clients_conf_path, serialized_clients)
+
+
+## Adds a new client with the [param client_config].
+func add_client(client: SSHClientWrapper) -> void:
+	_clients.append(client)
+	client.client_updated.connect(save_clients)
+	update_loader_clients()
+	save_clients()
+
+
+## Updates the action in the loader so it always shows all available clients.
+func update_loader_clients() -> void:
+	var clients: Dictionary = {}
+	for client in _clients:
+		if not clients.has(client.name):
+			clients[client.name] = client.uuid
+			continue
+
+		# If dict already contains the client_name, append a (2..) behind it
+		var client_name: String = client.name
+		var i: int = 2
+		while clients.has(client_name):
+			client_name = "%s (%s)" % [client.name, str(i)]
+			i += 1
+
+		clients[client_name] = client.uuid
+
+	PluginCoordinator.get_plugin_loader("SSH").set_client_config(clients)
+
+
+## Update the ssh keys [Dictionary] in all clients
+## so all available keys are shown in the editor.
+func update_clients_keys() -> void:
+	for client in _clients:
+		client.update_keys(get_keys_dict())
+
+
+## Get a SSH client identified by [param client_uuid]
+## Can also be the client name, though this functionality will be deleted in the future.
+func get_client(client_uuid: String) -> SSHClientWrapper:
+	for client in _clients:
+		if client.uuid == client_uuid:
+			return client
+		if client.name == client_uuid:
+			return client
+
+	return null
+
+
+## Removes a SSH client identified by [param client_uuid].
+func remove_client(client: SSHClientWrapper) -> void:
+	_clients.erase(client)
+	save_clients()
+
+
+## Executes the [param cmd] string on client, which is identified by [param client_uuid].
+## This operation is done asynchronously to not block the main thread.
+func exec_on_client(blocking: bool, client_uuid: String, cmd: String) -> bool:
+	var ssh_client: SSHClientWrapper = get_client(client_uuid)
+	if not ssh_client:
+		push_error("Couldn't execute %s: SSHClient %s not found" % [cmd, client_uuid])
+		return false
+
+	if blocking:
+		var output: Variant = ssh_client.exec_blocking(cmd)
+		if not output:
+			return false
+
+		return output.exit_status != -1
+
+	# Even though we are in non blocking mode and exec() is non blocking
+	# it isn't actually non blocking, it just doesn't block when the execution has started
+	# until then it does block, so to avoid any delay it is still moved to a different thread.
 	var thread: Thread = Thread.new()
-	thread.start(ssh_client.exec.bind(cmd))
+	thread.start(ssh_client.get_client().exec.bind(cmd))
 	_thread_pool.append(thread)
+
+	return true
+
+
+func _on_settings_button_pressed() -> void:
+	var clients_editor: SSHClientWrapper.SSHClientsEditor = SSHClientWrapper.SSHClientsEditor.new()
+	clients_editor.set_clients(_clients)
+	clients_editor.client_added.connect(add_client)
+	clients_editor.client_deleted.connect(remove_client)
+
+	var keys_editor: SSHKey.KeysEditor = SSHKey.KeysEditor.new()
+	keys_editor.set_keys(_keys)
+	keys_editor.key_added.connect(add_key)
+	keys_editor.key_deleted.connect(remove_key)
+
+	PopupManager.push_stack_item([clients_editor, keys_editor])

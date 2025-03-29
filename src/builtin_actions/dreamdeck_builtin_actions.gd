@@ -31,19 +31,31 @@ func get_actions() -> Array[PluginCoordinator.PluginActionDefinition]:
 
 
 ## Waits [param time]. Function for builtin action "Timer".
-func wait_time(time: float) -> void:
+func wait_time(_blocking: bool, time: float) -> void:
 	await get_tree().create_timer(time).timeout
 
 
-# TODO doesn't really work with blocking
 ## Executes [param command]. Function for builtin action "Execute Command".
-func exec_cmd(command: String) -> bool:
+func exec_cmd(blocking: bool, command: String) -> bool:
 	# Platform specific
 	# If the os is windows we have to run commands like this:
 	# OS.execute("CMD.exe", ["/c", ...])
 	if OS.get_name() == "Windows":
 		command = "CMD.exe /c " + command
 
+	if blocking:
+		var args: Array = split_command(command)
+		var cmd: String = args[0]
+		args.remove_at(0)
+		var output: Array = []
+		var ret: int = OS.execute(cmd, args, output, true)
+		if ConfigLoader.get_config()["debug"]:
+			if output.size() > 0 and output[0] != "":
+				print_dbg_msg(command, output[0])
+
+			print_dbg_msg(command, "exited with code: %s" % ret, "red" if ret != 0 else "white")
+
+		return ret != -1
 	if ConfigLoader.get_config()["debug"]:
 		var cmd_proc: CommandProcess = CommandProcess.new(command)
 		var threads: Array[Thread] = cmd_proc.exec_cmd()
@@ -61,17 +73,20 @@ func exec_cmd(command: String) -> bool:
 
 
 ## Switches panel [param panel_name] to the foreground. Function for builtin action "Switch panel".
-func switch_panel(panel_name: String) -> bool:
+func switch_panel(_blocking: bool, panel_name: String) -> bool:
 	return _layout.show_panel_by_name(panel_name)
 
 
 ## Updates all available panels. This is used to display a selection of panels in the action editor.
-## This is mostly supposed to be called by [Layout] when it loads something has changed.
+## This is mostly supposed to be called by [Layout] when it loads or something has changed.
 func update_available_panels(panels: Array[String]) -> void:
 	_available_panels = panels
 	var panel_object: Config.StringArrayObject = _switch_panel_config.get_object("panel_name")
 	if panel_object:
 		panel_object.set_string_array(panels)
+		if panels.size() > 0:
+			panel_object.set_default_value(panels[0])
+			panel_object.set_value(panels[0])
 
 
 func _setup_actions() -> void:
@@ -79,7 +94,10 @@ func _setup_actions() -> void:
 	exec_cmd_args_config.add_string("Command", "command", "")
 	var timer_args_config: Config = Config.new()
 	timer_args_config.add_float("Time", "time", 1.0)
-	_switch_panel_config.add_string_array("Panel name", "panel_name", "", _available_panels)
+	var default_panel: String = "" if _available_panels.size() == 0 else _available_panels[0]
+	_switch_panel_config.add_string_array(
+		"Panel name", "panel_name", default_panel, _available_panels
+	)
 
 	_actions = [
 		PluginCoordinator.PluginActionDefinition.new(
@@ -107,6 +125,19 @@ func _setup_actions() -> void:
 			""
 		)
 	]
+
+
+## Formats a message with print_rich and includes a timestamp
+static func print_dbg_msg(command: String, msg: String, color_code: String = "white"):
+	# The second color code is there because when msg contains newlines the color delimiter seems to break
+	# and be written as plain text into the output.
+	# To circumvent this we just print a white color again before the delimiter
+	print_rich(
+		(
+			'[color=%s]%s "%s": %s[color=white][/color]'
+			% [color_code, Time.get_datetime_string_from_system(), command, msg]
+		)
+	)
 
 
 ## Creates an array of strings from a single command string.
@@ -176,7 +207,8 @@ class CommandProcess:
 		args.remove_at(0)
 		var process: Dictionary = OS.execute_with_pipe(cmd, args)
 		if process == {}:
-			_print_dbg_msg("Failed to execute", "red")
+			@warning_ignore("static_called_on_instance")
+			DreamdeckBuiltinActions.print_dbg_msg(command, "Failed to execute", "red")
 			return []
 
 		_pid = process["pid"]
@@ -191,26 +223,20 @@ class CommandProcess:
 	## Prints the exit code nicely formatted or an error message if it was never started.
 	func print_exit_code() -> void:
 		if _pid < 0:
-			_print_dbg_msg("failed to start", "red")
+			@warning_ignore("static_called_on_instance")
+			DreamdeckBuiltinActions.print_dbg_msg(command, "failed to start", "red")
 			return
 
 		var exit_code: int = OS.get_process_exit_code(_pid)
-		_print_dbg_msg("exited with code %s" % exit_code, "red" if exit_code != 0 else "green")
+		@warning_ignore("static_called_on_instance")
+		DreamdeckBuiltinActions.print_dbg_msg(
+			command, "exited with code %s" % exit_code, "red" if exit_code != 0 else "green"
+		)
 
 	func _read(file: FileAccess, color_code: String = "white") -> void:
 		if is_instance_valid(file):
 			while file.is_open() and file.get_error() == OK:
 				var line: String = file.get_line()
 				if line != "":
-					_print_dbg_msg(line, color_code)
-
-	func _print_dbg_msg(msg: String, color_code: String = "white"):
-		# The second color code is there because when msg contains newlines the color delimiter seems to break
-		# and be written as plain text into the output.
-		# To circumvent this we just print a white color again before the delimiter
-		print_rich(
-			(
-				'[color=%s]%s "%s": %s[color=white][/color]'
-				% [color_code, Time.get_datetime_string_from_system(), command, msg]
-			)
-		)
+					@warning_ignore("static_called_on_instance")
+					DreamdeckBuiltinActions.print_dbg_msg(command, line, color_code)

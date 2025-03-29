@@ -67,8 +67,8 @@ func get_plugins():
 	return plugins
 
 
-func get_activated_plugins() -> Array:
-	var ret_array: Array = []
+func get_activated_plugins() -> Array[String]:
+	var ret_array: Array[String] = []
 	for plugin in _plugins:
 		if plugin.is_activated():
 			ret_array.push_back(plugin.plugin_name)
@@ -203,26 +203,6 @@ func edit_panel(panel: LayoutPanel):
 	var instance: PluginSceneBase = panel.get_plugin_instance()
 	if instance:
 		instance.edit_config()
-
-
-func generate_plugins_enum() -> Dictionary:
-	var ret_dict: Dictionary = {}
-	var i: int = 0
-	for plugin in get_activated_plugins():
-		ret_dict[plugin] = i
-		i += 1
-
-	return ret_dict
-
-
-func generate_scene_enum(plugin: String) -> Dictionary:
-	var ret_dict: Dictionary = {}
-	var i: int = 0
-	for scene in get_plugin_loader(plugin).scenes:
-		ret_dict[scene] = i
-		i += 1
-
-	return ret_dict
 
 
 func get_plugin_actions() -> Array[PluginActionDefinition]:
@@ -452,15 +432,18 @@ class PluginAction:
 	var controller: String
 	var plugin: String
 	var func_name: String
-	var args: Array[Variant]
+	var args: Array[Variant]:
+		set = set_args
 	var blocking: bool
+
+	var _call_args: Array[Variant]
 
 	func deserialize(dict: Dictionary) -> void:
 		controller = dict["controller"]
 		plugin = dict["plugin"]
 		func_name = dict["func_name"]
-		args = dict["args"]
 		blocking = dict["blocking"]
+		args = dict["args"]
 
 	func serialize() -> Dictionary:
 		return {
@@ -470,6 +453,12 @@ class PluginAction:
 			"args": args,
 			"blocking": blocking
 		}
+
+	func set_args(value: Array[Variant]) -> void:
+		args = value
+
+		_call_args = args.duplicate(true)
+		_call_args.insert(0, blocking)
 
 	func execute() -> void:
 		var controller_instance: PluginControllerBase
@@ -484,16 +473,10 @@ class PluginAction:
 				return
 
 		var ret: Variant
-		if blocking:
-			if plugin == "DreamDeck":
-				ret = await DreamdeckBuiltinActions.callv(func_name, args)
-			else:
-				ret = await controller_instance.callv(func_name, args)
+		if plugin == "DreamDeck":
+			ret = await DreamdeckBuiltinActions.callv(func_name, _call_args)
 		else:
-			if plugin == "DreamDeck":
-				ret = DreamdeckBuiltinActions.callv(func_name, args)
-			else:
-				ret = controller_instance.callv(func_name, args)
+			ret = await controller_instance.callv(func_name, _call_args)
 
 		if typeof(ret) == TYPE_BOOL:
 			if not ret:

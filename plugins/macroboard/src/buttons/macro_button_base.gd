@@ -64,7 +64,11 @@ func open_editor(new_button: bool = false) -> void:
 	_actions_editor = ActionsEditor.new()
 	_actions_editor.name = "Actions"
 	_actions_editor.connect("new_action_requested", _on_new_action_requested)
-	PopupManager.init_popup([settings_vbox, _actions_editor], _on_popup_confirmed)
+	PopupManager.init_popup(
+		[settings_vbox, _actions_editor],
+		_on_popup_confirmed,
+		func _on_cancel() -> void: button_pressed = false
+	)
 
 
 func _on_new_action_requested() -> void:
@@ -88,6 +92,7 @@ func _on_popup_new_action_confirmed() -> bool:
 
 # Required for extending classes to overwrite
 func _on_popup_confirmed() -> bool:
+	button_pressed = false
 	return true
 
 

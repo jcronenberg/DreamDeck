@@ -1,14 +1,12 @@
 class_name SSHPluginLoader
 extends PluginLoaderBase
 
-const SETTINGS_PAGE = preload("res://plugins/ssh/src/ssh_config_window.tscn")
-
 # Config for execute command action
 var _exec_cmd_config: Config = Config.new()
 
 
 func _init():
-	_exec_cmd_config.add_string_array("SSH Client", "ssh_client", "", [])
+	_exec_cmd_config.add_dict("SSH Client", "ssh_client", null, {})
 	_exec_cmd_config.add_string("Command", "command", "")
 	actions = [
 		PluginCoordinator.PluginActionDefinition.new(
@@ -26,9 +24,12 @@ func _init():
 	has_settings = true
 
 
-func set_client_config(clients: Array[String]) -> void:
-	_exec_cmd_config.get_object("ssh_client").set_string_array(clients)
+func set_client_config(clients: Dictionary) -> void:
+	var ssh_client_object: Config.DictObject = _exec_cmd_config.get_object("ssh_client")
+	ssh_client_object.set_dict(clients)
+	if clients.size() > 0:
+		ssh_client_object.set_value(clients.values()[0])
 
 
-func get_settings_page() -> Control:
-	return SETTINGS_PAGE.instantiate()
+func _on_settings_button_pressed() -> void:
+	get_controller("SSHController")._on_settings_button_pressed()

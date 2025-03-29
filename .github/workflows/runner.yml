@@ -64,11 +64,8 @@ jobs:
     uses: ./.github/workflows/flatpak-build.yml
 
   obs-build:
-    if: |
-      needs.changes.outputs.dist-changes == 'true' &&
-      (github.event_name == 'pull_request' ||
-      (github.repository == 'jcronenberg/DreamDeck' && github.ref == 'refs/heads/prototyping'))
-    name: OBS build
-    needs: [static-checks, changes]
+    if: github.repository == 'jcronenberg/DreamDeck' && github.event_name == 'push' && github.ref == 'refs/heads/prototyping'
+    name: OBS submit
+    needs: static-checks
     uses: ./.github/workflows/obs-build.yml
     secrets: inherit
