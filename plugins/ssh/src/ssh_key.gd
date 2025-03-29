@@ -1,5 +1,5 @@
 class_name SSHKey
-## Stores an SSH key.
+## Stores a SSH key.
 
 ## Emitted when the key config was updated.
 ## Note: not emitted on [method deserialize].
@@ -11,13 +11,10 @@ enum CryptoTypes {
 	RSA,
 }
 
-## The types a key can have.[br]
-## [code]EXISTING_KEY[code] uses an existing key from a file.[br]
-## [code]NEW_KEY[code] generates a new key or if it already has been generated
-## contains the keys data.
+## The types a key can have.
 enum KeyTypes {
-	NEW_KEY,
-	EXISTING_KEY,
+	NEW_KEY,  ## Use an existing key from a file.
+	EXISTING_KEY,  ## Generate a new key or if it already has been generated contains the keys data.
 }
 
 ## UUID of the key.

@@ -42,6 +42,7 @@ func remove_key(key: SSHKey) -> void:
 	save_keys()
 
 
+## Get a [SSHKey] by [param key_uuid]. Returns null on failure.
 func get_key(key_uuid: String) -> SSHKey:
 	for key in _keys:
 		if key.uuid == key_uuid:
@@ -50,6 +51,9 @@ func get_key(key_uuid: String) -> SSHKey:
 	return null
 
 
+## Get a [Dictionary] containing all the keys with key: key name, value: key uuid.
+## Note that the name may be altered if the name appears multiple times as dictionaries
+## can't contain the same key twice.
 func get_keys_dict() -> Dictionary:
 	var dict: Dictionary = {}
 	for key in _keys:
@@ -146,6 +150,8 @@ func update_loader_clients() -> void:
 	PluginCoordinator.get_plugin_loader("SSH").set_client_config(clients)
 
 
+## Update the ssh keys [Dictionary] in all clients
+## so all available keys are shown in the editor.
 func update_clients_keys() -> void:
 	for client in _clients:
 		client.update_keys(get_keys_dict())
