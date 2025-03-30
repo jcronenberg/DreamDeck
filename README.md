@@ -15,8 +15,17 @@ Feedback and contributions are of course always welcome.
 * Linux exclusive touch
 
 ## Installation
-### Building the project
-To build DreamDeck, ensure you have Rust/Cargo and Godot 4 (latest stable version recommended) with the corresponding export templates installed.
+### Prebuilt packages
+#### Github Actions build
+The latest version can be downloaded as a build artifact from Github Actions.
+1. Go to https://github.com/jcronenberg/DreamDeck/actions?query=branch%3Aprototyping
+2. Click on the latest action run
+3. At the bottom, the appropriate build artifact can be downloaded (requires to be logged in)
+#### From the Open Build Service
+The latest version is also published on OBS at https://build.opensuse.org/package/show/home:jcronenberg:dreamdeck/dreamdeck  
+This can be used either by adding the download repository manually or via [opi](https://github.com/openSUSE/opi)
+### Building the project from source
+To build DreamDeck, ensure you have Rust/Cargo and Godot 4 (latest stable version recommended) with the corresponding export templates installed (see the [official docs](https://docs.godotengine.org/en/latest/tutorials/export/exporting_projects.html#export-templates)).
 ```bash
 # Download
 ## Clone the project
@@ -30,7 +39,7 @@ make linux
 make windows
 ```
 The binary and libraries can now be found in `bin/`  
-On linux you can now also install via `make install`
+On Linux, you can now also install it via `make install` (requires root privileges)
 
 ### Configuring
 In the main menu, plugins can be enabled and disabled. You can also enter edit mode, which let's you configure the Macroboard plugin.  
