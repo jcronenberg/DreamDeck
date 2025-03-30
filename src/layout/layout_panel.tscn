@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://ducsh0oacvclf"]
 
-[ext_resource type="Script" path="res://src/layout/layout_panel.gd" id="1_0cnkw"]
+[ext_resource type="Script" uid="uid://neg5dvmj2x8u" path="res://src/layout/layout_panel.gd" id="1_0cnkw"]
 
 [node name="LayoutPanel" type="Control"]
 custom_minimum_size = Vector2(100, 100)

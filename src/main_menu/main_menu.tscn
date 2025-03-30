@@ -1,11 +1,11 @@
 [gd_scene load_steps=13 format=3 uid="uid://cmqfrusykgypy"]
 
-[ext_resource type="Script" path="res://src/main_menu/exit_area_button.gd" id="1"]
-[ext_resource type="Script" path="res://src/main_menu/menu.gd" id="3"]
-[ext_resource type="Script" path="res://src/main_menu/side_menu_button_area.gd" id="3_11tis"]
-[ext_resource type="Script" path="res://src/main_menu/menu_button.gd" id="4"]
+[ext_resource type="Script" uid="uid://ccwfurmckb65t" path="res://src/main_menu/exit_area_button.gd" id="1"]
+[ext_resource type="Script" uid="uid://cyr11l46vuvps" path="res://src/main_menu/menu.gd" id="3"]
+[ext_resource type="Script" uid="uid://b3fr3iclvdojb" path="res://src/main_menu/side_menu_button_area.gd" id="3_11tis"]
+[ext_resource type="Script" uid="uid://cv3sc816o1n0" path="res://src/main_menu/menu_button.gd" id="4"]
 [ext_resource type="Texture2D" uid="uid://ccblccwjfrh2j" path="res://resources/icons/hamburger_menu.png" id="4_rvcit"]
-[ext_resource type="Script" path="res://src/main_menu/main_menu.gd" id="5"]
+[ext_resource type="Script" uid="uid://dtuud7sp2wkvo" path="res://src/main_menu/main_menu.gd" id="5"]
 
 [sub_resource type="StyleBoxEmpty" id="2"]
 

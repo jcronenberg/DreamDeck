@@ -1,8 +1,8 @@
 [gd_scene load_steps=4 format=3 uid="uid://c62nj40j07xei"]
 
-[ext_resource type="Script" path="res://plugins/touch/scenes/touch.gd" id="1_fhsw0"]
+[ext_resource type="Script" uid="uid://dyw4ebfgu0rci" path="res://plugins/touch/scenes/touch.gd" id="1_fhsw0"]
 [ext_resource type="Theme" uid="uid://duea6v8sw5cfx" path="res://themes/main_theme.tres" id="3"]
-[ext_resource type="Script" path="res://plugins/touch/scenes/touch_device_options.gd" id="4"]
+[ext_resource type="Script" uid="uid://bim7dx7sycuuc" path="res://plugins/touch/scenes/touch_device_options.gd" id="4"]
 
 [node name="Touch" type="Control"]
 custom_minimum_size = Vector2(752, 24)

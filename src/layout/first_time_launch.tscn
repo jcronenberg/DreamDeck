@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://bi32uf4eygli6"]
 
-[ext_resource type="Script" path="res://src/layout/first_time_launch.gd" id="1_23js4"]
+[ext_resource type="Script" uid="uid://du5x4cyrxmugb" path="res://src/layout/first_time_launch.gd" id="1_23js4"]
 
 [node name="FirstTimeLaunch" type="CenterContainer"]
 anchors_preset = 15

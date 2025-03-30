@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://c7hrhunviq03i"]
 
-[ext_resource type="Script" path="res://plugins/macroboard/src/buttons/macro_action_button.gd" id="1_bokui"]
+[ext_resource type="Script" uid="uid://cl60rg6ufa5mf" path="res://plugins/macroboard/src/buttons/macro_action_button.gd" id="1_bokui"]
 
 [node name="MacroActionButton" type="Button"]
 custom_minimum_size = Vector2(150, 150)
