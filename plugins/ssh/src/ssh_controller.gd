@@ -184,7 +184,7 @@ func exec_on_client(blocking: bool, client_uuid: String, cmd: String) -> bool:
 		return false
 
 	if blocking:
-		var output: Variant = ssh_client.exec_blocking(cmd)
+		var output: Variant = ssh_client.get_client().exec_blocking(cmd)
 		if not output:
 			return false
 
