@@ -28,10 +28,14 @@ var _original_text: String
 var _tween
 
 
+func _ready() -> void:
+	resized.connect(_on_resized)
+
+
 ## Set text for the label.
 ## Use this instead of [method Label.set_text] or modifying [member Label.text]
 ## directly.
-func set_new_text(value: String):
+func set_new_text(value: String) -> void:
 	if value == _original_text:
 		return
 
@@ -51,7 +55,7 @@ func set_new_text(value: String):
 
 # Determines if scrolling should occur.
 # If it should, initializes scrolling and repeats via recursive calling.
-func _init_scroll():
+func _init_scroll() -> void:
 	await get_tree().create_timer(cooldown).timeout
 	_reset_pos_and_size()
 	# If a newer instance of the recursive function exists, the older should exit
@@ -102,7 +106,11 @@ func _init_scroll():
 	_init_scroll()
 
 
-func _reset_pos_and_size():
+func _reset_pos_and_size() -> void:
 	position.x = 0
 	# Custom resizing since the label doesn't automatically reduce it's size again
 	size.x = get_parent_area_size().x
+
+
+func _on_resized() -> void:
+	_init_scroll()
