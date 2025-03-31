@@ -36,5 +36,5 @@ jobs:
         run: osc commit -m "$GITHUB_SHA"
         working-directory: ./dreamdeck-package
       - name: Watch OBS result
-        run: osc results -w -F
+        run: timeout 900 osc results -w -F; r=$?; if [ $r -eq 124 ]; then return 0; else return $r; fi
         working-directory: ./dreamdeck-package
