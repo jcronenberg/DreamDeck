@@ -25,7 +25,7 @@ The latest version can be downloaded as a build artifact from Github Actions.
 The latest version is also published on OBS at https://build.opensuse.org/package/show/home:jcronenberg:dreamdeck/dreamdeck  
 This can be used either by adding the download repository manually or via [opi](https://github.com/openSUSE/opi)
 ### Building the project from source
-To build DreamDeck, ensure you have Rust/Cargo and Godot 4 (latest stable version recommended) with the corresponding export templates installed (see the [official docs](https://docs.godotengine.org/en/latest/tutorials/export/exporting_projects.html#export-templates)).
+To build DreamDeck, ensure you have Rust/Cargo and Godot 4 (latest stable version recommended) with the corresponding export templates installed (see the [official docs](https://docs.godotengine.org/en/stable/tutorials/export/exporting_projects.html#export-templates)).
 ```bash
 # Download
 ## Clone the project
