@@ -36,12 +36,14 @@ jobs:
         run: osc commit -m "$GITHUB_SHA"
         working-directory: ./dreamdeck-package
       - name: Watch OBS result
-        run: >
-          bash -c 'timeout 900 osc results -w -F;
-          r=$?;
+        shell: bash {0}
+        run: |
+          timeout 900 osc results -w -F
+          r=$?
           if [ $r -eq 124 ]; then
-          echo "::warning ::OBS build timed out"; exit 0;
+            echo "::warning ::OBS build timed out"
+            exit 0
           else
-          exit $r;
-          fi'
+            exit $r
+          fi
         working-directory: ./dreamdeck-package
