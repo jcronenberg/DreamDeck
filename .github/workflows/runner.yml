@@ -63,7 +63,7 @@ jobs:
     uses: ./.github/workflows/flatpak-build.yml
 
   obs-build:
-    if: github.repository == 'jcronenberg/DreamDeck' && github.event_name == 'push' && github.ref == 'refs/heads/prototyping'
+    #if: github.repository == 'jcronenberg/DreamDeck' && github.event_name == 'push' && github.ref == 'refs/heads/prototyping'
     name: OBS submit
     needs: static-checks
     uses: ./.github/workflows/obs-build.yml

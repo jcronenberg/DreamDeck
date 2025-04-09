@@ -6,7 +6,7 @@ on:
 jobs:
   update-obs-package:
     # only publish if push to main repo and branch
-    if: github.repository == 'jcronenberg/DreamDeck' && github.event_name == 'push' && github.ref == 'refs/heads/prototyping'
+    #if: github.repository == 'jcronenberg/DreamDeck' && github.event_name == 'push' && github.ref == 'refs/heads/prototyping'
 
     name: "Update dev OBS package"
     runs-on: ubuntu-latest
@@ -32,16 +32,42 @@ jobs:
       - name: Update current files in osc
         run: osc ar
         working-directory: ./dreamdeck-package
-      - name: Commit to OBS
-        run: osc commit -m "$GITHUB_SHA"
-        working-directory: ./dreamdeck-package
+        #- name: Commit to OBS
+        #  run: osc commit -m "$GITHUB_SHA"
+        #  working-directory: ./dreamdeck-package
       - name: Watch OBS result
-        run: >
-          bash -c 'timeout 900 osc results -w -F;
-          r=$?;
+        shell: bash {0}
+        run: |
+          timeout 900 osc results -w -F
+          r=$?
           if [ $r -eq 124 ]; then
-          echo "::warning ::OBS build timed out"; exit 0;
+            echo "::warning ::OBS build timed out"
+            exit 0
           else
-          exit $r;
-          fi'
+            exit $r
+          fi
+        working-directory: ./dreamdeck-package
+      - name: Watch OBS result 2
+        shell: bash {0}
+        run: |
+          timeout 10 sleep 12
+          r=$?
+          if [ $r -eq 124 ]; then
+            echo "::warning ::OBS build timed out"
+            exit 0
+          else
+            exit $r
+          fi
+        working-directory: ./dreamdeck-package
+      - name: Watch OBS result 3
+        shell: bash {0}
+        run: |
+          timeout 10 exit 1
+          r=$?
+          if [ $r -eq 124 ]; then
+            echo "::warning ::OBS build timed out"
+            exit 0
+          else
+            exit $r
+          fi
         working-directory: ./dreamdeck-package
