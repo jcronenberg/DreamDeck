@@ -103,6 +103,8 @@ pub impl SSHClient {
 
     /// Execute a command in a blocking fashion on the client. Client needs to be configured to work.
     /// If there is already a session active, it will use this session, otherwise it will try to open one.
+    /// Returns a variant, `null` on failure otherwise a `Dictionary` that contains
+    /// `{"stdout": String, "stderr": String, "exit_status": int}`.
     ///
     /// * `cmd` - Command to execute.
     #[func]
