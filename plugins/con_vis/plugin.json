@@ -1,0 +1,6 @@
+{
+  "plugin_name": "Connection Visualizer",
+  "description": "A panel that shows the locations of all current network connections on a globe.",
+  "version": "0.1.0",
+  "min_api_version": "0.1.0"
+}
