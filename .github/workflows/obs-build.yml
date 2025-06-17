@@ -11,7 +11,7 @@ jobs:
     name: "Update dev OBS package"
     runs-on: ubuntu-latest
     container:
-      image: registry.opensuse.org/home/jcronenberg/github-ci/containers/opensuse/obs-build:latest
+      image: registry.opensuse.org/home/jcronenberg/github-ci/containers_tumbleweed/obs-build:latest
 
     steps:
       - name: Git Checkout
