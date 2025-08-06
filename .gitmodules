@@ -1,4 +1,0 @@
-[submodule "addon_submodules/godot-dockable-container"]
-	path = addon_submodules/godot-dockable-container
-	url = https://github.com/jcronenberg/godot-dockable-container.git
-	branch = dreamdeck
