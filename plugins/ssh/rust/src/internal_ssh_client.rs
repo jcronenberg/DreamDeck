@@ -298,7 +298,7 @@ impl InternalSSHClient {
             }
         }
 
-        Ok(dict! {"stdout": stdout, "stderr": stderr, "exit_status": exit_status})
+        Ok(vdict! {"stdout": stdout, "stderr": stderr, "exit_status": exit_status})
     }
 
     pub async fn exec_ssh(

@@ -23,7 +23,7 @@ pub struct GrabTouchDevice {
     /// The current device
     device: Option<Device>,
     /// String is formatted like this: "{id}: {name}"
-    device_list: Option<HashMap<GString, usize>>,
+    device_list: Option<HashMap<String, usize>>,
     /// State of device
     grabbed: bool,
     /// Timer for trying to reconnect
@@ -31,9 +31,9 @@ pub struct GrabTouchDevice {
     /// Flag to try and grab the device for set amount of time
     try_grab: bool,
     /// Name of the currently selected device
-    device_name: Option<GString>,
+    device_name: Option<String>,
     /// Current /dev/input dir, used to detect input device changes
-    input_dir: GString,
+    input_dir: String,
     parent: Option<Gd<Node>>,
 
     base: Base<Node>,
@@ -92,7 +92,7 @@ impl GrabTouchDevice {
         }
 
         // Get id from device_list by matching name
-        let device_name: &GString = match &self.device_name {
+        let device_name: &String = match &self.device_name {
             Some(device_name) => device_name,
             None => return Err("No device name set".into()),
         };
@@ -120,7 +120,7 @@ impl GrabTouchDevice {
 
     /// Set self.device by specified name
     #[func]
-    fn set_device(&mut self, name: GString) -> Variant {
+    fn set_device(&mut self, name: String) -> Variant {
         self._get_devices();
 
         self.device_name = Some(name);
@@ -151,12 +151,12 @@ impl GrabTouchDevice {
 
         let mut devices = evdev::enumerate().map(|t| t.1).collect::<Vec<_>>();
         devices.reverse();
-        let mut device_map: HashMap<GString, usize> = HashMap::new();
+        let mut device_map: HashMap<String, usize> = HashMap::new();
         for (i, d) in devices.iter().enumerate() {
             if d.supported_absolute_axes().is_some_and(|axes| {
                 axes.contains(AbsoluteAxisCode::ABS_X) && axes.contains(AbsoluteAxisCode::ABS_Y)
             }) {
-                device_map.insert(d.name().unwrap_or("Unnamed device").to_string().into(), i);
+                device_map.insert(d.name().unwrap_or("Unnamed device").to_string(), i);
             }
         }
         self.device_list = Some(device_map);
@@ -170,7 +170,7 @@ impl GrabTouchDevice {
         let mut device_list_string: Vec<GString> = Vec::new();
         if let Some(device_list) = &self.device_list {
             for n in device_list.keys() {
-                device_list_string.push(format!("{}", n).into());
+                device_list_string.push(n.as_str().into());
             }
         }
         device_list_string.reverse();
@@ -203,9 +203,9 @@ impl GrabTouchDevice {
         let new_dir = read_input_dir();
 
         // Check if input devices changed
-        if self.input_dir != new_dir.clone().into() {
+        if self.input_dir != new_dir {
             // Store the new input_dir
-            self.input_dir = new_dir.into();
+            self.input_dir = new_dir;
             return true;
         }
         false
@@ -222,7 +222,7 @@ impl INode for GrabTouchDevice {
             retry_device: 0.0,
             try_grab: false,
             device_name: None,
-            input_dir: GString::new(),
+            input_dir: String::new(),
             parent: None,
             base,
         }
