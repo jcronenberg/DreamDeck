@@ -1,14 +1,7 @@
 name: "Static checks"
 
 on:
-  workflow_call:
-    inputs:
-      touch-changed:
-        type: string
-      ssh-changed:
-        type: string
-      gdscript-changed:
-        type: string
+  workflow_call
 
 env:
   CARGO_TERM_COLOR: always
@@ -16,7 +9,6 @@ env:
 jobs:
   rust_touch_checks:
     name: Rust checks for touch plugin
-    if: ${{ inputs.touch-changed == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -43,7 +35,6 @@ jobs:
 
   rust_ssh_checks:
     name: Rust checks for ssh plugin
-    if: ${{ inputs.ssh-changed == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -70,7 +61,6 @@ jobs:
 
   gd_checks:
     name: GDScript checks
-    if: ${{ inputs.gdscript-changed == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
