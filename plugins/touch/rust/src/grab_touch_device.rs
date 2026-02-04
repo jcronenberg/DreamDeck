@@ -231,30 +231,32 @@ impl INode for GrabTouchDevice {
     /// Godot _physics_process function
     fn physics_process(&mut self, delta: f64) {
         // If not connected, retry to connect
-        if !self.grabbed && self.device_name.is_some() {
-            // Store delta
-            self.retry_device += delta;
+        if !self.grabbed {
+            if let Some(device) = self.device_name.clone() {
+                // Store delta
+                self.retry_device += delta;
 
-            // Try grabbing the device multiple times when a new device is connected
-            // as sometimes it won't immediately grab the device
-            if self.try_grab && self.retry_device <= RETRY_TIMER / 2.0 {
-                self.set_device(self.device_name.as_ref().unwrap().clone());
-            } else if self.try_grab {
-                self.try_grab = false;
-            }
-
-            // If cumulative delta is over timer
-            if self.retry_device >= RETRY_TIMER {
-                if self._compare_input_dir() {
-                    self.try_grab = true;
-                    // Try to connect to device
-                    self.set_device(self.device_name.as_ref().unwrap().clone());
+                // Try grabbing the device multiple times when a new device is connected
+                // as sometimes it won't immediately grab the device
+                if self.try_grab && self.retry_device <= RETRY_TIMER / 2.0 {
+                    self.set_device(device.clone());
+                } else if self.try_grab {
+                    self.try_grab = false;
                 }
 
-                // Reset timer
-                self.retry_device = 0.0;
+                // If cumulative delta is over timer
+                if self.retry_device >= RETRY_TIMER {
+                    if self._compare_input_dir() {
+                        self.try_grab = true;
+                        // Try to connect to device
+                        self.set_device(device.clone());
+                    }
+
+                    // Reset timer
+                    self.retry_device = 0.0;
+                }
+                return;
             }
-            return;
         }
 
         // let mut parent = self.base_mut().get_parent().unwrap();
