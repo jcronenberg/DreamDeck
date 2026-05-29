@@ -473,7 +473,7 @@ class AuthWizard:
 	signal auth_completed(encoded_client: String, refresh_token: String, access_token: String)
 
 	const SCOPE: String = "user-modify-playback-state user-read-playback-state user-read-currently-playing"
-	const REDIRECT_URI: String = "http://localhost:8888/callback"
+	const REDIRECT_URI: String = "http://127.0.0.1:8888/callback"
 
 	var _auth_status_vbox: VBoxContainer = VBoxContainer.new()
 	var _auth_status_label: Label = Label.new()
