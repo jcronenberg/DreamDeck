@@ -1,6 +1,9 @@
 class_name NewPanelEditor
 extends Control
 
+## The layout or panel group that will receive the new panel.
+var target_layout: Node = null
+
 ## Config that currently is being edited
 var _config_editor: Config.ConfigEditor
 
@@ -34,7 +37,8 @@ func save() -> bool:
 
 	var new_panel_dict: Dictionary = _config_editor.serialize()
 	new_panel_dict["UUID"] = UUID.v4()
-	get_node("/root/Main/Layout").add_panel(new_panel_dict)
+	assert(target_layout, "Missing target layout for new panel")
+	target_layout.add_panel(new_panel_dict)
 	return true
 
 

@@ -94,7 +94,14 @@ func request_deletion():
 func _on_confirm_deletion():
 	if _plugin_instance and is_instance_valid(_plugin_instance):
 		_plugin_instance.delete_config()
-	get_node("/root/Main/Layout").call_deferred("delete_panel", self)
+	# Walk up to find the container that manages this panel (Layout or PanelGroup).
+	var manager = get_parent()
+	while not manager.has_method("delete_panel"):
+		manager = manager.get_parent()
+		if not manager:
+			push_error("Failed to get container of panel: %s" % self)
+			return
+	manager.call_deferred("delete_panel", self)
 
 
 func _on_visibility_changed() -> void:
