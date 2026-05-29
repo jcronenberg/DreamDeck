@@ -4,7 +4,7 @@ on:
   workflow_call:
 
 env:
-  GODOT_VERSION: 4.5.1
+  GODOT_VERSION: 4.6.3
 
 jobs:
   flatpak-build:
@@ -15,7 +15,7 @@ jobs:
       options: --privileged
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: true
       - name: Setup

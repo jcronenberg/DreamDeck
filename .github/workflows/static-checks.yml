@@ -14,10 +14,10 @@ jobs:
       fail-fast: false
     steps:
     - name: Git Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
     - name: Install toolchain
       run: rustup toolchain install stable
-    - uses: actions/cache@v4
+    - uses: actions/cache@v5
       with:
         path: |
           ~/.cargo/bin/
@@ -40,10 +40,10 @@ jobs:
       fail-fast: false
     steps:
     - name: Git Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
     - name: Install toolchain
       run: rustup toolchain install stable
-    - uses: actions/cache@v4
+    - uses: actions/cache@v5
       with:
         path: |
           ~/.cargo/bin/
@@ -66,7 +66,7 @@ jobs:
       fail-fast: false
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - uses: Scony/godot-gdscript-toolkit@master
       - name: Formatting checks
         run: gdformat --diff .
@@ -80,7 +80,7 @@ jobs:
       fail-fast: false
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Spell checks via codespell
         uses: codespell-project/actions-codespell@v2
         with:
