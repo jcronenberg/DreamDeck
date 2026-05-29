@@ -27,12 +27,7 @@ func _ready():
 ## Discovers all plugins at `res://plugins` and adds them to [member _plugins].
 ## It also loads all files in [member _conf_dir]/plugins as resource packs.
 func discover_plugins():
-	# FIXME in current godot load_resource_pack breaks DirAccess
-	# Thus runtime plugins don't work with the editor.
-	# If you need to test something export a debug build and test
-	# with that.
-	if not OS.has_feature("editor"):
-		_runtime_load_plugins()
+	_runtime_load_plugins()
 
 	var discovered_plugins: Array = list_plugins()
 	for plugin_path in discovered_plugins:
