@@ -5,9 +5,9 @@ use chrono::Local;
 use client::Msg;
 use godot::prelude::*;
 use keys::ssh_key::private::{Ed25519Keypair, KeypairData, RsaKeypair};
-use keys::ssh_key::rand_core::OsRng;
 use keys::{PrivateKey, PrivateKeyWithHashAlg};
 use russh::client::Handle;
+use russh::keys::key::safe_rng;
 use russh::*;
 use std::io;
 use std::path::PathBuf;
@@ -262,7 +262,7 @@ impl InternalSSHClient {
         ip: &String,
         user: &String,
         port: u16,
-    ) -> anyhow::Result<Dictionary> {
+    ) -> anyhow::Result<Dictionary<GString, Variant>> {
         let mut channel = block_on(self.open_channel(ip, user, port))?;
 
         // run cmd
@@ -298,7 +298,7 @@ impl InternalSSHClient {
             }
         }
 
-        Ok(vdict! {"stdout": stdout, "stderr": stderr, "exit_status": exit_status})
+        Ok(dict! {"stdout" => stdout, "stderr" => stderr, "exit_status" => exit_status})
     }
 
     pub async fn exec_ssh(
@@ -521,7 +521,7 @@ pub fn generate_private_key(
     key_size: i64,
     comment: String,
 ) -> anyhow::Result<String> {
-    let mut rng = OsRng;
+    let mut rng = safe_rng();
     let key_data = match key_type.as_str() {
         "ED25519" => KeypairData::from(Ed25519Keypair::random(&mut rng)),
         "RSA" => KeypairData::from(match RsaKeypair::random(&mut rng, key_size as usize) {
