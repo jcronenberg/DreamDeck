@@ -27,6 +27,16 @@ func _process(_delta) -> void:
 			_thread_pool.erase(thread)
 
 
+## Returns a dictionary containing all client.[br]
+## Layout: [code]{"client.name": client.uuid}[/code]
+func get_clients() -> Dictionary:
+	var ret: Dictionary = {}
+	for client in _clients:
+		ret[client.name] = client.uuid
+
+	return ret
+
+
 ## Adds a key to the keys list and also saves to disk.[br]
 ## Also updates the keys editor if it is being used
 func add_key(new_key: SSHKey) -> void:
