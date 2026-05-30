@@ -36,7 +36,6 @@ ConfigLoader="*res://src/autoload/config_loader.gd"
 GlobalSignals="*res://src/autoload/global_signals.gd"
 PluginCoordinator="*res://src/autoload/plugin_coordinator.gd"
 PopupManager="*res://src/autoload/popup_manager.gd"
-DreamdeckBuiltinActions="*res://src/builtin_actions/dreamdeck_builtin_actions.gd"
 
 [debug]
 

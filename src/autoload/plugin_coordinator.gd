@@ -1,5 +1,7 @@
 extends Node
 
+signal panels_changed
+
 const FILENAME := "plugins.json"
 const DEFAULT_ACTIVATED_PLUGINS := {
 	"Macroboard": true,
@@ -8,9 +10,18 @@ const DEFAULT_ACTIVATED_PLUGINS := {
 @export var layout_setup_finished: bool = false:
 	set = set_layout_setup_finished
 
+var layout: Layout:
+	set(value):
+		layout = value
+		panels_changed.emit()
+
 var _conf_dir: String = ArgumentParser.get_conf_dir()
 var _conf_path: String  # Path for plugins.json
 var _plugins: Array[Plugin] = []
+# This isn't stored inside _plugins because this the builtin is
+# meant to be special in that e.g. it's not possible to be disabled
+# and it also shouldn't appear in the plugin dialog
+var _builtin_loader: BuiltinLoader
 # _scenes example:
 # {"Spotify Panel": {"Spotify Panel1": scene, "Spotify Panel2": scene}, "Macroboard": {"Macroboard": scene}}
 var _scenes: Dictionary  # The already loaded scenes
@@ -18,6 +29,10 @@ var _scenes: Dictionary  # The already loaded scenes
 
 func _ready():
 	_conf_path = _conf_dir.path_join(FILENAME)
+
+	_builtin_loader = BuiltinLoader.new()
+	add_child(_builtin_loader)
+	_builtin_loader.plugin_load()
 
 	discover_plugins()
 	load_activated_plugins()
@@ -63,7 +78,7 @@ func get_plugins():
 
 
 func get_activated_plugins() -> Array[String]:
-	var ret_array: Array[String] = []
+	var ret_array: Array[String] = ["DreamDeck"]
 	for plugin in _plugins:
 		if plugin.is_activated():
 			ret_array.push_back(plugin.plugin_name)
@@ -135,6 +150,8 @@ func get_plugin_path(plugin_name) -> String:
 
 ## Returns loader of [param plugin_name]. Null if plugin doesn't exist or isn't loaded.
 func get_plugin_loader(plugin_name: String) -> PluginLoaderBase:
+	if plugin_name == "DreamDeck":
+		return _builtin_loader
 	for plugin in _plugins:
 		if plugin.plugin_name == plugin_name:
 			return plugin.get_loader()
@@ -202,19 +219,21 @@ func edit_panel(panel: LayoutPanel):
 
 func get_plugin_actions() -> Array[PluginActionDefinition]:
 	var actions: Array[PluginActionDefinition] = []
+	actions.append_array(_builtin_loader.actions)
 	for plugin in _plugins:
 		var loader: PluginLoaderBase = plugin.get_loader()
 		if loader:
 			actions.append_array(loader.actions)
-
-	actions.append_array(DreamdeckBuiltinActions.get_actions())
-
 	return actions
 
 
-func add_panel(leaf: DockableLayoutPanel):
-	get_node("/root/Main/Layout").set_new_panel_leaf(leaf)
+func add_panel(leaf: DockableLayoutPanel, source_container: DockableContainer = null) -> void:
+	var target: DockableContainer = (
+		source_container if source_container else get_node("/root/Main/Layout")
+	)
+	target.set_new_panel_leaf(leaf)
 	var new_panel_editor: NewPanelEditor = NewPanelEditor.new()
+	new_panel_editor.target_layout = target
 	PopupManager.init_popup([new_panel_editor], new_panel_editor.save)
 
 
@@ -456,23 +475,15 @@ class PluginAction:
 		_call_args.insert(0, blocking)
 
 	func execute() -> void:
-		var controller_instance: PluginControllerBase
-		if not controller == "" and not plugin == "":
-			var loader_instance: PluginLoaderBase = PluginCoordinator.get_plugin_loader(plugin)
-			if not loader_instance:
-				push_error("Failed to get plugin: %s" % plugin)
-				return
-			controller_instance = loader_instance.get_controller(controller)
-			if not controller_instance:
-				push_error("Failed to get controller: %s" % controller)
-				return
+		var loader_instance: PluginLoaderBase = PluginCoordinator.get_plugin_loader(plugin)
+		if not loader_instance:
+			push_error("Failed to get plugin: %s" % plugin)
+			return
+		var controller_instance: PluginControllerBase = loader_instance.get_controller(controller)
+		if not controller_instance:
+			push_error("Failed to get controller '%s' in plugin '%s'" % [controller, plugin])
+			return
 
-		var ret: Variant
-		if plugin == "DreamDeck":
-			ret = await DreamdeckBuiltinActions.callv(func_name, _call_args)
-		else:
-			ret = await controller_instance.callv(func_name, _call_args)
-
-		if typeof(ret) == TYPE_BOOL:
-			if not ret:
-				push_warning("Action %s %s failed" % [func_name, args])
+		var ret: Variant = await controller_instance.callv(func_name, _call_args)
+		if typeof(ret) == TYPE_BOOL and not ret:
+			push_warning("Action %s %s failed" % [func_name, args])

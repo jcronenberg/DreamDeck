@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://cpanelgroup01"]
+
+[ext_resource type="Script" uid="uid://uvarvc3qf3le" path="res://src/builtin_plugin/panel_group/panel_group.gd" id="1_pg001"]
+[ext_resource type="Script" uid="uid://btovuftjyxh0l" path="res://src/builtin_plugin/panel_group/group_layout.gd" id="2_ihnl2"]
+
+[node name="PanelGroup" type="Control" unique_id=1773599113]
+layout_mode = 3
+anchors_preset = 0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_pg001")
+
+[node name="GroupLayout" type="Container" parent="." unique_id=550161983]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_ihnl2")
+tab_alignment = 0
+metadata/_custom_type_script = "uid://btovuftjyxh0l"

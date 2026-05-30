@@ -19,11 +19,10 @@ func _ready():
 	set_split_handles_visibility(false)
 
 	PluginCoordinator.set_layout_setup_finished(true)
+	PluginCoordinator.layout = self
 
 	GlobalSignals.connect("exited_edit_mode", _on_edit_mode_exited)
 	GlobalSignals.connect("entered_edit_mode", _on_edit_mode_entered)
-
-	DreamdeckBuiltinActions._layout = self
 
 
 func save():
@@ -70,7 +69,6 @@ func load_layout() -> bool:
 		panel_instance.deserialize(panel)
 		add_child(panel_instance)
 
-	DreamdeckBuiltinActions.update_available_panels(get_panel_names())
 	return true
 
 
@@ -88,12 +86,12 @@ func add_panel(panel_config: Dictionary):
 		)
 
 	save()
-	DreamdeckBuiltinActions.update_available_panels(get_panel_names())
+	PluginCoordinator.panels_changed.emit()
 
 
 func delete_panel(panel: LayoutPanel):
 	panel.free()
-	DreamdeckBuiltinActions.update_available_panels(get_panel_names())
+	PluginCoordinator.panels_changed.emit()
 	save()
 
 
@@ -101,28 +99,43 @@ func set_new_panel_leaf(leaf: DockableLayoutPanel):
 	_new_panel_leaf = leaf
 
 
-func set_split_handles_visibility(visibility: bool):
-	_split_container.visible = visibility
-
-
+## Get all available panel names.
 func get_panel_names() -> Array[String]:
-	var panel_names: Array[String] = []
-	for tab in get_tabs():
+	return _collect_panel_names(self)
+
+
+# Recursive function to walk panel groups and get all tab names
+func _collect_panel_names(container: DockableContainer) -> Array[String]:
+	var names: Array[String] = []
+	for tab in container.get_tabs():
 		if not tab is LayoutPanel:
 			continue
-		panel_names.append(tab.panel_name)
+		names.append(tab.panel_name)
+		var plugin = tab.get_plugin_instance()
+		if plugin and plugin.has_method("get_nested_layout"):
+			names.append_array(_collect_panel_names(plugin.get_nested_layout()))
+	return names
 
-	return panel_names
 
-
+## Show a panel irrespective of how deep down panel groups it is.
 func show_panel_by_name(panel_name: String) -> bool:
-	for tab in get_tabs():
+	return _activate_panel_in_container(self, panel_name)
+
+
+# Recursive function to walk panel groups and activate all the tabs
+# to show a specific panel
+func _activate_panel_in_container(container: DockableContainer, panel_name: String) -> bool:
+	for tab in container.get_tabs():
 		if not tab is LayoutPanel:
 			continue
 		if tab.panel_name == panel_name:
-			set_control_as_current_tab(tab)
+			container.call_deferred("set_control_as_current_tab", tab)
 			return true
-
+		var plugin = tab.get_plugin_instance()
+		if plugin and plugin.has_method("get_nested_layout"):
+			if _activate_panel_in_container(plugin.get_nested_layout(), panel_name):
+				container.call_deferred("set_control_as_current_tab", tab)
+				return true
 	return false
 
 
