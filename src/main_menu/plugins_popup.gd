@@ -23,6 +23,11 @@ func populate_plugins() -> void:
 
 func populate_plugin_panel(plugin: PluginCoordinator.Plugin) -> void:
 	%PluginName.text = plugin.plugin_name
+	%PluginVersion.text = (
+		"v%s" % plugin.plugin_version if not plugin.plugin_version.is_empty() else ""
+	)
+	%PluginVersionWarning.visible = not plugin.is_api_compatible()
+	%PluginVersionWarning.text = " Requires DreamDeck >= %s" % plugin.min_api_version
 	%PluginIcon.texture = plugin.get_icon()
 	%PluginDescription.text = (
 		"[center][b]Description:[/b]\n%s[/center]" % [plugin.plugin_description]

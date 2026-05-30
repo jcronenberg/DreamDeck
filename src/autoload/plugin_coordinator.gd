@@ -2,6 +2,7 @@ extends Node
 
 signal panels_changed
 
+const DREAMDECK_VERSION := "0.1.0"
 const FILENAME := "plugins.json"
 const DEFAULT_ACTIVATED_PLUGINS := {
 	"Macroboard": true,
@@ -256,6 +257,8 @@ func _reinit() -> void:
 class Plugin:
 	var plugin_name: String
 	var plugin_description: String
+	var plugin_version: String
+	var min_api_version: String
 
 	var _icon_path: String
 	var _has_settings: bool = false
@@ -272,8 +275,30 @@ class Plugin:
 	func is_activated() -> bool:
 		return _activated
 
+	func is_api_compatible() -> bool:
+		if min_api_version.is_empty():
+			return true
+
+		var dd_version: PackedStringArray = PluginCoordinator.DREAMDECK_VERSION.split(".")
+		var plugin_min: PackedStringArray = min_api_version.split(".")
+		if dd_version.size() < 2 or plugin_min.size() < 2:
+			return false
+
+		if int(dd_version[0]) != int(plugin_min[0]):
+			return false
+		return int(dd_version[1]) >= int(plugin_min[1])
+
 	func set_activated(activated: bool):
 		if not is_os_allowed():
+			return
+
+		if activated and not is_api_compatible():
+			push_error(
+				(
+					"Plugin %s requires min API version %s, but DreamDeck is %s"
+					% [plugin_name, min_api_version, PluginCoordinator.DREAMDECK_VERSION]
+				)
+			)
 			return
 
 		if activated and not _loader:
@@ -323,6 +348,10 @@ class Plugin:
 			_icon_path = dict["icon_path"]
 		if dict.has("allow_os"):
 			_allowed_oses = dict["allow_os"]
+		if dict.has("version"):
+			plugin_version = dict["version"]
+		if dict.has("min_api_version"):
+			min_api_version = dict["min_api_version"]
 
 
 class PluginActionDefinition:

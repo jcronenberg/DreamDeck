@@ -1,8 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://bnwdp45cij8o8"]
+[gd_scene format=3 uid="uid://bnwdp45cij8o8"]
 
 [ext_resource type="Script" uid="uid://bl4oq27bosxs2" path="res://src/main_menu/plugins_popup.gd" id="1_ece6v"]
 
-[node name="PluginsPopup" type="Control"]
+[node name="PluginsPopup" type="Control" unique_id=283530099]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,7 +11,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_ece6v")
 
-[node name="HBox" type="HBoxContainer" parent="."]
+[node name="HBox" type="HBoxContainer" parent="." unique_id=1668171770]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -20,11 +20,11 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 20
 
-[node name="PluginSelectorScroll" type="ScrollContainer" parent="HBox"]
+[node name="PluginSelectorScroll" type="ScrollContainer" parent="HBox" unique_id=1343398574]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 
-[node name="PluginSelectorList" type="ItemList" parent="HBox/PluginSelectorScroll"]
+[node name="PluginSelectorList" type="ItemList" parent="HBox/PluginSelectorScroll" unique_id=1744846483]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
@@ -32,27 +32,48 @@ size_flags_vertical = 3
 theme_type_variation = &"SimpleSelectionItemList"
 auto_height = true
 
-[node name="PluginPanelMargin" type="MarginContainer" parent="HBox"]
+[node name="PluginPanelMargin" type="MarginContainer" parent="HBox" unique_id=93648075]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/margin_top = 20
 theme_override_constants/margin_bottom = 20
 
-[node name="PluginPanelScroll" type="ScrollContainer" parent="HBox/PluginPanelMargin"]
+[node name="PluginPanelScroll" type="ScrollContainer" parent="HBox/PluginPanelMargin" unique_id=1526231391]
 layout_mode = 2
 
-[node name="PluginPanelHBox" type="VBoxContainer" parent="HBox/PluginPanelMargin/PluginPanelScroll"]
+[node name="PluginPanelHBox" type="VBoxContainer" parent="HBox/PluginPanelMargin/PluginPanelScroll" unique_id=2027298845]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 20
 
-[node name="PluginName" type="Label" parent="HBox/PluginPanelMargin/PluginPanelScroll/PluginPanelHBox"]
+[node name="HeaderVBox" type="VBoxContainer" parent="HBox/PluginPanelMargin/PluginPanelScroll/PluginPanelHBox" unique_id=1159098429]
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="PluginName" type="Label" parent="HBox/PluginPanelMargin/PluginPanelScroll/PluginPanelHBox/HeaderVBox" unique_id=847514438]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Plugin1"
 horizontal_alignment = 1
 
-[node name="PluginIcon" type="TextureRect" parent="HBox/PluginPanelMargin/PluginPanelScroll/PluginPanelHBox"]
+[node name="PluginVersionBox" type="HBoxContainer" parent="HBox/PluginPanelMargin/PluginPanelScroll/PluginPanelHBox/HeaderVBox" unique_id=1829963818]
+layout_mode = 2
+alignment = 1
+
+[node name="PluginVersion" type="Label" parent="HBox/PluginPanelMargin/PluginPanelScroll/PluginPanelHBox/HeaderVBox/PluginVersionBox" unique_id=1679477939]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+
+[node name="PluginVersionWarning" type="Label" parent="HBox/PluginPanelMargin/PluginPanelScroll/PluginPanelHBox/HeaderVBox/PluginVersionBox" unique_id=698463182]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.6, 0, 1)
+theme_override_font_sizes/font_size = 12
+
+[node name="PluginIcon" type="TextureRect" parent="HBox/PluginPanelMargin/PluginPanelScroll/PluginPanelHBox" unique_id=1652386995]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 200)
 layout_mode = 2
@@ -60,7 +81,7 @@ size_flags_horizontal = 4
 expand_mode = 1
 stretch_mode = 5
 
-[node name="PluginDescription" type="RichTextLabel" parent="HBox/PluginPanelMargin/PluginPanelScroll/PluginPanelHBox"]
+[node name="PluginDescription" type="RichTextLabel" parent="HBox/PluginPanelMargin/PluginPanelScroll/PluginPanelHBox" unique_id=507961653]
 unique_name_in_owner = true
 layout_mode = 2
 bbcode_enabled = true
@@ -71,13 +92,13 @@ etc."
 fit_content = true
 scroll_active = false
 
-[node name="ActivateCheckButton" type="CheckButton" parent="HBox/PluginPanelMargin/PluginPanelScroll/PluginPanelHBox"]
+[node name="ActivateCheckButton" type="CheckButton" parent="HBox/PluginPanelMargin/PluginPanelScroll/PluginPanelHBox" unique_id=1188625714]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Activate plugin"
 
-[node name="SettingsButton" type="Button" parent="HBox/PluginPanelMargin/PluginPanelScroll/PluginPanelHBox"]
+[node name="SettingsButton" type="Button" parent="HBox/PluginPanelMargin/PluginPanelScroll/PluginPanelHBox" unique_id=800937086]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2

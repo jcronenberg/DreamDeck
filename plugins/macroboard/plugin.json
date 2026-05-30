@@ -1,4 +1,6 @@
 {
   "plugin_name": "Macroboard",
-  "description": "A panel that allows you to place buttons that execute actions."
+  "description": "A panel that allows you to place buttons that execute actions.",
+  "version": "0.1.0",
+  "min_api_version": "0.1.0"
 }
