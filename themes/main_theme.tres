@@ -202,17 +202,12 @@ bg_color = Color(0.12549, 0.121569, 0.14902, 1)
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_s8cd6"]
 
-[sub_resource type="StyleBoxFlat" id="28"]
-bg_color = Color(0.270588, 0.266667, 0.290196, 1)
-border_width_left = 4
-border_width_top = 4
-border_width_right = 4
-border_width_bottom = 4
-border_color = Color(0.270588, 0.266667, 0.290196, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1mjdo"]
+bg_color = Color(1, 1, 1, 0.15686275)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2ia3h"]
 bg_color = Color(0.270588, 0.266667, 0.290196, 1)
@@ -295,7 +290,7 @@ SimpleSelectionItemList/styles/focus = SubResource("StyleBoxEmpty_815kh")
 SolidPanel/base_type = &"Panel"
 SolidPanel/styles/panel = SubResource("30")
 TabContainer/styles/panel = SubResource("StyleBoxEmpty_s8cd6")
-TooltipPanel/styles/panel = SubResource("28")
+TooltipPanel/styles/panel = SubResource("StyleBoxFlat_1mjdo")
 VSplitContainer/constants/autohide = 0
 Window/styles/embedded_border = SubResource("StyleBoxFlat_2ia3h")
 Window/styles/embedded_unfocused_border = SubResource("StyleBoxFlat_2ia3h")

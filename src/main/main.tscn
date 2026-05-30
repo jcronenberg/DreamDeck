@@ -1,11 +1,11 @@
-[gd_scene load_steps=5 format=3 uid="uid://boyndkd14akrp"]
+[gd_scene format=3 uid="uid://boyndkd14akrp"]
 
 [ext_resource type="Theme" uid="uid://duea6v8sw5cfx" path="res://themes/main_theme.tres" id="1_2gbhf"]
 [ext_resource type="Script" uid="uid://csql3i82i2ja6" path="res://src/layout/layout.gd" id="2_la8x6"]
 [ext_resource type="PackedScene" uid="uid://bi32uf4eygli6" path="res://src/layout/first_time_launch.tscn" id="3_itfh7"]
 [ext_resource type="PackedScene" uid="uid://cmqfrusykgypy" path="res://src/main_menu/main_menu.tscn" id="4_757ro"]
 
-[node name="Main" type="Control"]
+[node name="Main" type="Control" unique_id=258660772]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -14,7 +14,7 @@ grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("1_2gbhf")
 
-[node name="Layout" type="Container" parent="."]
+[node name="Layout" type="Container" parent="." unique_id=485995126]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -26,13 +26,13 @@ tab_alignment = 0
 use_hidden_tabs_for_min_size = true
 tabs_visible = false
 
-[node name="FirstTimeLaunch" parent="." instance=ExtResource("3_itfh7")]
+[node name="FirstTimeLaunch" parent="." unique_id=1956409067 instance=ExtResource("3_itfh7")]
 layout_mode = 1
 
-[node name="MainMenu" parent="." instance=ExtResource("4_757ro")]
+[node name="MainMenu" parent="." unique_id=1140450770 instance=ExtResource("4_757ro")]
 layout_mode = 1
 
-[node name="DebugCursor" type="ColorRect" parent="."]
+[node name="DebugCursor" type="ColorRect" parent="." unique_id=1571517651]
 editor_description = "A small white square that shows where a input action from the touch plugin was registered."
 visible = false
 layout_mode = 0
