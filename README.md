@@ -18,7 +18,7 @@ Feedback and contributions are of course always welcome.
 ### Prebuilt packages
 #### Github Actions build
 The latest version can be downloaded as a build artifact from Github Actions.
-1. Go to [Github Actions Runs](https://github.com/jcronenberg/DreamDeck/actions?query=branch%3Aprototyping+event%3Apush)
+1. Go to [Github Actions Runs](https://github.com/jcronenberg/DreamDeck/actions?query=branch%3Amain+event%3Apush)
 2. Click on the latest action run
 3. At the bottom, the appropriate build artifact can be downloaded (requires to be logged in)
 ### Building the project from source

@@ -44,7 +44,7 @@ jobs:
         # Only upload artifact on pull request or main repo and main branch
         if: |
           github.event_name == 'pull_request' ||
-          (github.repository == 'jcronenberg/DreamDeck' && github.ref == 'refs/heads/prototyping')
+          (github.repository == 'jcronenberg/DreamDeck' && github.ref == 'refs/heads/main')
         with:
           name: dreamdeck
           path: ./bin/

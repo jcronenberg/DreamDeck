@@ -6,7 +6,7 @@ on:
 jobs:
   update-obs-package:
     # only publish if push to main repo and branch
-    if: github.repository == 'jcronenberg/DreamDeck' && github.event_name == 'push' && github.ref == 'refs/heads/prototyping'
+    if: github.repository == 'jcronenberg/DreamDeck' && github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     name: "Update dev OBS package"
     runs-on: ubuntu-latest
