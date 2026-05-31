@@ -107,7 +107,7 @@ func _on_confirm_deletion():
 func _on_visibility_changed() -> void:
 	if not _plugin_instance:
 		return
-	if visible:
+	if is_visible_in_tree():
 		_plugin_instance.scene_show()
 	else:
 		_plugin_instance.scene_hide()
