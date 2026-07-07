@@ -385,19 +385,32 @@ class DictObject:
 	func get_value() -> Variant:
 		return _value
 
+	# Returns the matching entry in _dict.values(), or null if there is none.
+	# Not using Dictionary/Array.has() here since it hash-compares, which
+	# treats int and float as different even though `==` doesn't. Values
+	# loaded from JSON can come back as float, so that would wrongly
+	# reject a valid, previously saved value (e.g. an enum int).
+	func _find_value(value: Variant) -> Variant:
+		for dict_value in _dict.values():
+			if dict_value == value:
+				return dict_value
+		return null
+
 	func set_value(value: Variant):
-		if _dict.values().has(value):
-			_value = value
-		elif value:
+		var matched: Variant = _find_value(value)
+		if matched != null:
+			_value = matched
+		elif value != null:
 			push_error("Value not in enum")
 
 	func get_default_value() -> Variant:
 		return _default_value
 
 	func set_default_value(value: Variant) -> void:
-		if _dict.values().has(value):
-			_default_value = value
-		elif value:
+		var matched: Variant = _find_value(value)
+		if matched != null:
+			_default_value = matched
+		elif value != null:
 			push_error("Default value not in dictionary")
 
 	func get_dict() -> Dictionary:
@@ -798,7 +811,7 @@ class DictEditor:
 			_value_editor.add_item(key)
 
 	func set_value(value: Variant):
-		if not value:
+		if value == null:
 			return
 		var id: int = -1
 		var value_string: Variant = _dict.find_key(value)
@@ -816,7 +829,7 @@ class DictEditor:
 
 		_value_editor.select(id)
 		value_selected.emit(_value_editor.get_item_text(id))
-		if _default_value:
+		if _default_value != null:
 			_default_button.visible = value != _default_value
 
 	func set_dict(dict: Dictionary):
@@ -841,7 +854,7 @@ class DictEditor:
 		set_value(_default_value)
 
 	func _on_value_editor_item_selected(index: int) -> void:
-		if _default_value:
+		if _default_value != null:
 			_default_button.visible = _dict[_value_editor.get_item_text(index)] != _default_value
 		value_selected.emit(_value_editor.get_item_text(index))
 

@@ -66,4 +66,15 @@ func _setup_actions() -> void:
 			"DreamDeck",
 			""
 		),
+		PluginCoordinator.PluginActionDefinition.new(
+			"Toggle sidebar",
+			"toggle_sidebar",
+			"Show or hide the sidebar",
+			Config.new(),
+			"DreamDeck",
+			""
+		),
+		PluginCoordinator.PluginActionDefinition.new(
+			"Open menu", "open_menu", "Open the main menu", Config.new(), "DreamDeck", ""
+		),
 	]

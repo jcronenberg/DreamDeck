@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://csql3i82i2ja6" path="res://src/layout/layout.gd" id="2_la8x6"]
 [ext_resource type="PackedScene" uid="uid://bi32uf4eygli6" path="res://src/layout/first_time_launch.tscn" id="3_itfh7"]
 [ext_resource type="PackedScene" uid="uid://cmqfrusykgypy" path="res://src/main_menu/main_menu.tscn" id="4_757ro"]
+[ext_resource type="PackedScene" uid="uid://c1f7yr5fbw3l4" path="res://src/sidebar/sidebar.tscn" id="5_sidebar"]
 
 [node name="Main" type="Control" unique_id=258660772]
 layout_mode = 3
@@ -13,6 +14,9 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("1_2gbhf")
+
+[node name="Sidebar" parent="." unique_id=1695277773 instance=ExtResource("5_sidebar")]
+layout_mode = 1
 
 [node name="Layout" type="Container" parent="." unique_id=485995126]
 layout_mode = 1
