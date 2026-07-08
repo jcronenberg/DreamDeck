@@ -65,9 +65,9 @@ func _init_scroll() -> void:
 	# Determining the size of the string feels so hacky lol
 	if (
 		(
-			get_theme_default_font()
+			get_theme_font("font")
 			. get_string_size(
-				_original_text, HORIZONTAL_ALIGNMENT_CENTER, -1, get_theme_default_font_size()
+				_original_text, HORIZONTAL_ALIGNMENT_CENTER, -1, get_theme_font_size("font_size")
 			)
 			. x
 		)
@@ -84,12 +84,12 @@ func _init_scroll() -> void:
 		"position",
 		Vector2(
 			-(
-				get_theme_default_font()
+				get_theme_font("font")
 				. get_string_size(
 					_original_text + separator_string,
 					HORIZONTAL_ALIGNMENT_CENTER,
 					-1,
-					get_theme_default_font_size()
+					get_theme_font_size("font_size")
 				)
 				. x
 			),

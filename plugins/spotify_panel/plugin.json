@@ -2,6 +2,6 @@
   "plugin_name": "Spotify Panel",
   "description": "A panel that shows and allows you to control the current Spotify playback for an authorized account.",
   "icon_path": "icons/spotify.png",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "min_api_version": "0.1.0"
 }
