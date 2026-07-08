@@ -1,6 +1,6 @@
 app-id: dev.jcronenberg.DreamDeck
 base: org.godotengine.godot.BaseApp
-base-version: "4.6"
+base-version: "4.7"
 runtime: org.freedesktop.Platform
 runtime-version: "25.08"
 sdk: org.freedesktop.Sdk
