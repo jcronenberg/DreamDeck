@@ -4,14 +4,14 @@ on:
   workflow_call:
 
 env:
-  GODOT_VERSION: 4.6.3
+  GODOT_VERSION: 4.7
 
 jobs:
   linux-build:
     name: Linux build
     runs-on: ubuntu-latest
     container:
-      image: docker://barichello/godot-ci:4.6.3
+      image: docker://barichello/godot-ci:4.7
     steps:
       - name: Checkout
         uses: actions/checkout@v5
