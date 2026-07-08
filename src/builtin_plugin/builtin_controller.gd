@@ -57,6 +57,14 @@ func exec_cmd(blocking: bool, command: String) -> bool:
 	return true
 
 
+func toggle_sidebar(_blocking: bool) -> void:
+	GlobalSignals.toggle_sidebar.call_deferred()
+
+
+func open_menu(_blocking: bool) -> void:
+	GlobalSignals.menu_open_requested.emit.call_deferred()
+
+
 func switch_panel(_blocking: bool, panel_name: String) -> bool:
 	if not PluginCoordinator.layout:
 		return false

@@ -24,6 +24,30 @@ func _ready():
 	GlobalSignals.connect("exited_edit_mode", _on_edit_mode_exited)
 	GlobalSignals.connect("entered_edit_mode", _on_edit_mode_entered)
 
+	ConfigLoader.config.config_changed.connect(_apply_sidebar_inset)
+	GlobalSignals.sidebar_visibility_changed.connect(_apply_sidebar_inset)
+	_apply_sidebar_inset()
+
+
+## Insets this container's edges so it keeps clear of the sidebar
+## (see the global "Sidebar position"/"Sidebar thickness" settings).
+## While the sidebar is hidden the container spans the full window.
+func _apply_sidebar_inset() -> void:
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	if not GlobalSignals.sidebar_visible:
+		return
+	var data: Dictionary = ConfigLoader.get_config()
+	var thickness: float = data["sidebar_thickness"]
+	match data["sidebar_position"]:
+		Sidebar.SidebarPosition.LEFT:
+			offset_left = thickness
+		Sidebar.SidebarPosition.RIGHT:
+			offset_right = -thickness
+		Sidebar.SidebarPosition.TOP:
+			offset_top = thickness
+		Sidebar.SidebarPosition.BOTTOM:
+			offset_bottom = -thickness
+
 
 func save():
 	ConfLib.save_config(_conf_path, serialize())

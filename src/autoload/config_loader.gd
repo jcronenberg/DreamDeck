@@ -24,6 +24,16 @@ func _ready():
 	config.add_bool("Debug mode", "debug", false)
 	config.add_int("Window size width", "window_size_x", 1280)
 	config.add_int("Window size height", "window_size_y", 800)
+	config.add_color("Sidebar color", "sidebar_color", Color(0.12549, 0.121569, 0.14902, 1))
+	config.add_dict(
+		"Sidebar position",
+		"sidebar_position",
+		Sidebar.SidebarPosition.LEFT,
+		Sidebar.SidebarPosition
+	)
+	config.add_int("Sidebar thickness", "sidebar_thickness", 80)
+	config.add_color("Menu background color", "menu_bg_color", Color(0.12549, 0.121569, 0.14902, 1))
+	config.add_color("Menu font color", "menu_font_color", Color(1, 1, 1, 1))
 
 	load_config()
 

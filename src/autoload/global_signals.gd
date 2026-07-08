@@ -3,8 +3,11 @@ extends Node
 signal entered_edit_mode
 signal exited_edit_mode
 signal activated_plugins_changed
+signal menu_open_requested
+signal sidebar_visibility_changed
 
 var edit_state: bool = false
+var sidebar_visible: bool = true
 
 
 func toggle_edit_mode():
@@ -26,6 +29,11 @@ func exit_edit_mode():
 
 func get_edit_state() -> bool:
 	return edit_state
+
+
+func toggle_sidebar():
+	sidebar_visible = not sidebar_visible
+	sidebar_visibility_changed.emit()
 
 
 # The purpose for this function is mainly when importing a config backup.

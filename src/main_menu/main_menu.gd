@@ -36,6 +36,8 @@ func _ready():
 	quit_button.connect("pressed", get_tree().quit)
 	$Menu/SettingSeparator.add_child(quit_button)
 
+	$Menu.apply_config()
+
 
 func _on_settings_button_pressed() -> void:
 	var settings_vbox: VBoxContainer = VBoxContainer.new()
