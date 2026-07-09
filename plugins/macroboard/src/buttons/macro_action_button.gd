@@ -186,11 +186,11 @@ func _on_pressed() -> void:
 	if not (GlobalSignals.get_edit_state() or force_edit_mode):
 		if not _exec_thread:
 			_exec_thread = Thread.new()
-		if _exec_thread.is_alive():
+		if _exec_thread.is_started():
 			# Shouldn't happen as button should be disabled
 			push_error("Already executing")
 			return
-		if _exec_thread.is_started():
+		if _exec_thread.is_started() and not _exec_thread.is_alive():
 			_exec_thread.wait_to_finish()
 
 		_exec_thread.start(_execute)

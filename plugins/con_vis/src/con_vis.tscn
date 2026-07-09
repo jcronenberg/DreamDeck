@@ -42,7 +42,7 @@ mesh = SubResource("SphereMesh_ufxx5")
 script = ExtResource("1_iyqf8")
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(-4.37114e-08, -0.34202, 0.939693, 0, 0.939693, 0.34202, -1, 1.49502e-08, -4.10753e-08, 15, 5, 0)
+transform = Transform3D(-4.37114e-08, -0.309017, 0.951057, 0, 0.951057, 0.309017, -1, 1.35076e-08, -4.1572e-08, 15, 5, 0)
 environment = SubResource("Environment_irk5n")
 projection = 1
 current = true
