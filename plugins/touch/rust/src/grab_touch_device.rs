@@ -181,6 +181,11 @@ impl GrabTouchDevice {
     #[func]
     fn grab_device(&mut self) -> Variant {
         if let Some(device) = self.device.as_mut() {
+            // Discard any events that queued up in the kernel while ungrabbed so they
+            // aren't replayed as stale touches once processing resumes.
+            while let Ok(iterator) = device.fetch_events() {
+                for _ in iterator {}
+            }
             if let Err(e) = device.grab() {
                 return e.to_string().to_variant();
             }
@@ -232,6 +237,14 @@ impl INode for GrabTouchDevice {
     fn physics_process(&mut self, delta: f64) {
         // If not connected, retry to connect
         if !self.grabbed {
+            // Keep draining the device's event queue while ungrabbed so touches made
+            // during this time aren't replayed once grabbed again.
+            if let Some(device) = self.device.as_mut() {
+                while let Ok(iterator) = device.fetch_events() {
+                    for _ in iterator {}
+                }
+            }
+
             if let Some(device) = self.device_name.clone() {
                 // Store delta
                 self.retry_device += delta;
