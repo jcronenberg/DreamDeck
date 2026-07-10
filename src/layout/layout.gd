@@ -4,6 +4,8 @@ extends DockableContainer
 const SAVE_FILENAME = "layout.json"
 const LAYOUT_PANEL = preload("res://src/layout/layout_panel.tscn")
 
+const SPLIT_HANDLE_MODULATE := Color(8.0, 8.0, 8.0, 1.0)
+
 var _new_panel_leaf: DockableLayoutPanel:  # Parent for new panel
 	set = set_new_panel_leaf
 @onready var _conf_path: String = PluginCoordinator.get_conf_dir("").path_join(SAVE_FILENAME)
@@ -11,6 +13,8 @@ var _new_panel_leaf: DockableLayoutPanel:  # Parent for new panel
 
 func _ready():
 	super()
+
+	_split_container.modulate = SPLIT_HANDLE_MODULATE
 
 	if not load_layout():
 		push_error("Failed to load layout")
@@ -23,6 +27,8 @@ func _ready():
 
 	GlobalSignals.connect("exited_edit_mode", _on_edit_mode_exited)
 	GlobalSignals.connect("entered_edit_mode", _on_edit_mode_entered)
+	GlobalSignals.connect("exited_resize_mode", _on_resize_mode_exited)
+	GlobalSignals.connect("entered_resize_mode", _on_resize_mode_entered)
 
 	ConfigLoader.config.config_changed.connect(_apply_sidebar_inset)
 	GlobalSignals.sidebar_visibility_changed.connect(_apply_sidebar_inset)
@@ -170,5 +176,14 @@ func _on_edit_mode_entered():
 
 func _on_edit_mode_exited():
 	self.tabs_visible = false
+	set_split_handles_visibility(false)
+	save()
+
+
+func _on_resize_mode_entered():
+	set_split_handles_visibility(true)
+
+
+func _on_resize_mode_exited():
 	set_split_handles_visibility(false)
 	save()

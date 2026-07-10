@@ -28,6 +28,13 @@ func _ready():
 	edit_mode_button.custom_minimum_size = Vector2(0, 60)
 	edit_mode_button.connect("pressed", GlobalSignals.toggle_edit_mode)
 	$Menu/SettingSeparator.add_child(edit_mode_button)
+	# Resize Mode
+	var resize_mode_button: Button = Button.new()
+	resize_mode_button.text = "Resize Mode"
+	resize_mode_button.theme_type_variation = "MainMenuButton"
+	resize_mode_button.custom_minimum_size = Vector2(0, 60)
+	resize_mode_button.connect("pressed", GlobalSignals.toggle_resize_mode)
+	$Menu/SettingSeparator.add_child(resize_mode_button)
 	# Quit button
 	var quit_button: Button = Button.new()
 	quit_button.text = "Quit"

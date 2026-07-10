@@ -11,11 +11,14 @@ var _new_panel_leaf: DockableLayoutPanel
 
 func _ready() -> void:
 	super()
+	_split_container.modulate = Layout.SPLIT_HANDLE_MODULATE
 	var in_edit_mode: bool = GlobalSignals.get_edit_state()
 	tabs_visible = in_edit_mode
-	set_split_handles_visibility(in_edit_mode)
+	set_split_handles_visibility(in_edit_mode or GlobalSignals.get_resize_state())
 	GlobalSignals.connect("entered_edit_mode", _on_entered_edit_mode)
 	GlobalSignals.connect("exited_edit_mode", _on_exited_edit_mode)
+	GlobalSignals.connect("entered_resize_mode", _on_entered_resize_mode)
+	GlobalSignals.connect("exited_resize_mode", _on_exited_resize_mode)
 
 
 func load() -> void:
@@ -98,5 +101,14 @@ func _on_entered_edit_mode() -> void:
 
 func _on_exited_edit_mode() -> void:
 	tabs_visible = false
+	set_split_handles_visibility(false)
+	save()
+
+
+func _on_entered_resize_mode() -> void:
+	set_split_handles_visibility(true)
+
+
+func _on_exited_resize_mode() -> void:
 	set_split_handles_visibility(false)
 	save()
