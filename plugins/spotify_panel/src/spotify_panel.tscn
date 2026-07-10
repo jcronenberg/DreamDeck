@@ -1,215 +1,321 @@
-[gd_scene load_steps=12 format=3 uid="uid://qe4e20ic7gh6"]
+[gd_scene format=3 uid="uid://qe4e20ic7gh6"]
 
-[ext_resource type="Script" uid="uid://cf28f41vlo0k8" path="res://plugins/spotify_panel/src/spotify_panel.gd" id="2"]
-[ext_resource type="Script" uid="uid://cpcss8qp16776" path="res://src/helper/scroll_text_label.gd" id="2_q8llh"]
-[ext_resource type="Texture2D" uid="uid://bbk3j37mfjskc" path="res://plugins/spotify_panel/icons/play.png" id="3_l1pjn"]
-[ext_resource type="Texture2D" uid="uid://mbhkx5xfqfvb" path="res://plugins/spotify_panel/icons/pause.png" id="4_8lx5g"]
-[ext_resource type="Texture2D" uid="uid://bx5dva3lwl48g" path="res://plugins/spotify_panel/icons/skip_back.png" id="5_e3fd5"]
-[ext_resource type="Texture2D" uid="uid://cdp7roqs772kc" path="res://plugins/spotify_panel/icons/skip_forward.png" id="6_q3rvv"]
-[ext_resource type="Texture2D" uid="uid://d30x5lt6rhnex" path="res://plugins/spotify_panel/icons/repeat.png" id="7_o6ubl"]
-[ext_resource type="Texture2D" uid="uid://bq1yap1gtaao1" path="res://plugins/spotify_panel/icons/shuffle.png" id="8_0cj1e"]
-[ext_resource type="Texture2D" uid="uid://bnp1u6vqrluvs" path="res://plugins/spotify_panel/icons/shuffle_selected.png" id="9_lalix"]
-[ext_resource type="Texture2D" uid="uid://cfm2omfhoib8o" path="res://plugins/spotify_panel/icons/volume_down.png" id="10_5prxm"]
-[ext_resource type="Texture2D" uid="uid://bi73hx2c382le" path="res://plugins/spotify_panel/icons/volume_up.png" id="11_b5w8l"]
+[ext_resource type="Script" uid="uid://cf28f41vlo0k8" path="res://plugins/spotify_panel/src/spotify_panel.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://cpcss8qp16776" path="res://src/helper/scroll_text_label.gd" id="2_scroll"]
+[ext_resource type="Texture2D" uid="uid://bbk3j37mfjskc" path="res://plugins/spotify_panel/icons/play.png" id="3_play"]
+[ext_resource type="Texture2D" uid="uid://mbhkx5xfqfvb" path="res://plugins/spotify_panel/icons/pause.png" id="4_pause"]
+[ext_resource type="Texture2D" uid="uid://bx5dva3lwl48g" path="res://plugins/spotify_panel/icons/skip_back.png" id="5_skip_back"]
+[ext_resource type="Texture2D" uid="uid://cdp7roqs772kc" path="res://plugins/spotify_panel/icons/skip_forward.png" id="6_skip_forward"]
+[ext_resource type="Texture2D" uid="uid://d30x5lt6rhnex" path="res://plugins/spotify_panel/icons/repeat.png" id="7_repeat"]
+[ext_resource type="Texture2D" uid="uid://bq1yap1gtaao1" path="res://plugins/spotify_panel/icons/shuffle.png" id="8_shuffle"]
+[ext_resource type="Texture2D" uid="uid://bnp1u6vqrluvs" path="res://plugins/spotify_panel/icons/shuffle_selected.png" id="9_shuffle_selected"]
+[ext_resource type="Texture2D" uid="uid://cfm2omfhoib8o" path="res://plugins/spotify_panel/icons/volume_down.png" id="10_volume_down"]
+[ext_resource type="Texture2D" uid="uid://bi73hx2c382le" path="res://plugins/spotify_panel/icons/volume_up.png" id="11_volume_up"]
 
-[node name="SpotifyPanel" type="Control"]
-custom_minimum_size = Vector2(400, 800)
-layout_mode = 3
-anchors_preset = 0
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_background"]
+bg_color = Color(1, 1, 1, 0.0470588)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_grabber"]
+bg_color = Color(1, 1, 1, 1)
+
+[node name="SpotifyPanel" type="PanelContainer" unique_id=25259225]
+custom_minimum_size = Vector2(160, 120)
 offset_right = 400.0
-offset_bottom = 800.0
-script = ExtResource("2")
+offset_bottom = 600.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_background")
+script = ExtResource("1_script")
 
-[node name="Background" type="Panel" parent="."]
+[node name="Content" type="Control" parent="." unique_id=2058702283]
+editor_description = "Non-container: blocks children's minimum size from growing the PanelContainer's."
 clip_contents = true
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="Content" unique_id=653409476]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
 
-[node name="AlbumArt" type="TextureRect" parent="Background"]
-layout_mode = 0
-anchor_left = 0.2
-anchor_top = 0.13
-anchor_right = 0.8
-anchor_bottom = 0.43
+[node name="MainBox" type="BoxContainer" parent="Content/Margin" unique_id=1706436132]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+vertical = true
+
+[node name="MediaBox" type="VBoxContainer" parent="Content/Margin/MainBox" unique_id=1299488016]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="AlbumArt" type="TextureRect" parent="Content/Margin/MainBox/MediaBox" unique_id=1908166705]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
 expand_mode = 1
 stretch_mode = 5
 
-[node name="ScrollSideMargin" type="Control" parent="Background"]
+[node name="TrackNameClip" type="Control" parent="Content/Margin/MainBox/MediaBox" unique_id=1346334206]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 32)
 clip_contents = true
+layout_mode = 2
+
+[node name="TrackName" type="Label" parent="Content/Margin/MainBox/MediaBox/TrackNameClip" unique_id=1004366624]
+unique_name_in_owner = true
 layout_mode = 1
-anchor_left = 0.02
-anchor_right = 0.98
+anchors_preset = 15
+anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-
-[node name="TrackName" type="Label" parent="Background/ScrollSideMargin"]
-layout_mode = 1
-anchors_preset = -1
-anchor_top = 0.08
-anchor_right = 1.0
-anchor_bottom = 0.08
-text = "Playback"
+theme_override_font_sizes/font_size = 20
+text = "No active playback"
 horizontal_alignment = 1
-script = ExtResource("2_q8llh")
+vertical_alignment = 1
+script = ExtResource("2_scroll")
 separator_string = "    "
 cooldown = 5.0
 
-[node name="AlbumName" type="Label" parent="Background/ScrollSideMargin"]
+[node name="ArtistNameClip" type="Control" parent="Content/Margin/MainBox/MediaBox" unique_id=1534606382]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 26)
+clip_contents = true
+layout_mode = 2
+
+[node name="ArtistsName" type="Label" parent="Content/Margin/MainBox/MediaBox/ArtistNameClip" unique_id=289835138]
+unique_name_in_owner = true
 layout_mode = 1
-anchors_preset = -1
-anchor_top = 0.45
+anchors_preset = 15
 anchor_right = 1.0
-anchor_bottom = 0.45
-text = "Not Active"
-horizontal_alignment = 1
-script = ExtResource("2_q8llh")
-separator_string = "    "
-cooldown = 5.0
-
-[node name="ArtistsName" type="Label" parent="Background/ScrollSideMargin"]
-layout_mode = 1
-anchors_preset = -1
-anchor_top = 0.5
-anchor_right = 1.0
-anchor_bottom = 0.5
-text = "Yet"
-horizontal_alignment = 1
-script = ExtResource("2_q8llh")
-separator_string = "    "
-cooldown = 5.0
-
-[node name="Controls" type="Control" parent="Background"]
-anchors_preset = 0
-anchor_top = 0.52
-anchor_right = 1.0
-anchor_bottom = 0.92
-
-[node name="PlayPauseButton" type="TextureButton" parent="Background/Controls"]
-custom_minimum_size = Vector2(50, 50)
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-grow_horizontal = 2
-grow_vertical = 2
-toggle_mode = true
-texture_normal = ExtResource("3_l1pjn")
-texture_pressed = ExtResource("4_8lx5g")
-ignore_texture_size = true
-stretch_mode = 5
-
-[node name="SkipBackButton" type="TextureButton" parent="Background/Controls"]
-custom_minimum_size = Vector2(50, 50)
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.15
-anchor_top = 0.5
-anchor_right = 0.15
-anchor_bottom = 0.5
-grow_vertical = 2
-texture_normal = ExtResource("5_e3fd5")
-ignore_texture_size = true
-stretch_mode = 5
-
-[node name="SkipForwardButton" type="TextureButton" parent="Background/Controls"]
-custom_minimum_size = Vector2(50, 50)
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.85
-anchor_top = 0.5
-anchor_right = 0.85
-anchor_bottom = 0.5
-grow_horizontal = 0
-grow_vertical = 2
-texture_normal = ExtResource("6_q3rvv")
-ignore_texture_size = true
-stretch_mode = 5
-
-[node name="RepeatButton" type="TextureButton" parent="Background/Controls"]
-custom_minimum_size = Vector2(50, 50)
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.85
-anchor_top = 0.9
-anchor_right = 0.85
-anchor_bottom = 0.9
-grow_horizontal = 0
-grow_vertical = 0
-texture_normal = ExtResource("7_o6ubl")
-ignore_texture_size = true
-stretch_mode = 5
-
-[node name="ShuffleButton" type="TextureButton" parent="Background/Controls"]
-custom_minimum_size = Vector2(50, 50)
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.15
-anchor_top = 0.9
-anchor_right = 0.15
-anchor_bottom = 0.9
-grow_vertical = 0
-toggle_mode = true
-texture_normal = ExtResource("8_0cj1e")
-texture_pressed = ExtResource("9_lalix")
-ignore_texture_size = true
-stretch_mode = 5
-
-[node name="VolumeDownButton" type="TextureButton" parent="Background/Controls"]
-custom_minimum_size = Vector2(55, 55)
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.05
-anchor_top = 0.1
-anchor_right = 0.05
-anchor_bottom = 0.1
-texture_normal = ExtResource("10_5prxm")
-ignore_texture_size = true
-stretch_mode = 5
-
-[node name="VolumeUpButton" type="TextureButton" parent="Background/Controls"]
-custom_minimum_size = Vector2(55, 55)
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.95
-anchor_top = 0.1
-anchor_right = 0.95
-anchor_bottom = 0.1
-grow_horizontal = 0
-texture_normal = ExtResource("11_b5w8l")
-ignore_texture_size = true
-stretch_mode = 5
-
-[node name="DeviceOptions" type="OptionButton" parent="Background/Controls"]
-custom_minimum_size = Vector2(300, 0)
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
 anchor_bottom = 1.0
 grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 15
+horizontal_alignment = 1
+vertical_alignment = 1
+script = ExtResource("2_scroll")
+separator_string = "    "
+cooldown = 5.0
+
+[node name="AlbumNameClip" type="Control" parent="Content/Margin/MainBox/MediaBox" unique_id=999305246]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 22)
+clip_contents = true
+layout_mode = 2
+
+[node name="AlbumName" type="Label" parent="Content/Margin/MainBox/MediaBox/AlbumNameClip" unique_id=1785852581]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 13
+horizontal_alignment = 1
+vertical_alignment = 1
+script = ExtResource("2_scroll")
+separator_string = "    "
+cooldown = 5.0
+
+[node name="ControlsBox" type="VBoxContainer" parent="Content/Margin/MainBox" unique_id=389212862]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="ProgressRow" type="HBoxContainer" parent="Content/Margin/MainBox/ControlsBox" unique_id=847213569]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="CurrentTimeLabel" type="Label" parent="Content/Margin/MainBox/ControlsBox/ProgressRow" unique_id=390517284]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "0:00"
+vertical_alignment = 1
+
+[node name="ProgressSlider" type="HSlider" parent="Content/Margin/MainBox/ControlsBox/ProgressRow" unique_id=1720845093]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_styles/grabber_area = SubResource("StyleBoxFlat_progress_grabber")
+theme_override_styles/grabber_area_highlight = SubResource("StyleBoxFlat_progress_grabber")
+max_value = 1.0
+step = 1000.0
+
+[node name="DurationLabel" type="Label" parent="Content/Margin/MainBox/ControlsBox/ProgressRow" unique_id=602931847]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "0:00"
+vertical_alignment = 1
+
+[node name="PlaybackControls" type="HBoxContainer" parent="Content/Margin/MainBox/ControlsBox" unique_id=1578068762]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="SkipBackMargin" type="MarginContainer" parent="Content/Margin/MainBox/ControlsBox/PlaybackControls" unique_id=462138726]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="SkipBackButton" type="TextureButton" parent="Content/Margin/MainBox/ControlsBox/PlaybackControls/SkipBackMargin" unique_id=236618187]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+texture_normal = ExtResource("5_skip_back")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="PlayPauseMargin" type="MarginContainer" parent="Content/Margin/MainBox/ControlsBox/PlaybackControls" unique_id=2105366956]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="PlayPauseButton" type="TextureButton" parent="Content/Margin/MainBox/ControlsBox/PlaybackControls/PlayPauseMargin" unique_id=469283430]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+toggle_mode = true
+texture_normal = ExtResource("3_play")
+texture_pressed = ExtResource("4_pause")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="SkipForwardMargin" type="MarginContainer" parent="Content/Margin/MainBox/ControlsBox/PlaybackControls" unique_id=334892691]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="SkipForwardButton" type="TextureButton" parent="Content/Margin/MainBox/ControlsBox/PlaybackControls/SkipForwardMargin" unique_id=144676361]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+texture_normal = ExtResource("6_skip_forward")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="ExtraControls" type="HBoxContainer" parent="Content/Margin/MainBox/ControlsBox" unique_id=1494372518]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="ShuffleMargin" type="MarginContainer" parent="Content/Margin/MainBox/ControlsBox/ExtraControls" unique_id=1677112497]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ShuffleButton" type="TextureButton" parent="Content/Margin/MainBox/ControlsBox/ExtraControls/ShuffleMargin" unique_id=384188847]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+toggle_mode = true
+texture_normal = ExtResource("8_shuffle")
+texture_pressed = ExtResource("9_shuffle_selected")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="RepeatMargin" type="MarginContainer" parent="Content/Margin/MainBox/ControlsBox/ExtraControls" unique_id=442315874]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="RepeatButton" type="TextureButton" parent="Content/Margin/MainBox/ControlsBox/ExtraControls/RepeatMargin" unique_id=2123066570]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+texture_normal = ExtResource("7_repeat")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="VolumeRow" type="HBoxContainer" parent="Content/Margin/MainBox/ControlsBox" unique_id=154571340]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="VolumeDownButton" type="TextureButton" parent="Content/Margin/MainBox/ControlsBox/VolumeRow" unique_id=666771770]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+texture_normal = ExtResource("10_volume_down")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="VolumeSlider" type="HSlider" parent="Content/Margin/MainBox/ControlsBox/VolumeRow" unique_id=1028186997]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+
+[node name="VolumeUpButton" type="TextureButton" parent="Content/Margin/MainBox/ControlsBox/VolumeRow" unique_id=2211465]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+texture_normal = ExtResource("11_volume_up")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="VolumeDeviceSpacer" type="Control" parent="Content/Margin/MainBox/ControlsBox" unique_id=719283456]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="DeviceMargin" type="MarginContainer" parent="Content/Margin/MainBox/ControlsBox" unique_id=937797960]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_right = 20
+
+[node name="DeviceOptions" type="OptionButton" parent="Content/Margin/MainBox/ControlsBox/DeviceMargin" unique_id=1386377202]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
 alignment = 1
 clip_text = true
+selected = 0
+item_count = 1
+popup/item_0/text = "Devices"
+popup/item_0/id = 0
+popup/item_0/disabled = true
 
-[node name="HTTPGet" type="HTTPRequest" parent="."]
+[node name="SetupHint" type="VBoxContainer" parent="Content/Margin" unique_id=1388527793]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
 
-[node name="HTTPGetDevices" type="HTTPRequest" parent="."]
+[node name="SetupHintTitle" type="Label" parent="Content/Margin/SetupHint" unique_id=1588259032]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Spotify account not set up"
+horizontal_alignment = 1
+autowrap_mode = 3
 
-[node name="HTTPPost" type="HTTPRequest" parent="."]
-use_threads = true
-
-[connection signal="pressed" from="Background/Controls/PlayPauseButton" to="." method="_on_PlayPauseButton_pressed"]
-[connection signal="pressed" from="Background/Controls/SkipBackButton" to="." method="_on_SkipBackButton_pressed"]
-[connection signal="pressed" from="Background/Controls/SkipForwardButton" to="." method="_on_SkipForwardButton_pressed"]
-[connection signal="pressed" from="Background/Controls/RepeatButton" to="." method="_on_RepeatButton_pressed"]
-[connection signal="pressed" from="Background/Controls/ShuffleButton" to="." method="_on_ShuffleButton_pressed"]
-[connection signal="pressed" from="Background/Controls/VolumeDownButton" to="." method="_on_VolumeDownButton_pressed"]
-[connection signal="pressed" from="Background/Controls/VolumeUpButton" to="." method="_on_VolumeUpButton_pressed"]
-[connection signal="item_selected" from="Background/Controls/DeviceOptions" to="." method="_on_DeviceOptions_item_selected"]
+[node name="SetupHintDescription" type="Label" parent="Content/Margin/SetupHint" unique_id=1434453897]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "Enter edit mode and select \"Edit panel\" in this panel's menu, then connect your account with the Authentication Wizard."
+horizontal_alignment = 1
+autowrap_mode = 3
