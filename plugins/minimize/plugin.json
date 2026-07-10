@@ -1,0 +1,6 @@
+{
+  "plugin_name": "Minimize",
+  "description": "Minimizes the main window and shows a small floating button that restores it again.",
+  "version": "0.1.0",
+  "min_api_version": "0.1.0"
+}
