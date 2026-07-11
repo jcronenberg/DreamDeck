@@ -203,6 +203,12 @@ impl GrabTouchDevice {
         }
     }
 
+    /// Returns whether the current device is grabbed
+    #[func]
+    fn is_grabbed(&self) -> bool {
+        self.grabbed
+    }
+
     /// Returns true if something changed in input_dir
     fn _compare_input_dir(&mut self) -> bool {
         let new_dir = read_input_dir();

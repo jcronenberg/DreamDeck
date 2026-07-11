@@ -7,6 +7,10 @@ extends PluginControllerBase
 ## NOTE: It can't modify mouse position, so [code]get_local_mouse_position()[/code]
 ## and [code]get_global_mouse_position()[/code] should be avoided everywhere.
 
+## Emitted whenever the current device's grabbed state changes, so open
+## [Touch] scenes can stay in sync when it's toggled from elsewhere (e.g. an action).
+signal grab_state_changed(grabbed: bool)
+
 const PLUGIN_NAME = "Touch"
 
 var _grab_touch_devices_script: GrabTouchDevice = null  # Touch device grabber.
@@ -78,11 +82,32 @@ func grab_device() -> void:
 	var ret: Variant = _grab_touch_devices_script.grab_device()
 	if typeof(ret) == TYPE_STRING:
 		push_warning("Failed grabbing device: " + ret)
+	grab_state_changed.emit(is_device_grabbed())
 
 
 ## Ungrabs current device.
 func ungrab_device() -> void:
 	_grab_touch_devices_script.ungrab_device()
+	grab_state_changed.emit(is_device_grabbed())
+
+
+## Returns whether the current device is grabbed.
+func is_device_grabbed() -> bool:
+	return _grab_touch_devices_script.is_grabbed()
+
+
+## Action entrypoint: toggles the grab status of the current device.
+## Deferred since actions can be invoked from a background thread (e.g. macro
+## buttons run on a worker thread), while grabbing touches the scene tree.
+func toggle_grab_device(_blocking: bool) -> void:
+	_toggle_grab_device.call_deferred()
+
+
+func _toggle_grab_device() -> void:
+	if is_device_grabbed():
+		ungrab_device()
+	else:
+		grab_device()
 
 
 ## Registers [param window] so touch events inside its bounds are routed to
