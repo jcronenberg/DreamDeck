@@ -47,13 +47,21 @@ var _removed_button_pos: int = -1
 var _dragged_button_pos: int = -1
 
 # Path where layout is stored.
-@onready var _layout_path: String = conf_dir.path_join("layout.json")
+var _layout_path: String
 
 
 func _init() -> void:
 	config.add_int("Columns", "columns", 8)
 	config.add_int("Rows", "rows", 3)
 	config.add_bool("Square buttons", "square_buttons", false)
+
+
+## Sets [member _layout_path] here rather than via [code]@onready[/code], since config can
+## be applied (and [method load_layout] called) before this instance ever enters the tree,
+## e.g. the Minimize plugin's quick action bar.
+func init(init_scene_id: String) -> void:
+	super(init_scene_id)
+	_layout_path = conf_dir.path_join("layout.json")
 
 
 func _ready() -> void:
