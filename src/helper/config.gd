@@ -620,6 +620,10 @@ class ConfigEditor:
 
 class VariantEditor:
 	extends HBoxContainer
+	## Emitted by editors that support it whenever their live value changes,
+	## ahead of [method Config.ConfigEditor.apply]. Not emitted by every editor type.
+	signal value_changed(value: Variant)
+
 	var _key: String
 	var _name_label: Label = Label.new()
 	var _description_label: RichTextLabel
@@ -715,6 +719,9 @@ class IntEditor:
 		_value_editor.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		add_child(_value_editor)
 		set_value(object.get_value())
+		_value_editor.value_changed.connect(
+			func(value: float) -> void: value_changed.emit(int(value))
+		)
 
 	func set_value(value: int):
 		_value_editor.value = value
