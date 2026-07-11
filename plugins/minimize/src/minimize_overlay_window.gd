@@ -1,25 +1,38 @@
 class_name MinimizeOverlayWindow
 extends Window
-## A small always-on-top window holding a single button to restore the main window.
+## A small always-on-top window holding a button to restore the main window,
+## plus (if the Macroboard plugin is active) a toggle that expands a quick
+## action bar to the side.
 ##
 ## Built entirely in code (no scene), mirroring [PopupManager]'s SimpleWindow.
 
 signal restore_requested
 
 const ICON: Texture2D = preload("res://resources/icons/dreamdeck.png")
+const BUTTON_SIZE := Vector2i(64, 64)
 
-var _button: TextureButton = TextureButton.new()
-var _target_position: Vector2i = Vector2i.ZERO
+var _controller: MinimizeController
+var _restore_button: TextureButton = TextureButton.new()
+# Only created when the controller reports a quick bar is available, so an
+# parentless Button/Control isn't leaked on every minimize when it's not.
+var _toggle_button: Button = null
+# A MarginContainer (rather than a plain Control) so it actively forces the
+# embedded quick bar to its own size on every layout pass, mirroring how
+# [LayoutPanel] embeds plugin scenes. A plain Control only resizes an
+# anchor-full-rect child reactively when its own size changes, which never
+# happens on a plain reparent, so the quick bar would keep whatever size it had
+# in its previous parent (e.g. the much wider settings popup).
+var _bar_container: MarginContainer = null
+var _hbox: HBoxContainer = HBoxContainer.new()
+var _expanded: bool = false
 
 
-func _init(overlay_size: Vector2i, overlay_position: Vector2i) -> void:
+func _init(controller: MinimizeController) -> void:
 	# A freshly created Window defaults to visible=true, but force_native can't
 	# be changed while "displayed" (even before entering the tree). Hidden here,
 	# shown explicitly once fully configured and added to the tree.
 	visible = false
-	size = overlay_size
-	position = overlay_position
-	_target_position = overlay_position
+	_controller = controller
 	borderless = true
 	always_on_top = true
 	unresizable = true
@@ -29,17 +42,31 @@ func _init(overlay_size: Vector2i, overlay_position: Vector2i) -> void:
 	# main window is minimized.
 	force_native = true
 
-	var bg: ColorRect = ColorRect.new()
-	bg.color = Color(0.12549, 0.121569, 0.14902, 1)
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(bg)
+	# Mirrors the main window's background transparency (see [ConfigLoader]) now
+	# that there's no opaque ColorRect behind the buttons.
+	transparent = true
+	set_transparent_background(ConfigLoader.get_config()["transparent_bg"])
 
-	_button.texture_normal = ICON
-	_button.ignore_texture_size = true
-	_button.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
-	_button.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_button.pressed.connect(func() -> void: restore_requested.emit())
-	add_child(_button)
+	_hbox.add_theme_constant_override("separation", 0)
+	_hbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(_hbox)
+
+	_restore_button.texture_normal = ICON
+	_restore_button.ignore_texture_size = true
+	_restore_button.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+	_restore_button.custom_minimum_size = Vector2(BUTTON_SIZE)
+	_restore_button.pressed.connect(func() -> void: restore_requested.emit())
+
+	if _controller.has_quick_bar():
+		_toggle_button = Button.new()
+		_toggle_button.custom_minimum_size = Vector2(BUTTON_SIZE)
+		_toggle_button.pressed.connect(_on_toggle_pressed)
+
+		_bar_container = MarginContainer.new()
+		_bar_container.clip_contents = true
+
+	_layout_children()
+	_resize_to_current_state()
 
 
 func _ready() -> void:
@@ -51,4 +78,85 @@ func _ready() -> void:
 	# back control from that placement policy.
 	await get_tree().process_frame
 	await get_tree().process_frame
-	position = _target_position
+	_resize_to_current_state()
+
+
+# Orders the restore button, toggle button and action bar so the bar always
+# grows away from the screen edge the overlay is pinned to.
+func _layout_children() -> void:
+	for child in _hbox.get_children():
+		_hbox.remove_child(child)
+
+	var pinned_left: bool = (
+		_controller.get_corner()
+		in [MinimizeController.Corner.TOP_LEFT, MinimizeController.Corner.BOTTOM_LEFT]
+	)
+
+	var children: Array[Control] = [_restore_button]
+	if _controller.has_quick_bar():
+		children.append(_toggle_button)
+		children.append(_bar_container)
+	if not pinned_left:
+		children.reverse()
+
+	for child in children:
+		_hbox.add_child(child)
+
+	_update_toggle_text(pinned_left)
+	_apply_bar_gap(pinned_left)
+
+
+# Gives the bar a gap from the toggle button, matching the spacing between
+# buttons within the macroboard itself, on whichever side the toggle button
+# is on (the bar's other side stays flush with the edge of the window).
+func _apply_bar_gap(pinned_left: bool) -> void:
+	if not _controller.has_quick_bar():
+		return
+
+	# Collapsed, the bar must contribute zero size on its own -- MarginContainer
+	# adds its margins on top of the (zero) child minimum size regardless of
+	# custom_minimum_size, so a stray margin here would show up as dead space
+	# next to the toggle button and push the restore button off-window.
+	var gap: int = Macroboard.BUTTON_GAP if _expanded else 0
+	_bar_container.add_theme_constant_override("margin_left", gap if pinned_left else 0)
+	_bar_container.add_theme_constant_override("margin_right", 0 if pinned_left else gap)
+
+
+func _update_toggle_text(pinned_left: bool) -> void:
+	if not _controller.has_quick_bar():
+		return
+
+	var points_away_from_restore: bool = pinned_left != _expanded
+	_toggle_button.text = "›" if points_away_from_restore else "‹"
+
+
+func _on_toggle_pressed() -> void:
+	_expanded = not _expanded
+
+	if _expanded:
+		_controller.attach_quick_bar(_bar_container)
+	else:
+		_controller.detach_quick_bar()
+
+	_layout_children()
+	_resize_to_current_state()
+
+
+func _get_bar_width() -> int:
+	if not _expanded or not _controller.has_quick_bar():
+		return 0
+	return _controller.get_quick_bar_amount() * BUTTON_SIZE.x + Macroboard.BUTTON_GAP
+
+
+func _current_size() -> Vector2i:
+	var button_count: int = 2 if _controller.has_quick_bar() else 1
+	return Vector2i(BUTTON_SIZE.x * button_count + _get_bar_width(), BUTTON_SIZE.y)
+
+
+func _resize_to_current_state() -> void:
+	if _controller.has_quick_bar():
+		_bar_container.custom_minimum_size = Vector2(_get_bar_width(), BUTTON_SIZE.y)
+
+	var new_size: Vector2i = _current_size()
+	size = new_size
+	position = _controller.get_overlay_position(new_size)

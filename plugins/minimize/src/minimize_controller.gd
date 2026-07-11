@@ -8,7 +8,10 @@ extends PluginControllerBase
 enum Corner { TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT }
 
 const PLUGIN_NAME := "Minimize"
-const OVERLAY_SIZE := Vector2i(64, 64)
+const QUICK_BAR_SCENE: PackedScene = preload(
+	"res://plugins/macroboard/src/macroboard/macroboard.tscn"
+)
+const QUICK_BAR_ID := "minimize_quick_bar"
 
 var _overlay_window: MinimizeOverlayWindow = null
 # Window mode to restore to, captured right before minimizing.
@@ -17,6 +20,15 @@ var _previous_window_mode: int = Window.MODE_WINDOWED
 var _corner: int = Corner.BOTTOM_RIGHT
 var _margin: int = 20
 var _ungrab_touch_on_minimize: bool = false
+var _quick_bar_amount: int = 3
+
+var _quick_bar: Macroboard = null
+
+# Screen the overlay was placed on, captured right before minimizing (while the
+# main window's geometry is still reliable) and reused for any later resize
+# (e.g. expanding the quick action bar), since the main window's geometry can
+# no longer be trusted once it's minimized.
+var _overlay_screen: int = 0
 
 # Setting Window.mode = MODE_MINIMIZED isn't necessarily synchronous with some
 # window managers, so [method _process] must wait for confirmation that the
@@ -45,6 +57,15 @@ func _init() -> void:
 			+ "minimized. Enable this to release it until the app is restored."
 		)
 	)
+	config.add_int(
+		"Quick action bar buttons",
+		"quick_bar_amount",
+		3,
+		(
+			"Amount of buttons in the quick action bar shown next to the restore button "
+			+ "(requires the Macroboard plugin to be active)"
+		)
+	)
 
 
 func handle_config() -> void:
@@ -52,6 +73,10 @@ func handle_config() -> void:
 	_corner = data["corner"]
 	_margin = data["margin"]
 	_ungrab_touch_on_minimize = data["ungrab_touch_on_minimize"]
+	_quick_bar_amount = data["quick_bar_amount"]
+
+	if _quick_bar:
+		_apply_quick_bar_config(_quick_bar)
 
 
 ## Action entrypoint: minimizes the main window and spawns the restore button.
@@ -71,7 +96,7 @@ func _minimize() -> void:
 		return
 
 	# Computed before minimizing, while the window's current screen is still reliable.
-	var overlay_position: Vector2i = _get_overlay_position()
+	_overlay_screen = _get_window_screen()
 
 	_previous_window_mode = get_window().mode
 	_minimize_confirmed = false
@@ -80,7 +105,7 @@ func _minimize() -> void:
 	if _ungrab_touch_on_minimize:
 		_set_touch_grabbed(false)
 
-	_overlay_window = MinimizeOverlayWindow.new(OVERLAY_SIZE, overlay_position)
+	_overlay_window = MinimizeOverlayWindow.new(self)
 	_overlay_window.restore_requested.connect(_on_restore_requested)
 	add_child(_overlay_window)
 	_overlay_window.show()
@@ -136,12 +161,107 @@ func _finish_restore() -> void:
 	if _ungrab_touch_on_minimize:
 		_set_touch_grabbed(true)
 
+	detach_quick_bar()
+
 	if is_instance_valid(_overlay_window):
 		var touch_controller: TouchController = _get_touch_controller()
 		if touch_controller:
 			touch_controller.unregister_window(_overlay_window)
 		_overlay_window.queue_free()
 	_overlay_window = null
+
+
+func get_corner() -> int:
+	return _corner
+
+
+## Whether the quick action bar can be shown, i.e. the Macroboard plugin is active.
+func has_quick_bar() -> bool:
+	return PluginCoordinator.get_plugin_loader("Macroboard") != null
+
+
+func get_quick_bar_amount() -> int:
+	return _quick_bar_amount
+
+
+## Returns the shared quick action bar instance, creating it on first use.
+## Returns null if [method has_quick_bar] is false.
+func get_quick_bar() -> Macroboard:
+	if not has_quick_bar():
+		return null
+
+	if not _quick_bar:
+		_quick_bar = QUICK_BAR_SCENE.instantiate()
+		_quick_bar.init(QUICK_BAR_ID)
+		_apply_quick_bar_config(_quick_bar)
+
+	return _quick_bar
+
+
+## Moves the quick action bar under [param target], creating it on first use.
+## Returns null if [method has_quick_bar] is false.
+func attach_quick_bar(target: Control) -> Macroboard:
+	var quick_bar: Macroboard = get_quick_bar()
+	if not quick_bar:
+		return null
+
+	if quick_bar.get_parent() == target:
+		return quick_bar
+	if quick_bar.get_parent():
+		quick_bar.reparent(target)
+	else:
+		target.add_child(quick_bar)
+
+	return quick_bar
+
+
+## Removes the quick action bar from its current parent (if any) without
+## freeing it, so it can be reused the next time it's attached.
+func detach_quick_bar() -> void:
+	if _quick_bar and _quick_bar.get_parent():
+		_quick_bar.get_parent().remove_child(_quick_bar)
+
+
+## Live-previews [param amount] buttons on the shared quick bar without persisting
+## it to [member _quick_bar_amount], so the settings popup's embedded editor can
+## reflect in-progress edits immediately. Reverted (or committed) by
+## [method sync_quick_bar_config] once the setting is actually applied or discarded.
+func preview_quick_bar_amount(amount: int) -> void:
+	if _quick_bar:
+		_quick_bar.config.apply_dict({"columns": amount, "rows": 1, "square_buttons": false})
+
+
+## Resyncs the shared quick bar to the currently persisted [member _quick_bar_amount],
+## discarding any unsaved preview from [method preview_quick_bar_amount].
+func sync_quick_bar_config() -> void:
+	if _quick_bar:
+		_apply_quick_bar_config(_quick_bar)
+
+
+func _apply_quick_bar_config(quick_bar: Macroboard) -> void:
+	quick_bar.config.apply_dict({"columns": _quick_bar_amount, "rows": 1, "square_buttons": false})
+
+
+## Computes the screen position an overlay of [param overlay_size] should be placed
+## at, anchored to [member _corner] on [member _overlay_screen].
+func get_overlay_position(overlay_size: Vector2i) -> Vector2i:
+	var screen_position: Vector2i = DisplayServer.screen_get_position(_overlay_screen)
+	var screen_size: Vector2i = DisplayServer.screen_get_size(_overlay_screen)
+
+	var offset: Vector2i
+	match _corner:
+		Corner.TOP_LEFT:
+			offset = Vector2i(_margin, _margin)
+		Corner.TOP_RIGHT:
+			offset = Vector2i(screen_size.x - overlay_size.x - _margin, _margin)
+		Corner.BOTTOM_LEFT:
+			offset = Vector2i(_margin, screen_size.y - overlay_size.y - _margin)
+		Corner.BOTTOM_RIGHT:
+			offset = Vector2i(
+				screen_size.x - overlay_size.x - _margin, screen_size.y - overlay_size.y - _margin
+			)
+
+	return screen_position + offset
 
 
 func _set_touch_grabbed(grabbed: bool) -> void:
@@ -178,24 +298,3 @@ func _get_window_screen() -> int:
 			return screen
 
 	return window.current_screen
-
-
-func _get_overlay_position() -> Vector2i:
-	var screen: int = _get_window_screen()
-	var screen_position: Vector2i = DisplayServer.screen_get_position(screen)
-	var screen_size: Vector2i = DisplayServer.screen_get_size(screen)
-
-	var offset: Vector2i
-	match _corner:
-		Corner.TOP_LEFT:
-			offset = Vector2i(_margin, _margin)
-		Corner.TOP_RIGHT:
-			offset = Vector2i(screen_size.x - OVERLAY_SIZE.x - _margin, _margin)
-		Corner.BOTTOM_LEFT:
-			offset = Vector2i(_margin, screen_size.y - OVERLAY_SIZE.y - _margin)
-		Corner.BOTTOM_RIGHT:
-			offset = Vector2i(
-				screen_size.x - OVERLAY_SIZE.x - _margin, screen_size.y - OVERLAY_SIZE.y - _margin
-			)
-
-	return screen_position + offset
