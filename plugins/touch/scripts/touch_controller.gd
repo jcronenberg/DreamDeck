@@ -19,10 +19,15 @@ var _device_max_abs_x: int = -1  # Device's maximum value for ABS_X events.
 var _device_max_abs_y: int = -1  # Device's maximum value for ABS_X events.
 var _divide_x_by: float = 0.0  # Amount to divide X by based on screen size and device's max values.
 var _divide_y_by: float = 0.0  # Amount to divide Y by based on screen size and device's max values.
-var _window_area_min: Vector2 = Vector2(0, 0)  # Top left position of window in current screen.
-var _window_area_max: Vector2 = Vector2(0, 0)  # Bottom right position of window in current screen.
 var _default_device: String  # Default device string.
 var _debug_cursor: ColorRect = null  # Debug cursor instance. Will only be set if in editor.
+
+# Native windows opted in via register_window(); embedded subwindows don't
+# need this since they already receive input through the main viewport.
+var _registered_windows: Array[Window] = []
+# Tracks which window a touch sequence started on, so its touch-up reaches
+# the same window even after leaving its bounds.
+var _last_target_window: Window = null
 
 
 func _init() -> void:
@@ -80,6 +85,21 @@ func ungrab_device() -> void:
 	_grab_touch_devices_script.ungrab_device()
 
 
+## Registers [param window] so touch events inside its bounds are routed to
+## it. For native ([code]force_native[/code]) windows only.
+func register_window(window: Window) -> void:
+	if window in _registered_windows:
+		return
+	_registered_windows.append(window)
+
+
+## Unregisters a window previously passed to [method register_window].
+func unregister_window(window: Window) -> void:
+	_registered_windows.erase(window)
+	if _last_target_window == window:
+		_last_target_window = null
+
+
 ## Tries to set device to [param device_name].[br]
 ## NOTE: Also tries to grab new device immediately.
 func set_device(device_name: String) -> void:
@@ -119,30 +139,65 @@ func key_event(state: bool) -> void:
 	_handle_event()
 
 
-# Send touch device events to global [Input] if all necessary conditions are met.
 func _handle_event() -> void:
 	# This check is necessary because the button down event is the first event
 	# if we don't first set x and y it will use the previous position
-	if _x_coord > -1 and _y_coord > -1:
-		# If window is not fullscreen we have to calculate if the touch was within the area of the window
-		# If it wasn't we skip the event
-		if (
-			_pressed
-			and (not (
-				(get_window().mode == Window.MODE_EXCLUSIVE_FULLSCREEN)
-				or (get_window().mode == Window.MODE_FULLSCREEN)
-			))
-			and (
-				(_x_coord > _window_area_max.x or _x_coord < _window_area_min.x)
-				or (_y_coord > _window_area_max.y or _y_coord < _window_area_min.y)
-			)
-		):
+	if _x_coord <= -1 or _y_coord <= -1:
+		return
+
+	var target_window: Window
+	if _pressed:
+		target_window = _resolve_target_window()
+		if not target_window:
 			return
+		_last_target_window = target_window
+	elif _last_target_window and is_instance_valid(_last_target_window):
+		# Deliver touch-up to whichever window got the press, even if the
+		# coordinate has since left its bounds, to avoid a stuck "pressed" touch.
+		target_window = _last_target_window
+	elif get_window().mode != Window.MODE_MINIMIZED:
+		target_window = get_window()
+	else:
+		# Unmatched touch-up (e.g. press never landed on a window) while
+		# minimized - drop rather than leak to the hidden main window.
+		return
 
-		Input.parse_input_event(_construct_touch_event())
+	var event: InputEvent = _construct_touch_event(target_window)
+	if target_window == get_window():
+		# push_input() bypasses the global Input singleton's action/mouse-mask
+		# state, which other code (e.g. layout drag) relies on for the main window.
+		Input.parse_input_event(event)
+	else:
+		target_window.push_input(event)
 
 
-func _construct_touch_event() -> InputEvent:
+# Registered windows win over the main one since they're expected to sit on
+# top. A minimized main window is excluded - its reported geometry is stale.
+func _resolve_target_window() -> Window:
+	if (
+		(get_window().mode == Window.MODE_EXCLUSIVE_FULLSCREEN)
+		or (get_window().mode == Window.MODE_FULLSCREEN)
+	):
+		return get_window()
+
+	var point: Vector2 = Vector2(_x_coord, _y_coord)
+	for window in _registered_windows:
+		if is_instance_valid(window) and _window_rect(window).has_point(point):
+			return window
+
+	if (get_window().mode != Window.MODE_MINIMIZED) and _window_rect(get_window()).has_point(point):
+		return get_window()
+
+	return null
+
+
+# Screen-local bounds of [param window], in the same frame the touch device's
+# coordinates are calibrated against.
+func _window_rect(window: Window) -> Rect2:
+	return Rect2(window.get_position() - DisplayServer.screen_get_position(), window.get_size())
+
+
+func _construct_touch_event(target_window: Window) -> InputEvent:
 	var event: InputEvent
 	if not _pressed or _x_diff == 0 and _y_diff == 0:
 		event = InputEventScreenTouch.new()
@@ -153,8 +208,8 @@ func _construct_touch_event() -> InputEvent:
 		_x_diff = 0
 		_y_diff = 0
 
-	event.position = Vector2(_x_coord, _y_coord) - _window_area_min
-	if _debug_cursor:
+	event.position = Vector2(_x_coord, _y_coord) - _window_rect(target_window).position
+	if _debug_cursor and target_window == get_window():
 		_debug_cursor.position = event.position
 
 	if not _pressed:
@@ -176,18 +231,5 @@ func _calculate_divide_by() -> void:
 	_divide_y_by = _device_max_abs_y / float(DisplayServer.screen_get_size().y)
 
 
-# Calculates [member _window_area_min] and [member _window_area_max].
-func _calculate_window_area() -> void:
-	_window_area_min = get_window().get_position() - DisplayServer.screen_get_position()
-	_window_area_max = (
-		get_window().get_position() + get_window().get_size() - DisplayServer.screen_get_position()
-	)
-
-
 func _on_main_window_resized() -> void:
 	_calculate_divide_by()
-	if not (
-		(get_window().mode == Window.MODE_EXCLUSIVE_FULLSCREEN)
-		or (get_window().mode == Window.MODE_FULLSCREEN)
-	):
-		_calculate_window_area()
