@@ -13,6 +13,12 @@ signal confirm_dialog_closed(bool)
 ## The gap between buttons
 const BUTTON_GAP = 10
 
+## Forces edit affordance for all buttons in this [Macroboard] regardless of the
+## global edit mode. Set via [method set_force_edit_mode]. Used to edit a
+## macroboard embedded outside of the normal layout, e.g. the Minimize plugin's
+## quick action bar.
+var force_edit_mode: bool = false
+
 var _action_button: PackedScene = load(
 	"res://plugins/macroboard/src/buttons/macro_action_button.tscn"
 )
@@ -121,6 +127,21 @@ func save_layout() -> void:
 	ConfLib.save_config(_layout_path, _create_layout_array())
 
 
+## Forces edit affordance (open editor on click, allow dragging, show "add"
+## buttons on empty slots) for this instance independent of the global edit mode.
+## Disabling it saves the current layout/config, mirroring [method _on_exited_edit_mode].
+func set_force_edit_mode(value: bool) -> void:
+	force_edit_mode = value
+	for button in _layout_instances:
+		if button is MacroActionButton:
+			button.force_edit_mode = value
+	_toggle_add_buttons(_is_edit_mode_active())
+
+	if not value:
+		save_layout()
+		config.save()
+
+
 ## Resets internal values associated with button dragging.
 func reset_dragging_state() -> void:
 	_dragged_button_pos = -1
@@ -173,7 +194,7 @@ func _create_buttons(layout: Array) -> void:
 
 	_place_buttons()
 	# Since all buttons get reset, we need to account for edit mode
-	_toggle_add_buttons(GlobalSignals.get_edit_state())
+	_toggle_add_buttons(_is_edit_mode_active())
 
 
 func _create_action_button(button_dict: Dictionary) -> MacroActionButton:
@@ -182,6 +203,7 @@ func _create_action_button(button_dict: Dictionary) -> MacroActionButton:
 	action_button.deserialize(button_dict)
 	associate_signals(action_button)
 	action_button.set_custom_minimum_size(_button_min_size)
+	action_button.force_edit_mode = force_edit_mode
 	return action_button
 
 
@@ -190,7 +212,7 @@ func _create_no_button() -> MacroNoButton:
 	no_button.replace_button.connect(add_action_button, CONNECT_DEFERRED)
 	no_button.button_deletion_requested.connect(delete_button.bind(no_button), CONNECT_DEFERRED)
 	no_button.set_custom_minimum_size(_button_min_size)
-	no_button.set_add_button(GlobalSignals.get_edit_state())
+	no_button.set_add_button(_is_edit_mode_active())
 	return no_button
 
 
@@ -213,6 +235,12 @@ func _place_buttons() -> void:
 		row.move_child(button, i % int(_max_buttons.x))
 
 		i += 1
+
+
+# Whether edit affordance should currently be active, either because the app's
+# global edit mode is on or because this instance was forced into it.
+func _is_edit_mode_active() -> bool:
+	return GlobalSignals.get_edit_state() or force_edit_mode
 
 
 # Toggles all [MacroNoButton]s.
@@ -376,11 +404,11 @@ func _create_layout_array() -> Array:
 
 
 func _on_entered_edit_mode() -> void:
-	_toggle_add_buttons(true)
+	_toggle_add_buttons(_is_edit_mode_active())
 
 
 func _on_exited_edit_mode() -> void:
-	_toggle_add_buttons(false)
+	_toggle_add_buttons(_is_edit_mode_active())
 
 	save_layout()
 	config.save()

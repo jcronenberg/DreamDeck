@@ -8,6 +8,12 @@ signal button_changed
 ## Used by [Macroboard] to decide if button has moved from a different one.
 var dragging_macroboard: Macroboard = null
 
+## Set by an owning [Macroboard] to force edit affordance (open editor on click,
+## allow dragging) for this button regardless of the global edit mode. Used to
+## edit a macroboard embedded outside of the normal layout, e.g. the Minimize
+## plugin's quick action bar.
+var force_edit_mode: bool = false
+
 var _button_label: String = ""
 var _icon_path: String = ""
 var _show_button_label: bool = false
@@ -177,7 +183,7 @@ func _on_pressed() -> void:
 	# If not in edit mode, start thread to execute all actions
 	# It is moved to a thread to not block the whole main thread while
 	# blocking actions get executed
-	if not GlobalSignals.get_edit_state():
+	if not (GlobalSignals.get_edit_state() or force_edit_mode):
 		if not _exec_thread:
 			_exec_thread = Thread.new()
 		if _exec_thread.is_alive():
@@ -226,7 +232,7 @@ func _notification(notif: int) -> void:
 
 
 func _get_drag_data(_at_position: Vector2) -> Variant:
-	if not GlobalSignals.get_edit_state():
+	if not (GlobalSignals.get_edit_state() or force_edit_mode):
 		return
 
 	var duplicated_node: Button = self.duplicate(0)
