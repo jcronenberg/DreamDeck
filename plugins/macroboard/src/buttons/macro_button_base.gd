@@ -64,7 +64,7 @@ func open_editor(new_button: bool = false) -> void:
 	_actions_editor = ActionsEditor.new()
 	_actions_editor.name = "Actions"
 	_actions_editor.connect("new_action_requested", _on_new_action_requested)
-	PopupManager.init_popup(
+	PopupManager.push_stack_item(
 		[settings_vbox, _actions_editor],
 		_on_popup_confirmed,
 		func _on_cancel() -> void: button_pressed = false

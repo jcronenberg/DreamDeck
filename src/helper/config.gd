@@ -620,6 +620,10 @@ class ConfigEditor:
 
 class VariantEditor:
 	extends HBoxContainer
+	## Emitted by editors that support it whenever their live value changes,
+	## ahead of [method Config.ConfigEditor.apply]. Not emitted by every editor type.
+	signal value_changed(value: Variant)
+
 	var _key: String
 	var _name_label: Label = Label.new()
 	var _description_label: RichTextLabel
@@ -715,6 +719,9 @@ class IntEditor:
 		_value_editor.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		add_child(_value_editor)
 		set_value(object.get_value())
+		_value_editor.value_changed.connect(
+			func(value: float) -> void: value_changed.emit(int(value))
+		)
 
 	func set_value(value: int):
 		_value_editor.value = value
@@ -813,12 +820,20 @@ class DictEditor:
 	func set_value(value: Variant):
 		if value == null:
 			return
-		var id: int = -1
-		var value_string: Variant = _dict.find_key(value)
-		if value_string == null:
+
+		# find_key() hash-compares, rejecting a JSON-loaded float against an int key.
+		var matched_value: Variant = null
+		for dict_value in _dict.values():
+			if dict_value == value:
+				matched_value = dict_value
+				break
+
+		if matched_value == null:
 			push_error("Value not found in enum")
 			return
 
+		var id: int = -1
+		var value_string: Variant = _dict.find_key(matched_value)
 		for i in _value_editor.get_item_count():
 			if _value_editor.get_item_text(i) == value_string:
 				id = i
@@ -830,7 +845,7 @@ class DictEditor:
 		_value_editor.select(id)
 		value_selected.emit(_value_editor.get_item_text(id))
 		if _default_value != null:
-			_default_button.visible = value != _default_value
+			_default_button.visible = matched_value != _default_value
 
 	func set_dict(dict: Dictionary):
 		_dict = dict
