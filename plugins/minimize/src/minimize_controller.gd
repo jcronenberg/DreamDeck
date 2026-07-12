@@ -7,15 +7,15 @@ extends PluginControllerBase
 
 enum Corner { TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT }
 
-const PLUGIN_NAME := "Minimize"
+const PLUGIN_NAME: String = "Minimize"
 const QUICK_BAR_SCENE: PackedScene = preload(
 	"res://plugins/macroboard/src/macroboard/macroboard.tscn"
 )
-const QUICK_BAR_ID := "minimize_quick_bar"
+const QUICK_BAR_ID: String = "minimize_quick_bar"
 
 var _overlay_window: MinimizeOverlayWindow = null
 # Window mode to restore to, captured right before minimizing.
-var _previous_window_mode: int = Window.MODE_WINDOWED
+var _previous_window_mode: Window.Mode = Window.MODE_WINDOWED
 
 var _corner: int = Corner.BOTTOM_RIGHT
 # Corner actually in effect for the current overlay, seeded from [member _corner]
@@ -28,18 +28,14 @@ var _quick_bar_amount: int = 3
 
 var _quick_bar: Macroboard = null
 
-# Screen the overlay was placed on, captured right before minimizing (while the
-# main window's geometry is still reliable) and reused for any later resize
-# (e.g. expanding the quick action bar), since the main window's geometry can
-# no longer be trusted once it's minimized.
+# Screen the overlay is placed on. Captured right before minimizing and reused for
+# later resizes, since the main window's geometry can't be trusted once minimized.
 var _overlay_screen: int = 0
 
-# Setting Window.mode = MODE_MINIMIZED isn't necessarily synchronous with some
-# window managers, so [method _process] must wait for confirmation that the
-# window actually reached MODE_MINIMIZED before it starts treating "mode is no
-# longer MODE_MINIMIZED" as a sign the user restored it externally. Without
-# this, the still-in-flight minimize request would immediately look like a
-# restore and tear the overlay down before it was ever seen.
+# Some window managers apply MODE_MINIMIZED asynchronously, so right after the
+# request the mode can still briefly read as the old value. Only once the window
+# has actually reached MODE_MINIMIZED may "mode is no longer MODE_MINIMIZED" be
+# treated as an external restore instead of the still-in-flight minimize.
 var _minimize_confirmed: bool = false
 
 
@@ -79,8 +75,7 @@ func handle_config() -> void:
 	_ungrab_touch_on_minimize = data["ungrab_touch_on_minimize"]
 	_quick_bar_amount = data["quick_bar_amount"]
 
-	if _quick_bar:
-		_apply_quick_bar_config(_quick_bar)
+	sync_quick_bar_config()
 
 
 ## Action entrypoint: minimizes the main window and spawns the restore button.
@@ -99,7 +94,6 @@ func _minimize() -> void:
 	if _overlay_window:
 		return
 
-	# Computed before minimizing, while the window's current screen is still reliable.
 	_overlay_screen = _get_window_screen()
 	_overlay_corner = _corner
 
@@ -122,21 +116,16 @@ func _minimize() -> void:
 	set_process(true)
 
 
-# Some window managers apply MODE_MINIMIZED asynchronously, so the main window
-# can also be un-minimized by something other than our overlay button (OS
-# taskbar, Alt-Tab, window manager shortcut, ...). We treat "window mode is no
-# longer MODE_MINIMIZED after having actually reached it" as the single source
-# of truth for an external restore and poll for it here. The "after having
-# actually reached it" part matters: right after requesting the minimize, mode
-# may still briefly read as the old (non-minimized) value, which must not be
-# mistaken for a restore.
+# Polls for an external restore (OS taskbar, Alt-Tab, window manager shortcut, ...),
+# for which the window mode leaving MODE_MINIMIZED is the single source of truth.
+# See [member _minimize_confirmed].
 func _process(_delta: float) -> void:
 	if not _overlay_window:
 		return
 
 	if not is_instance_valid(_overlay_window):
-		_overlay_window = null
-		set_process(false)
+		# Overlay freed externally (e.g. by the window manager); run the full cleanup.
+		_finish_restore()
 		return
 
 	var current_mode: int = get_window().mode
@@ -150,9 +139,8 @@ func _process(_delta: float) -> void:
 
 
 # Called when the overlay button is pressed (or the overlay window is closed).
-# Performs the restore directly instead of relying on [method _process] to
-# notice, since that would race the window manager's (possibly async) handling
-# of the mode change.
+# Restores directly instead of waiting for [method _process] to notice, which
+# would race the window manager's (possibly async) handling of the mode change.
 func _on_restore_requested() -> void:
 	get_window().mode = _previous_window_mode
 	get_window().grab_focus()
@@ -213,26 +201,24 @@ func get_quick_bar() -> Macroboard:
 	if not _quick_bar:
 		_quick_bar = QUICK_BAR_SCENE.instantiate()
 		_quick_bar.init(QUICK_BAR_ID)
-		_apply_quick_bar_config(_quick_bar)
+		_apply_quick_bar_config(_quick_bar_amount)
 
 	return _quick_bar
 
 
 ## Moves the quick action bar under [param target], creating it on first use.
-## Returns null if [method has_quick_bar] is false.
-func attach_quick_bar(target: Control) -> Macroboard:
+## No-op if [method has_quick_bar] is false.
+func attach_quick_bar(target: Control) -> void:
 	var quick_bar: Macroboard = get_quick_bar()
 	if not quick_bar:
-		return null
+		return
 
 	if quick_bar.get_parent() == target:
-		return quick_bar
+		return
 	if quick_bar.get_parent():
 		quick_bar.reparent(target)
 	else:
 		target.add_child(quick_bar)
-
-	return quick_bar
 
 
 ## Removes the quick action bar from its current parent (if any) without
@@ -243,23 +229,21 @@ func detach_quick_bar() -> void:
 
 
 ## Live-previews [param amount] buttons on the shared quick bar without persisting
-## it to [member _quick_bar_amount], so the settings popup's embedded editor can
-## reflect in-progress edits immediately. Reverted (or committed) by
-## [method sync_quick_bar_config] once the setting is actually applied or discarded.
+## it, so the settings popup's embedded editor reflects in-progress edits immediately.
+## Committed or reverted by [method sync_quick_bar_config].
 func preview_quick_bar_amount(amount: int) -> void:
-	if _quick_bar:
-		_quick_bar.config.apply_dict({"columns": amount, "rows": 1, "square_buttons": false})
+	_apply_quick_bar_config(amount)
 
 
 ## Resyncs the shared quick bar to the currently persisted [member _quick_bar_amount],
 ## discarding any unsaved preview from [method preview_quick_bar_amount].
 func sync_quick_bar_config() -> void:
+	_apply_quick_bar_config(_quick_bar_amount)
+
+
+func _apply_quick_bar_config(amount: int) -> void:
 	if _quick_bar:
-		_apply_quick_bar_config(_quick_bar)
-
-
-func _apply_quick_bar_config(quick_bar: Macroboard) -> void:
-	quick_bar.config.apply_dict({"columns": _quick_bar_amount, "rows": 1, "square_buttons": false})
+		_quick_bar.config.apply_dict({"columns": amount, "rows": 1, "square_buttons": false})
 
 
 ## Computes the screen position an overlay of [param overlay_size] should be placed

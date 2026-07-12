@@ -9,19 +9,18 @@ extends Window
 signal restore_requested
 
 const ICON: Texture2D = preload("res://resources/icons/dreamdeck.png")
-const BUTTON_SIZE := Vector2i(64, 64)
+const BUTTON_SIZE: Vector2i = Vector2i(64, 64)
 
 var _controller: MinimizeController
 var _restore_button: TextureButton = TextureButton.new()
-# Only created when the controller reports a quick bar is available, so an
-# parentless Button/Control isn't leaked on every minimize when it's not.
+# Only created when the controller reports a quick bar is available (also
+# serving as the "quick bar exists" check), so a parentless Control isn't
+# leaked on every minimize when it's not.
 var _toggle_button: Button = null
 # A MarginContainer (rather than a plain Control) so it actively forces the
-# embedded quick bar to its own size on every layout pass, mirroring how
-# [LayoutPanel] embeds plugin scenes. A plain Control only resizes an
-# anchor-full-rect child reactively when its own size changes, which never
-# happens on a plain reparent, so the quick bar would keep whatever size it had
-# in its previous parent (e.g. the much wider settings popup).
+# embedded quick bar to its own size on every layout pass; a plain Control would
+# let the bar keep whatever size it had in its previous parent (e.g. the much
+# wider settings popup), since a reparent alone never triggers a resize.
 var _bar_container: MarginContainer = null
 var _hbox: HBoxContainer = HBoxContainer.new()
 var _expanded: bool = false
@@ -71,11 +70,9 @@ func _init(controller: MinimizeController) -> void:
 
 func _ready() -> void:
 	close_requested.connect(func() -> void: restore_requested.emit())
-	# Some window managers ignore the requested position on the window's
-	# initial map, instead placing it on the currently focused
-	# monitor/workspace, but do honor an explicit move once it's already
-	# mapped. Re-apply the position a couple of frames after showing to win
-	# back control from that placement policy.
+	# Some window managers ignore the requested position on the window's initial
+	# map but honor an explicit move once it's mapped, so re-apply it a couple of
+	# frames after showing.
 	await get_tree().process_frame
 	await get_tree().process_frame
 	_resize_to_current_state()
@@ -93,7 +90,7 @@ func _layout_children() -> void:
 	)
 
 	var children: Array[Control] = [_restore_button]
-	if _controller.has_quick_bar():
+	if _toggle_button:
 		children.append(_toggle_button)
 		children.append(_bar_container)
 	if not pinned_left:
@@ -110,7 +107,7 @@ func _layout_children() -> void:
 # buttons within the macroboard itself, on whichever side the toggle button
 # is on (the bar's other side stays flush with the edge of the window).
 func _apply_bar_gap(pinned_left: bool) -> void:
-	if not _controller.has_quick_bar():
+	if not _bar_container:
 		return
 
 	# Collapsed, the bar must contribute zero size on its own -- MarginContainer
@@ -123,7 +120,7 @@ func _apply_bar_gap(pinned_left: bool) -> void:
 
 
 func _update_toggle_text(pinned_left: bool) -> void:
-	if not _controller.has_quick_bar():
+	if not _toggle_button:
 		return
 
 	var points_away_from_restore: bool = pinned_left != _expanded
@@ -150,18 +147,18 @@ func refresh_layout() -> void:
 
 
 func _get_bar_width() -> int:
-	if not _expanded or not _controller.has_quick_bar():
+	if not _expanded or not _bar_container:
 		return 0
 	return _controller.get_quick_bar_amount() * BUTTON_SIZE.x + Macroboard.BUTTON_GAP
 
 
 func _current_size() -> Vector2i:
-	var button_count: int = 2 if _controller.has_quick_bar() else 1
+	var button_count: int = 2 if _toggle_button else 1
 	return Vector2i(BUTTON_SIZE.x * button_count + _get_bar_width(), BUTTON_SIZE.y)
 
 
 func _resize_to_current_state() -> void:
-	if _controller.has_quick_bar():
+	if _bar_container:
 		_bar_container.custom_minimum_size = Vector2(_get_bar_width(), BUTTON_SIZE.y)
 
 	var new_size: Vector2i = _current_size()

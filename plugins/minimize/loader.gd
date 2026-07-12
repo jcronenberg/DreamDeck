@@ -47,9 +47,8 @@ func _on_settings_button_pressed() -> void:
 	config_editor.name = "Settings"
 	var scenes: Array[Control] = [config_editor]
 
-	var quick_bar_wrapper: MarginContainer = null
 	if controller.has_quick_bar():
-		quick_bar_wrapper = MarginContainer.new()
+		var quick_bar_wrapper: MarginContainer = MarginContainer.new()
 		quick_bar_wrapper.name = "Quick Action Bar"
 		quick_bar_wrapper.custom_minimum_size = Vector2(0, 200)
 		controller.get_quick_bar().set_force_edit_mode(true)
@@ -72,10 +71,9 @@ func _on_settings_button_pressed() -> void:
 	)
 
 
-# Detaches the shared quick action bar from the settings popup (so it survives
-# PopupManager freeing the popup's own nodes), resyncs it to the (possibly just
-# applied) persisted button amount to discard any unsaved live preview, and turns
-# off its forced edit affordance, saving its layout in the process.
+# Detaches the shared quick action bar (so PopupManager freeing the popup's nodes
+# doesn't free it too), discards any unsaved live preview, and ends the forced
+# edit mode, saving the bar's layout in the process.
 func _stop_editing_quick_bar(controller: MinimizeController) -> void:
 	if not controller.has_quick_bar():
 		return
