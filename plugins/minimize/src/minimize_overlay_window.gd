@@ -32,6 +32,7 @@ func _init(controller: MinimizeController) -> void:
 	# shown explicitly once fully configured and added to the tree.
 	visible = false
 	_controller = controller
+	title = "DreamDeck - Minimize Overlay"
 	borderless = true
 	always_on_top = true
 	unresizable = true
