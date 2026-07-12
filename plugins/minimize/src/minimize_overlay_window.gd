@@ -138,6 +138,13 @@ func _on_toggle_pressed() -> void:
 	else:
 		_controller.detach_quick_bar()
 
+	refresh_layout()
+
+
+## Re-derives child order and window size/position from the controller's
+## current corner. Called after [method MinimizeController.move_to_corner]
+## moves the overlay to a different corner of the screen.
+func refresh_layout() -> void:
 	_layout_children()
 	_resize_to_current_state()
 

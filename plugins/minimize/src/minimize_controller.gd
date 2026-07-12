@@ -18,6 +18,10 @@ var _overlay_window: MinimizeOverlayWindow = null
 var _previous_window_mode: int = Window.MODE_WINDOWED
 
 var _corner: int = Corner.BOTTOM_RIGHT
+# Corner actually in effect for the current overlay, seeded from [member _corner]
+# each time it's created. Kept separate so [method move_to_corner] can move the
+# live overlay without touching the persisted setting.
+var _overlay_corner: int = Corner.BOTTOM_RIGHT
 var _margin: int = 20
 var _ungrab_touch_on_minimize: bool = false
 var _quick_bar_amount: int = 3
@@ -97,6 +101,7 @@ func _minimize() -> void:
 
 	# Computed before minimizing, while the window's current screen is still reliable.
 	_overlay_screen = _get_window_screen()
+	_overlay_corner = _corner
 
 	_previous_window_mode = get_window().mode
 	_minimize_confirmed = false
@@ -154,6 +159,20 @@ func _on_restore_requested() -> void:
 	_finish_restore()
 
 
+## Action entrypoint: moves the live overlay to [param corner], without touching
+## the persisted "corner" setting. No-op if not currently minimized.
+func move_to_corner(_blocking: bool, corner: int) -> void:
+	_move_to_corner.call_deferred(corner)
+
+
+func _move_to_corner(corner: int) -> void:
+	if not _overlay_window or not is_instance_valid(_overlay_window):
+		return
+
+	_overlay_corner = corner
+	_overlay_window.refresh_layout()
+
+
 func _finish_restore() -> void:
 	set_process(false)
 	_minimize_confirmed = false
@@ -171,8 +190,9 @@ func _finish_restore() -> void:
 	_overlay_window = null
 
 
+## Corner in effect for the current (or next) overlay. See [member _overlay_corner].
 func get_corner() -> int:
-	return _corner
+	return _overlay_corner
 
 
 ## Whether the quick action bar can be shown, i.e. the Macroboard plugin is active.
@@ -243,13 +263,13 @@ func _apply_quick_bar_config(quick_bar: Macroboard) -> void:
 
 
 ## Computes the screen position an overlay of [param overlay_size] should be placed
-## at, anchored to [member _corner] on [member _overlay_screen].
+## at, anchored to [member _overlay_corner] on [member _overlay_screen].
 func get_overlay_position(overlay_size: Vector2i) -> Vector2i:
 	var screen_position: Vector2i = DisplayServer.screen_get_position(_overlay_screen)
 	var screen_size: Vector2i = DisplayServer.screen_get_size(_overlay_screen)
 
 	var offset: Vector2i
-	match _corner:
+	match _overlay_corner:
 		Corner.TOP_LEFT:
 			offset = Vector2i(_margin, _margin)
 		Corner.TOP_RIGHT:

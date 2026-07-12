@@ -6,12 +6,31 @@ func _init() -> void:
 	plugin_name = "Minimize"
 	controllers = {"MinimizeController": "res://plugins/minimize/src/minimize_controller.gd"}
 	has_settings = true
+
+	# Lets each button pick which corner it moves the overlay to.
+	var move_to_corner_config: Config = Config.new()
+	move_to_corner_config.add_dict(
+		"Corner", "corner", MinimizeController.Corner.BOTTOM_RIGHT, MinimizeController.Corner
+	)
+
 	actions = [
 		PluginCoordinator.PluginActionDefinition.new(
 			"Minimize",
 			"minimize_app",
 			"Minimizes the main window and shows a small floating button to restore it",
 			Config.new(),
+			"Minimize",
+			"MinimizeController"
+		),
+		PluginCoordinator.PluginActionDefinition.new(
+			"Move minimize window",
+			"move_to_corner",
+			(
+				"Moves the restore button to the selected corner of the screen. "
+				+ "Only affects the currently minimized window, not the plugin's setting; "
+				+ "a no-op if not minimized"
+			),
+			move_to_corner_config,
 			"Minimize",
 			"MinimizeController"
 		)
