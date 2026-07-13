@@ -103,6 +103,8 @@ var _pending_track_change_since_ticks: int = 0
 var _next_track_data: Dictionary = {}
 # Cover art urls that have been fully downloaded to cache_dir_path, see _ensure_cover_cached()
 var _cached_cover_urls: Dictionary = {}
+# Id of the last device reported as active
+var _last_active_device_id: String = ""
 
 # Api requests are sent one at a time in order, see _process_queue()
 var _request_queue: Array[SpotifyApiRequest] = []
@@ -976,12 +978,28 @@ func _generate_device_list(data: Array) -> void:
 	if device_list.is_empty():
 		_add_device_placeholder()
 		return
-	var active_index: int = 0
+	# -1 until a device reports is_active, so the fallback below only kicks in when none does
+	var active_index: int = -1
 	for i in device_list.size():
 		%DeviceOptions.add_item(device_list[i]["name"], i)
 		if device_list[i]["is_active"]:
 			active_index = i
+			_last_active_device_id = device_list[i]["id"]
+
+	# Keep last active device selected instead of falling back to the first device in the list.
+	if active_index < 0:
+		active_index = maxi(_find_device_index(_last_active_device_id), 0)
 	%DeviceOptions.select(active_index)
+
+
+# Index of [param device_id] in device_list, or -1 if it's not (or no longer) present.
+func _find_device_index(device_id: String) -> int:
+	if device_id.is_empty():
+		return -1
+	for i in device_list.size():
+		if device_list[i]["id"] == device_id:
+			return i
+	return -1
 
 
 # Non-selectable stand-in item so the dropdown keeps its size while no real devices are known.
