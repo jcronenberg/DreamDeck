@@ -58,9 +58,7 @@ func _on_settings_button_pressed() -> void:
 		[settings],
 		func apply_and_save() -> bool:
 			var selected: int = device_options.get_selected()
-			var value: String = (
-				"" if selected <= 0 else device_options.get_item_text(selected)
-			)
+			var value: String = "" if selected <= 0 else device_options.get_item_text(selected)
 			controller.config.get_object("default_device").set_value(value)
 			controller.config.save()
 			controller.handle_config()
