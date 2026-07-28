@@ -8,7 +8,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 godot = { git = "https://github.com/godot-rust/gdext", branch = "master", features = ["experimental-threads", "register-docs"] }
-russh = { version = "0.61.1" }
+russh = { version = "0.62.4" }
 anyhow = "1.0.102"
 async-std = { version = "1.13.2", features = ["tokio1"] }
 chrono = "0.4.44"
