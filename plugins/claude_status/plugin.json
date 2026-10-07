@@ -1,0 +1,6 @@
+{
+  "plugin_name": "Claude Status",
+  "description": "Shows a stop light per Claude Code session, indicating whether it is working, stopped or waiting for input, and how much of the rate limits is used.",
+  "version": "0.1.0",
+  "min_api_version": "0.1.0"
+}
