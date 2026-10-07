@@ -71,8 +71,19 @@ impl client::Handler for Client {
 
     async fn check_server_key(
         &mut self,
-        server_public_key: &russh::keys::PublicKey,
+        server_key: &keys::PublicKeyOrCertificate,
     ) -> Result<bool, Self::Error> {
+        if let ServerCheckMethod::NoCheck = self.server_check {
+            return Ok(true);
+        }
+        // Certificate algorithms are never advertised, and the checks below only know plain keys.
+        let server_public_key: &keys::PublicKey = match server_key {
+            keys::PublicKeyOrCertificate::PublicKey { key, .. } => key,
+            keys::PublicKeyOrCertificate::Certificate(_) => {
+                return Err(SSHError::ServerCheckFailed)
+            }
+        };
+
         match &self.server_check {
             ServerCheckMethod::NoCheck => Ok(true),
             ServerCheckMethod::PublicKey(key) => {
